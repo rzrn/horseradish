@@ -124,14 +124,6 @@ piqueserver\.ssh module
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.statistics module
-------------------------------
-
-.. automodule:: piqueserver.statistics
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 piqueserver\.statusserver module
 --------------------------------
 
