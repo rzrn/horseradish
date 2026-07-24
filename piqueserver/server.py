@@ -34,9 +34,8 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 import aiohttp
 from pyspades.enet import Address, Packet, Peer
-from twisted.internet import reactor, threads
-from twisted.internet.defer import Deferred, ensureDeferred
-from twisted.internet.task import LoopingCall, coiterate, deferLater
+from twisted.internet import reactor
+from twisted.internet.defer import ensureDeferred
 from twisted.internet.tcp import Port
 
 from logging import FileHandler, StreamHandler, getLevelName
@@ -54,6 +53,7 @@ from piqueserver.release import check_for_releases, format_release
 from piqueserver.scheduler import Scheduler
 from piqueserver.utils import as_deferred, EndCall
 from piqueserver.bansubscribe import bans_config_urls
+from piqueserver.statusserver import StatusServer
 from pyspades.bytes import NoDataLeft
 from pyspades.constants import (CTF_MODE, ERROR_SHUTDOWN, TC_MODE,
                                 EXTENSION_CHATTYPE, EXTENSION_KICKREASON)
@@ -74,12 +74,6 @@ def validate_team_name(name):
         # for now we just warn
         # return False
     return True
-
-# TODO: move to a better place if reusable
-
-
-def sleep(secs):
-    return deferLater(reactor, secs, lambda: None)
 
 
 # declare configuration options
@@ -160,6 +154,7 @@ default_ip_getter = 'https://services.buildandshoot.com/getip'
 ip_getter_option = config.option('ip_getter', default_ip_getter)
 name_option = config.option(
     'name', default='piqueserver #%s' % random.randrange(0, 2000))
+notify_new_releases = config.option("release_notifications", default=True)
 motd_option = config.option('motd')
 help_option = config.option('help', default=[
     'Server name: %(server_name)s',
@@ -373,10 +368,6 @@ class FeatureProtocol(ServerProtocol):
         if irc.get('enabled', False):
             from piqueserver.irc import IRCRelay
             self.irc_relay = IRCRelay(self, irc)
-        if status_server_enabled.get():
-            from piqueserver.statusserver import StatusServer
-            self.status_server = StatusServer(self)
-            ensureDeferred(self.status_server.listen())
         if ban_publish.get():
             from piqueserver.banpublish import PublishServer
             self.ban_publish = PublishServer(self, ban_publish_port.get())
@@ -400,6 +391,17 @@ class FeatureProtocol(ServerProtocol):
         ServerProtocol.__init__(self, self.port, interface)
         self.host.intercept = self.receive_callback
 
+        ensureDeferred(as_deferred(self.on_event_loop_start()))
+
+        reactor.addSystemEventTrigger(
+            'before', 'shutdown', lambda: ensureDeferred(as_deferred(self.shutdown())))
+
+    async def on_event_loop_start(self):
+        if status_server_enabled.get():
+            self.status_server = StatusServer(self)
+            start_server = await self.status_server.create()
+            asyncio.create_task(start_server)
+
         try:
             self.set_map_rotation(self.config['rotation'])
         except MapNotFound as e:
@@ -407,35 +409,24 @@ class FeatureProtocol(ServerProtocol):
                          name=e.map)
             raise SystemExit
 
-        map_load_d = self.advance_rotation()
-        # discard the result of the map advance for now
-        map_load_d.addCallback(lambda x: self._post_init())
+        await self.advance_rotation()
 
-        ip_getter = ip_getter_option.get()
-        ensureDeferred(as_deferred(self.print_identifiers(ip_getter)))
-
-        self.new_release = None
-        notify_new_releases = config.option(
-            "release_notifications", default=True)
-        if notify_new_releases.get():
-            ensureDeferred(as_deferred(self.watch_for_releases()))
-
-        self.vacuum_loop = LoopingCall(self.vacuum_bans)
-        # Run the vacuum every 6 hours, and kick it off it right now
-        self.vacuum_loop.start(60 * 60 * 6, True)
-
-        reactor.addSystemEventTrigger(
-            'before', 'shutdown', lambda: ensureDeferred(self.shutdown()))
-
-    def _post_init(self):
-        """called after the map has been loaded"""
-        self.update_format()
         self.tip_frequency = tip_frequency.get()
         if self.tips and self.tip_frequency > 0:
-            reactor.callLater(self.tip_frequency * 60, self.send_tip)
+            asyncio.create_task(self.send_tip_loop(self.tip_frequency * 60))
 
         self.master = register_master_option.get()
         self.set_master()
+
+        ip_getter = ip_getter_option.get()
+        await self.print_identifiers(ip_getter)
+
+        self.new_release = None
+        if notify_new_releases.get():
+            asyncio.create_task(self.watch_for_releases())
+
+        # Run the vacuum every 6 hours, and kick it off it right now
+        self.vacuum_loop = asyncio.create_task(self.vacuum_bans(60 * 60 * 6))
 
     async def print_identifiers(self, ip_getter: str):
         if ip_getter:
@@ -475,10 +466,12 @@ class FeatureProtocol(ServerProtocol):
 
     def set_time_limit(self, time_limit: Optional[int] = None, additive:
                        bool = False) -> Optional[int]:
+        loop = asyncio.get_running_loop()
+
         advance_call = self.advance_call
         add_time = 0.0
         if advance_call is not None:
-            add_time = ((advance_call.getTime() - reactor.seconds()) / 60.0)
+            add_time = ((advance_call.when() - loop.time()) / 60.0)
             advance_call.cancel()
             self.advance_call = None
         time_limit = time_limit or self.default_time_limit
@@ -491,7 +484,7 @@ class FeatureProtocol(ServerProtocol):
             time_limit = min(time_limit + add_time, self.default_time_limit)
 
         seconds = time_limit * 60
-        self.advance_call = reactor.callLater(seconds, self._time_up)
+        self.advance_call = loop.call_later(seconds, self._time_up)
 
         for call in self.end_calls[:]:
             call.set(seconds)
@@ -506,7 +499,7 @@ class FeatureProtocol(ServerProtocol):
         return time_limit
 
     def _next_time_announce(self):
-        remaining = self.advance_call.getTime() - reactor.seconds()
+        remaining = self.advance_call.when() - asyncio.get_running_loop().time()
         if remaining < 60.001:
             if remaining < 10.001:
                 self.broadcast_chat('%s...' % int(round(remaining)))
@@ -521,13 +514,13 @@ class FeatureProtocol(ServerProtocol):
         self.advance_call = None
         self.advance_rotation('Time up!')
 
-    def advance_rotation(self, message: Optional[str] = None) -> Deferred:
+    def advance_rotation(self, message: Optional[str] = None):
         """
         Advances to the next map in the rotation. If message is provided
         it will send it to the chat, waits for 10 seconds and then advances.
 
         Returns:
-            Deferred that fires when the map has been loaded
+            asyncio.Task that fires when the map has been loaded
         """
         self.set_time_limit(False)
         if self.planned_map is None:
@@ -543,14 +536,14 @@ class FeatureProtocol(ServerProtocol):
                 self.broadcast_chat(
                     '{} Next map: {}.'.format(message, planned_map.full_name),
                     irc=True)
-                await sleep(10)
+                await asyncio.sleep(10)
             else:
                 log.info("advancing to map '{name}'",
                          name=planned_map.full_name)
 
             await self.set_map_name(planned_map)
 
-        return ensureDeferred(do_advance())
+        return asyncio.create_task(do_advance())
 
     def get_mode_name(self) -> str:
         return self.game_mode_name
@@ -572,17 +565,16 @@ class FeatureProtocol(ServerProtocol):
         name_option.set(name)
         self.update_format()
 
-    def make_map(self, rot_info: RotationInfo) -> Deferred:
+    def make_map(self, rot_info: RotationInfo):
         """
         Creates and returns a Map object from rotation info in a new thread
 
         Returns:
-            Deferred that resolves to a `Map` object.
+            Coroutine that resolves to a `Map` object.
         """
         # we must do this in a new thread, since map generation might take so
         # long that clients time out.
-        return threads.deferToThread(
-            Map, rot_info, os.path.join(config.config_dir, 'maps'))
+        return asyncio.to_thread(Map, rot_info, os.path.join(config.config_dir, 'maps'))
 
     def set_map_rotation(self, maps: List[str]) -> None:
         """
@@ -676,18 +668,18 @@ class FeatureProtocol(ServerProtocol):
             return
 
         # send shutdown notification
-        log.info("disconnecting players")
-        self.broadcast_chat("Server shutting down in 3sec.")
+        log.info("Disconnecting players")
+        self.broadcast_chat("Server shutting down in 3 s")
         for i in range(3, 0, -1):
-            self.broadcast_chat(str(i)+"...")
-            await sleep(1)
+            self.broadcast_chat("{}...".format(i))
+            await asyncio.sleep(1)
 
         # disconnect all players
         for connection in list(self.connections.values()):
             connection.disconnect(ERROR_SHUTDOWN)
 
         # give the connections some time to terminate
-        await sleep(0.2)
+        await asyncio.sleep(0.2)
 
     def add_ban(self, ip, reason, duration, name=None):
         """
@@ -722,21 +714,21 @@ class FeatureProtocol(ServerProtocol):
                 log.info("#" * 60)
             await asyncio.sleep(86400)  # 24 hrs
 
-    def vacuum_bans(self):
+    async def vacuum_bans(self, delay):
         """remove any bans that might have expired. This takes a while, so it is
         split up over the event loop"""
 
-        def do_vacuum_bans():
+        async def do_vacuum_bans():
             """do the actual clearing of bans"""
 
             bans_count = len(self.bans)
-            log.info("starting ban vacuum with {count} bans",
-                     count=bans_count)
-            start_time = time.time()
+            log.info("Starting ban vacuum with {count} bans", count = bans_count)
+            start_time = time.monotonic()
 
-            # create a copy of the items, so we don't have issues modifying
-            # while iteraing
-            for ban in list(self.bans.iteritems()):
+            # create a copy of the items, so we don't have issues modifying while iterating
+            bans = await asyncio.to_thread(list, self.bans.iteritems())
+
+            for ban in bans:
                 ban_exipry = ban[1][2]
                 if ban_exipry is None:
                     # entry never expires
@@ -744,15 +736,19 @@ class FeatureProtocol(ServerProtocol):
                 if ban[1][2] < start_time:
                     # expired
                     del self.bans[ban[0]]
-                yield
-            log.debug("ban vacuum took {time:.2f} seconds, removed {count} bans",
-                      count=bans_count - len(self.bans),
-                      time=time.time() - start_time)
+
+                yield ban
+
+            log.debug("Ban vacuum took {time:.2f} seconds, removed {count} bans",
+                      count = bans_count - len(self.bans),
+                      time = time.monotonic() - start_time)
             self.save_bans()
 
-        # TODO: use cooperate() here instead, once you figure out why it's
-        # swallowing errors. Perhaps try add an errback?
-        coiterate(do_vacuum_bans())
+        while True:
+            async for ban in do_vacuum_bans():
+                pass
+
+            await asyncio.sleep(delay)
 
     def undo_last_ban(self):
         result = self.bans.pop()
@@ -763,12 +759,12 @@ class FeatureProtocol(ServerProtocol):
         ban_file = os.path.join(config.config_dir, bans_file.get())
         ensure_dir_exists(ban_file)
 
-        start_time = reactor.seconds()
+        start_time = time.monotonic()
         with open(ban_file, 'w') as f:
             json.dump(self.bans.make_list(), f, indent=2)
-        log.debug("saving {count} bans took {time:.2f} seconds",
-                  count=len(self.bans),
-                  time=reactor.seconds() - start_time)
+        log.debug("Saving {count} bans took {time:.2f} seconds",
+                  count = len(self.bans),
+                  time = time.monotonic() - start_time)
 
         if self.ban_publish is not None:
             self.ban_publish.update()
@@ -816,7 +812,7 @@ class FeatureProtocol(ServerProtocol):
 
     def data_received(self, peer: Peer, packet: Packet) -> None:
         ip = peer.address.host
-        current_time = reactor.seconds()
+        current_time = time.monotonic()
         try:
             ServerProtocol.data_received(self, peer, packet)
         except (NoDataLeft, ValueError):
@@ -828,7 +824,7 @@ class FeatureProtocol(ServerProtocol):
             )
             self.hard_bans.add(ip)
             return
-        dt = reactor.seconds() - current_time
+        dt = time.monotonic() - current_time
         if dt > 1.0:
             log.warning('processing {data!r} from {ip} took {time}',
                         data=packet.data,
@@ -842,10 +838,12 @@ class FeatureProtocol(ServerProtocol):
             else:
                 self.irc_relay.send(msg, do_filter=True)
 
-    def send_tip(self):
-        line = self.tips[random.randrange(len(self.tips))]
-        self.broadcast_chat(line)
-        reactor.callLater(self.tip_frequency * 60, self.send_tip)
+    async def send_tip_loop(self, delay):
+        while True:
+            await asyncio.sleep(delay)
+
+            line = self.tips[random.randrange(len(self.tips))]
+            self.broadcast_chat(line)
 
     # pylint: disable=arguments-differ
     def broadcast_chat(self, value, global_message=True, sender=None,
@@ -869,14 +867,14 @@ class FeatureProtocol(ServerProtocol):
 
     def update_world(self):
         last_time = self.last_time
-        current_time = reactor.seconds()
+        current_time = time.monotonic()
         if last_time is not None:
             dt = current_time - last_time
             if dt > 1.0:
                 log.warning('high CPU usage detected - {dt}', dt=dt)
         self.last_time = current_time
         ServerProtocol.update_world(self)
-        time_taken = reactor.seconds() - current_time
+        time_taken = time.monotonic() - current_time
         if time_taken > 1.0:
             log.warning(
                 'World update iteration took {time}, objects: {objects!r}',
@@ -947,7 +945,7 @@ class FeatureProtocol(ServerProtocol):
     def get_advance_time(self) -> float:
         if not self.advance_call:
             return None
-        return self.advance_call.getTime() - self.advance_call.seconds()
+        return self.advance_call.when() - asyncio.get_running_loop().time()
 
 
 def run() -> None:

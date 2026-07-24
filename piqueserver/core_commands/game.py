@@ -1,6 +1,6 @@
+import asyncio
 import math
 import re
-from twisted.internet import reactor
 from piqueserver.config import cast_duration
 from pyspades.common import prettify_timespan
 from piqueserver.commands import (
@@ -17,7 +17,7 @@ def get_time_limit(connection):
     if advance_call is None:
         return 'No time limit set'
     left = int(
-        math.ceil((advance_call.getTime() - reactor.seconds()) / 60.0))
+        math.ceil((advance_call.when() - asyncio.get_running_loop().time()) / 60.0))
     return 'There are %s minutes left' % left
 
 

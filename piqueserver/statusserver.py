@@ -16,7 +16,6 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
-from twisted.internet.defer import Deferred
 import aiohttp
 from aiohttp import web
 from multidict import MultiDict
@@ -28,7 +27,6 @@ from PIL import Image
 from io import BytesIO
 from aiohttp.abc import AbstractAccessLogger
 from pyspades.logger import getLogger
-from piqueserver.utils import as_deferred
 
 from piqueserver.config import config, cast_duration
 
@@ -151,16 +149,14 @@ class StatusServer:
         ])
         return app
 
-    async def listen(self):
-        """Starts the status server on configured host/port"""
+    async def create(self):
+        """Set up the status server on configured host/port"""
         app = self.create_app()
         if logging_option.get():
             runner = web.AppRunner(app, access_log=getLogger(), access_log_class=AccessLogger)
         else:
             runner = web.AppRunner(app)
-        await as_deferred(runner.setup())
-        site = web.TCPSite(runner, host_option.get(), port_option.get())
-        await as_deferred(site.start())
 
-        # TODO: explain why we do this
-        await Deferred()
+        await runner.setup()
+
+        return web.TCPSite(runner, host_option.get(), port_option.get()).start()
