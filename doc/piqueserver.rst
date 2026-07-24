@@ -20,22 +20,6 @@ Subpackages
 Submodules
 ----------
 
-piqueserver\.banpublish module
-------------------------------
-
-.. automodule:: piqueserver.banpublish
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-piqueserver\.bansubscribe module
---------------------------------
-
-.. automodule:: piqueserver.bansubscribe
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 piqueserver\.commands module
 ----------------------------
 

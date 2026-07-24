@@ -130,22 +130,6 @@ This section defines the behaviour when admins ban players::
     # location the bans are saved and loaded from
     file = "bans.txt"
 
-    # Ban publish allows you to synchronize bans between servers. When enabled,
-    # the server listens on the given port and responds to any requests with a list
-    # of bans
-    publish = false
-    publish_port = 32885
-
-    # Bansubscribe allows you to inherit bans from another server with banpublish enabled.
-    # `url` is the URL returning the json list, `whitelist` is a list of names which should
-    # be exempt from the filter
-    bansubscribe = [
-        { url = "http://www.blacklist.spadille.net/subscribe.json", whitelist = []},
-    ]
-
-    # how often the subscribed servers are frequented to update bans
-    bansubscribe_interval = "5min"
-
 .. _respawn_waves:
 
 respawn_waves

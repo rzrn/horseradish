@@ -52,7 +52,6 @@ from piqueserver.player import FeatureConnection
 from piqueserver.release import check_for_releases, format_release
 from piqueserver.scheduler import Scheduler
 from piqueserver.utils import as_deferred, EndCall
-from piqueserver.bansubscribe import bans_config_urls
 from piqueserver.statusserver import StatusServer
 from pyspades.bytes import NoDataLeft
 from pyspades.constants import (CTF_MODE, ERROR_SHUTDOWN, TC_MODE,
@@ -143,8 +142,6 @@ ssh_enabled = config.section('ssh').option('enabled', False)
 irc_options = config.option('irc', {})
 status_server_enabled = config.section(
     'status_server').option('enabled', False)
-ban_publish = bans_config.option('publish', False)
-ban_publish_port = bans_config.option('publish_port', 32885)
 logging_rotate_daily = logging_config.option('rotate_daily', False)
 tip_frequency = config.option(
     'tips_frequency', default="5sec", cast=lambda x: cast_duration(x)/60)
@@ -204,8 +201,6 @@ class FeatureTeam(Team):
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
     bans = None
-    ban_publish = None
-    ban_manager = None
     everyone_is_admin = False
     player_memory = None
     irc_relay = None
@@ -368,13 +363,6 @@ class FeatureProtocol(ServerProtocol):
         if irc.get('enabled', False):
             from piqueserver.irc import IRCRelay
             self.irc_relay = IRCRelay(self, irc)
-        if ban_publish.get():
-            from piqueserver.banpublish import PublishServer
-            self.ban_publish = PublishServer(self, ban_publish_port.get())
-        if bans_config_urls.get():
-            from piqueserver import bansubscribe
-            self.ban_manager = bansubscribe.BanManager(self)
-            ensureDeferred(as_deferred(self.ban_manager.start()))
         self.start_time = time.time()
         self.end_calls = []
         # TODO: why is this here?
@@ -765,9 +753,6 @@ class FeatureProtocol(ServerProtocol):
         log.debug("Saving {count} bans took {time:.2f} seconds",
                   count = len(self.bans),
                   time = time.monotonic() - start_time)
-
-        if self.ban_publish is not None:
-            self.ban_publish.update()
 
     def receive_callback(self, address: Address, data: bytes) -> int:
         """This hook receives the raw UDP data before it is processed by enet"""

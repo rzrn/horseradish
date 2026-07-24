@@ -51,8 +51,7 @@ it's ``__init__`` method. This does the following:
 - Read configuration such as map rotation, team names, time limits, win
   conditions
 - Load the ban list
-- Import and initialize auxilliary functionality like SSH, status server,
-  banpublish/bansubscribe, command console.
+- Import and initialize auxilliary functionality like SSH, status server, command console.
 - Initialize user configuration
 - Resolve the filenames of the map rotation
 - Create the ``enet.Host`` object, listening on the socket.

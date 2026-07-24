@@ -21,14 +21,6 @@ This is for the webpage which displays info about the server.
 - Config variable: ``status_server.port``
 - Protocol: tcp
 
-Banpublish
-----------
-For making the banlist public.
-
-- Default: 32885
-- Config variable: ``banpublish.port``
-- Protocol: tcp
-
 SSH
 ---
 Some ssh server for remotely connecting to the server.

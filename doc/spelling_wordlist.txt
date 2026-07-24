@@ -157,7 +157,6 @@ src
 networkdict
 github
 vcvarsall
-banpublish
 putChild
 isLeaf
 postpath
@@ -165,7 +164,6 @@ isLeaf
 getChild
 IResource
 getChildWithDefault
-bansubscribe
 repr
 getdefaultencoding
 addr
