@@ -186,6 +186,11 @@ def random_choice_cycle(choices):
         yield from random.sample(choices, k = len(choices))
 
 
+def log_task_exception(task):
+    if exc := task.exception():
+        log.critical("Unhandled error in asyncio.Task", exc_info = exc)
+
+
 class FeatureTeam(Team):
     locked = False
 
@@ -388,7 +393,7 @@ class FeatureProtocol(ServerProtocol):
         if status_server_enabled.get():
             self.status_server = StatusServer(self)
             start_server = await self.status_server.create()
-            asyncio.create_task(start_server)
+            self.create_task(start_server)
 
         try:
             self.set_map_rotation(self.config['rotation'])
@@ -401,7 +406,7 @@ class FeatureProtocol(ServerProtocol):
 
         self.tip_frequency = tip_frequency.get()
         if self.tips and self.tip_frequency > 0:
-            asyncio.create_task(self.send_tip_loop(self.tip_frequency * 60))
+            self.create_task(self.send_tip_loop(self.tip_frequency * 60))
 
         self.master = register_master_option.get()
         self.set_master()
@@ -411,10 +416,10 @@ class FeatureProtocol(ServerProtocol):
 
         self.new_release = None
         if notify_new_releases.get():
-            asyncio.create_task(self.watch_for_releases())
+            self.create_task(self.watch_for_releases())
 
         # Run the vacuum every 6 hours, and kick it off it right now
-        self.vacuum_loop = asyncio.create_task(self.vacuum_bans(60 * 60 * 6))
+        self.vacuum_loop = self.create_task(self.vacuum_bans(60 * 60 * 6))
 
     async def print_identifiers(self, ip_getter: str):
         if ip_getter:
@@ -531,7 +536,7 @@ class FeatureProtocol(ServerProtocol):
 
             await self.set_map_name(planned_map)
 
-        return asyncio.create_task(do_advance())
+        return self.create_task(do_advance())
 
     def get_mode_name(self) -> str:
         return self.game_mode_name
@@ -906,7 +911,13 @@ class FeatureProtocol(ServerProtocol):
     def cancel_vote(self, connection=None):
         return 'No vote in progress.'
 
-    # useful twisted wrappers
+    # useful wrappers
+
+    def create_task(self, coro):
+        task = asyncio.create_task(coro)
+        task.add_done_callback(log_task_exception)
+
+        return task
 
     def listenTCP(self, *arg, **kw) -> Port:
         return reactor.listenTCP(
