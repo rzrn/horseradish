@@ -13,19 +13,33 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import string
 import inspect
 import logging
 
+formatter = string.Formatter()
+
+class FormatEvent:
+    def __init__(self, fmt, w, kw):
+        self.fmt    = str(fmt)
+        self.args   = w
+        self.kwargs = kw
+
+    def __str__(self):
+        return formatter.vformat(self.fmt, self.args, self.kwargs)
+
 class FormatLogger(logging.Logger):
-    def _log(self, level, msg, w, exc_info = None, extra = None, stack_info = False, stacklevel = 1, **kw):
-        if isinstance(msg, str):
-            strval = msg.format(*w, **kw)
-        else:
-            strval = str(msg)
+    def _log(self, level, msg, args, exc_info = None, extra = None, stack_info = False, stacklevel = 1, **kwargs):
+        if kwargs:
+            msg = FormatEvent(msg, args, kwargs)
+            args = ()
 
         super()._log(
-            level, strval, (),
-            exc_info = exc_info, extra = extra, stack_info = stack_info, stacklevel = stacklevel + 1
+            level, msg, args,
+            exc_info = exc_info,
+            extra = extra,
+            stack_info = stack_info,
+            stacklevel = stacklevel + 1
         )
 
 logging.setLoggerClass(FormatLogger)
