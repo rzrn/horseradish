@@ -291,19 +291,15 @@ ssh
 +++
 
 This section controls `SSH`_ "manhole" access to the server. This allows you
-access to a python shell. This is mainly useful for debugging. If you don't know
+access to a Python shell. This is mainly useful for debugging. If you don't know
 what you are doing, you should leave it disabled::
 
     [ssh]
     enabled = false
+    network_interface = "127.0.0.1"
     port = 32887
-
-    [ssh.users]
-    # user = password
-    # pairs for credentials allowed to login to the ssh server
-    # WARNING: keep these credentials secure since this gives console access to the server
-    # on which piqueserver is running!
-    user1 = "ssh_pass_change_this"
+    server_host_keys = "ssh_host_ed25519_key"
+    authorized_client_keys = "authorized_keys"
 
 .. _ssh: http://en.wikipedia.org/wiki/Secure_Shell
 

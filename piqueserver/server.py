@@ -138,7 +138,6 @@ rubberband_distance = config.option('rubberband_distance', default=10)
 user_blocks_only = config.option('user_blocks_only', False)
 logging_profile_option = logging_config.option('profile', False)
 set_god_build = config.option('set_god_build', False)
-ssh_enabled = config.section('ssh').option('enabled', False)
 irc_options = config.option('irc', {})
 status_server_enabled = config.section(
     'status_server').option('enabled', False)
@@ -146,6 +145,13 @@ logging_rotate_daily = logging_config.option('rotate_daily', False)
 tip_frequency = config.option(
     'tips_frequency', default="5sec", cast=lambda x: cast_duration(x)/60)
 register_master_option = config.option('master', False)
+
+ssh_config = config.section('ssh')
+ssh_enabled = ssh_config.option('enabled', False)
+ssh_network_interface = ssh_config.option("network_interface", "127.0.0.1")
+ssh_port = ssh_config.option("port", 38827)
+ssh_server_host_keys = ssh_config.option("server_host_keys", "ssh_host_ed25519_key")
+ssh_authorized_client_keys = ssh_config.option("authorized_client_keys", "authorized_keys")
 
 default_ip_getter = 'https://services.buildandshoot.com/getip'
 ip_getter_option = config.option('ip_getter', default_ip_getter)
@@ -214,7 +220,6 @@ class FeatureProtocol(ServerProtocol):
     building = True
     killing = True
     global_chat = True
-    remote_console = None
     advance_call = None
     master: bool = False
     master_hosts = []
@@ -361,9 +366,6 @@ class FeatureProtocol(ServerProtocol):
         if user_blocks_only.get():
             self.user_blocks = set()
         self.set_god_build = set_god_build.get()
-        if ssh_enabled.get():
-            from piqueserver.ssh import RemoteConsole
-            self.remote_console = RemoteConsole(self)
         irc = irc_options.get()
         if irc.get('enabled', False):
             from piqueserver.irc import IRCRelay
@@ -390,6 +392,18 @@ class FeatureProtocol(ServerProtocol):
             'before', 'shutdown', lambda: ensureDeferred(as_deferred(self.shutdown())))
 
     async def on_event_loop_start(self):
+        if ssh_enabled.get():
+            from piqueserver.ssh import create_remote_console
+            try:
+                await create_remote_console(
+                    ssh_network_interface.get(), ssh_port.get(),
+                    server_host_keys = ssh_server_host_keys.get(),
+                    authorized_client_keys = ssh_authorized_client_keys.get(),
+                    locals = dict(protocol = self)
+                )
+            except:
+                log.exception("The SSH server launch failed.")
+
         if status_server_enabled.get():
             self.status_server = StatusServer(self)
             start_server = await self.status_server.create()

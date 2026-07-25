@@ -135,7 +135,7 @@ from = [
 
 # ssh script
 ssh = [
-    "Twisted[tls,conch]",
+    "asyncssh",
 ]
 
 # development dependencies
@@ -149,7 +149,7 @@ dev = [
     "Sphinx",
     "tox",
     "sphinx_rtd_theme",
-    "Twisted[tls,conch]",
+    "asyncssh",
 ]
 
 [project.urls]

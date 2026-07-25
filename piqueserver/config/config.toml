@@ -280,18 +280,12 @@ chatprefix = "."
 
 
 [ssh]
-# enable the ssh manhole server
-# gives ssh access to a python repl connected to the running server
+# Enable the ssh manhole server
+# Gives ssh access to a Python REPL connected to the running server
 # Do not enable unless you are sure you want to use this!
 #enabled = false
+#network_interface = "127.0.0.1"
 #port = 32887
-
-[ssh.users]
-# user = password
-# pairs for credentials allowed to login to the ssh server
-# WARNING: keep these credentials secure since this gives console access to the server
-# on which piqueserver is running!
-#user1 = "ssh_pass_change_this"
 
 
 ###############################################################################
