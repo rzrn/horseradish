@@ -24,7 +24,8 @@ from dataclasses import dataclass
 import socket
 from typing import TYPE_CHECKING, Any, Callable, List, TypedDict
 
-from twisted.internet import reactor
+import asyncio
+
 from pyspades.loaders import Loader
 from pyspades.protocol import BaseConnection
 from pyspades.constants import MASTER_VERSION
@@ -122,7 +123,9 @@ class MasterPool:
     ) -> None:
         self.descriptors: List[MasterHostDescriptor] = []
         self.clients: List[MasterConnection] = []
+
         self.protocol = protocol
+        self.reconnect_interval = reconnect_interval
 
     def add_descriptor(self, host: str, port: int):
         descriptor = MasterHostDescriptor(host=host, port=port)
@@ -181,22 +184,23 @@ class MasterPool:
         reason: str,
     ):
         if client is not None and client.was_once_connected:
-            message = 'Disconnected from [{host}:{port}] ({reason}), reconnecting in 60s'
+            message = 'Disconnected from [{host}:{port}] ({reason}), reconnecting in {delay} s'
         else:
             # connection failure instead of disconnect
-            message = 'Connection to [{host}:{port}] failed ({reason}), retrying in 60s'
+            message = 'Connection to [{host}:{port}] failed ({reason}), retrying in {delay} s'
 
         log.info(
             message,
             host=descriptor.host,
             port=descriptor.port,
             reason=reason,
+            delay=self.reconnect_interval
         )
 
         if client is not None:
             self.remove_client(client)
 
-        reactor.callLater(5, lambda: self.add_client(descriptor))
+        asyncio.get_running_loop().call_later(self.reconnect_interval, self.add_client, descriptor)
 
     def update_server(self):
         for client in self.clients:
