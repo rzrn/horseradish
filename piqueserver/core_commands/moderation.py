@@ -1,5 +1,8 @@
 from random import choice
-from twisted.internet import reactor
+
+import asyncio
+import functools
+
 # aparently, we need to send packets in this file. For now, I give in.
 from pyspades.contained import (
     CreatePlayer, SetTool, KillAction, InputData, SetColor, WeaponInput)
@@ -252,8 +255,13 @@ def invisible(connection, player):
         kill_action = KillAction()
         kill_action.kill_type = choice([GRENADE_KILL, FALL_KILL])
         kill_action.player_id = kill_action.killer_id = player.player_id
-        reactor.callLater(1.0 / NETWORK_FPS, protocol.broadcast_contained,
-                          kill_action, sender=player)
+
+        # TODO: remove this horrible hack by injecting this somehow after the next WorldUpdate packet
+        asyncio.get_running_loop().call_later(
+            1.0 / NETWORK_FPS, functools.partial(
+                protocol.broadcast_contained, kill_action, sender = player
+            )
+        )
     else:
         player.send_chat("You return to visibility")
         protocol.irc_say('* %s became visible' % player.name)
