@@ -1,7 +1,6 @@
 import asyncio
 from asyncio import Future
-from twisted.internet.defer import ensureDeferred, Deferred
-from twisted.internet import reactor
+from twisted.internet.defer import Deferred
 from typing import Awaitable, Optional, Callable
 
 
@@ -13,6 +12,7 @@ def as_deferred(f: Awaitable) -> Deferred:
     return Deferred.fromFuture(asyncio.ensure_future(f))
 
 
+# TODO: this looks ugly and probably is not really needed
 class EndCall:
     """a call that can be rescheduled while in the future"""
     def __init__(self, protocol, delay: int, func: Callable, *arg, **kw) -> None:
@@ -27,31 +27,30 @@ class EndCall:
 
     def set(self, value: Optional[float]) -> None:
         if value is None:
-            if self.call is not None:
-                self.call.cancel()
+            if call := self.call:
                 self.call = None
-        elif value is not None:
+                call.cancel()
+        else:
             value = value - self.delay
+
             if value <= 0.0:
                 self.cancel()
-            elif self.call:
-                # In Twisted==18.9.0, reset() is broken when using
-                # AsyncIOReactor
-                # self.call.reset(value)
-                self.call.cancel()
-                self.call = reactor.callLater(value, self.fire)
             else:
-                self.call = reactor.callLater(value, self.fire)
+                if call := self.call:
+                    call.cancel()
+
+                self.call = asyncio.get_running_loop().call_later(value, self.fire)
 
     def fire(self):
         self.call = None
-        self.cancel()
+        self.cancel() # TODO: do we need this?
         self.func(*self.arg, **self.kw)
 
     def cancel(self) -> None:
-        self.set(None)
-        self.protocol.end_calls.remove(self)
-        self._active = False
+        if self._active:
+            self.set(None)
+            self.protocol.end_calls.remove(self)
+            self._active = False
 
     def active(self) -> bool:
-        return self._active and (self.call and self.call.active())
+        return self._active and self.call is not None and self.call.cancelled() is False

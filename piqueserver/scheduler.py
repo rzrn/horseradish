@@ -15,40 +15,43 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+import asyncio
+import functools
 from weakref import WeakSet
-from twisted.internet import reactor
-from twisted.internet.task import LoopingCall
 
+async def looping_call(delay, func, w, kw):
+    while True:
+        await asyncio.sleep(delay)
+        func(*w, **kw)
 
 class Scheduler:
-
     def __init__(self, protocol):
         self.protocol = protocol
         self.calls = WeakSet()
         self.loops = WeakSet()
 
-    def call_later(self, *arg, **kw):
-        call = reactor.callLater(*arg, **kw)
+    def call_later(self, delay, func, *w, **kw):
+        part = functools.partial(func, *w, **kw)
+        call = asyncio.get_running_loop().call_later(delay, part)
         self.calls.add(call)
         return call
 
-    def call_end(self, *arg, **kw):
-        call = self.protocol.call_end(*arg, **kw)
+    def call_end(self, *w, **kw):
+        call = self.protocol.call_end(*w, **kw)
         self.calls.add(call)
         return call
 
-    def loop_call(self, delay, func, *arg, **kw):
-        loop = LoopingCall(func, *arg, **kw)
-        loop.start(delay, False)
+    def loop_call(self, delay, func, *w, **kw):
+        loop = asyncio.create_task(looping_call(delay, func, w, kw))
         self.loops.add(loop)
         return loop
 
     def reset(self):
         for call in self.calls:
-            if call.active():
-                call.cancel()
+            call.cancel()
+
         for loop in self.loops:
-            if loop.running:
-                loop.stop()
+            loop.cancel()
+
         self.calls = WeakSet()
         self.loops = WeakSet()
