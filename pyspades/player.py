@@ -8,7 +8,9 @@ from itertools import product
 from typing import Dict, Optional, Sequence, Tuple, Union
 
 import pyspades.enet as enet
-from twisted.internet import reactor
+
+from time import monotonic
+import asyncio
 
 from pyspades import contained as loaders
 from pyspades import world
@@ -239,7 +241,7 @@ class ServerConnection(BaseConnection):
     def on_position_update_recieved(self, contained: loaders.PositionData) -> None:
         if not self.hp:
             return
-        current_time = reactor.seconds()
+        current_time = monotonic()
         last_update = self.last_position_update
         self.last_position_update = current_time
         if last_update is not None:
@@ -517,7 +519,7 @@ class ServerConnection(BaseConnection):
             interval = WEAPON_INTERVAL[self.weapon]
         else:
             interval = TOOL_INTERVAL[self.tool]
-        current_time = reactor.seconds()
+        current_time = monotonic()
         last_time = self.last_block
         self.last_block = current_time
         if (self.rapid_hack_detect and last_time is not None and
@@ -563,7 +565,7 @@ class ServerConnection(BaseConnection):
                     if count:
                         self.total_blocks_removed += count
                         self.on_block_removed(*xyz)
-            self.last_block_destroy = reactor.seconds()
+            self.last_block_destroy = monotonic()
         block_action = loaders.BlockAction()
         block_action.x = x
         block_action.y = y
@@ -580,7 +582,7 @@ class ServerConnection(BaseConnection):
         if self.line_build_start_pos is None:
             return
 
-        current_time = reactor.seconds()
+        current_time = monotonic()
         last_time = self.last_block
         self.last_block = current_time
         if (self.rapid_hack_detect and last_time is not None and
@@ -775,8 +777,8 @@ class ServerConnection(BaseConnection):
     def check_refill(self):
         last_refill = self.last_refill
         if (last_refill is None or
-                reactor.seconds() - last_refill > self.protocol.refill_interval):
-            self.last_refill = reactor.seconds()
+                monotonic() - last_refill > self.protocol.refill_interval):
+            self.last_refill = monotonic()
             if self.on_refill() != False:
                 self.refill()
 
@@ -838,8 +840,9 @@ class ServerConnection(BaseConnection):
 
     def respawn(self) -> None:
         if self.spawn_call is None:
-            self.spawn_call = reactor.callLater(
-                self.get_respawn_time(), self.spawn)
+            self.spawn_call = asyncio.get_running_loop().call_later(
+                self.get_respawn_time(), self.spawn
+            )
 
     def get_spawn_location(self) -> Tuple[int, int, int]:
         game_mode = self.protocol.game_mode
@@ -855,7 +858,7 @@ class ServerConnection(BaseConnection):
         if not self.respawn_time:
             return 0
         if self.protocol.respawn_waves:
-            offset = reactor.seconds() % self.respawn_time
+            offset = monotonic() % self.respawn_time
         else:
             offset = 0
         return self.respawn_time - offset
@@ -1018,7 +1021,7 @@ class ServerConnection(BaseConnection):
                         return
                     hit_time = self.protocol.friendly_fire_time
                     if (self.last_block_destroy is None
-                            or reactor.seconds() - self.last_block_destroy >= hit_time):
+                            or monotonic() - self.last_block_destroy >= hit_time):
                         return
                 else:
                     return

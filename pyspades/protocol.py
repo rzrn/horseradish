@@ -16,7 +16,6 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
-from twisted.internet import reactor
 from pyspades.bytes import ByteWriter
 
 import pyspades.enet as enet
@@ -102,8 +101,7 @@ class BaseProtocol:
         peer = self.host.connect(enet.Address(host, port), channel_count,
                                  version)
         connection = connection_class(self, peer)
-        connection.timeout_call = reactor.callLater(timeout,
-                                                    connection.timed_out)
+        connection.timeout_call = asyncio.get_running_loop().call_later(timeout, connection.timed_out)
         self.clients[peer] = connection
         return connection
 

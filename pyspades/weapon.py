@@ -1,6 +1,8 @@
 import math
+from time import monotonic
 from typing import Callable, Dict
-from twisted.internet import reactor
+
+import asyncio
 from pyspades.constants import (RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON,
                                 HEAD, TORSO, ARMS, LEGS, CLIP_TOLERANCE)
 
@@ -45,7 +47,7 @@ class BaseWeapon:
     def set_shoot(self, value: bool) -> None:
         if value == self.shoot:
             return
-        current_time = reactor.seconds()
+        current_time = monotonic()
         if value:
             self.start = current_time
             if self.current_ammo <= 0:
@@ -74,7 +76,7 @@ class BaseWeapon:
         self.reloading = True
         self.set_shoot(False)
         self.current_ammo = ammo
-        self.reload_call = reactor.callLater(self.reload_time, self.on_reload)
+        self.reload_call = asyncio.get_running_loop().call_later(self.reload_time, self.on_reload)
 
     def on_reload(self) -> None:
         self.reloading = False
@@ -92,7 +94,7 @@ class BaseWeapon:
 
     def get_ammo(self, no_max: bool = False) -> int:
         if self.shoot:
-            dt = reactor.seconds() - self.shoot_time
+            dt = monotonic() - self.shoot_time
             ammo = self.current_ammo - max(0, int(
                 math.ceil(dt / self.delay)))
         else:

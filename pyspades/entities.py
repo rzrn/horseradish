@@ -1,8 +1,10 @@
+from time import monotonic
+
 from pyspades.constants import NEUTRAL_TEAM, TC_CAPTURE_RATE, SPAWN_RADIUS
 from pyspades.common import Vertex3
 from pyspades import contained as loaders
 
-from twisted.internet import reactor
+import asyncio
 
 move_object = loaders.MoveObject()
 progress_bar = loaders.ProgressBar()
@@ -79,7 +81,7 @@ class Territory(Flag):
             self.finish_call.cancel()
             self.finish_call = None
         if rate != 0:
-            self.start = reactor.seconds()
+            self.start = monotonic()
             rate_value = self.rate_value
             if rate_value < 0:
                 self.capturing_team = self.protocol.blue_team
@@ -88,7 +90,7 @@ class Territory(Flag):
                 self.capturing_team = self.protocol.green_team
                 end_time = (1.0 - progress) / rate_value
             if self.capturing_team is not self.team:
-                self.finish_call = reactor.callLater(end_time, self.finish)
+                self.finish_call = asyncio.get_running_loop().call_later(end_time, self.finish)
         self.send_progress()
 
     def send_progress(self):
@@ -142,7 +144,7 @@ class Territory(Flag):
         rate = self.rate_value
         if rate == 0.0 or self.start is None:
             return self.progress
-        dt = reactor.seconds() - self.start
+        dt = monotonic() - self.start
         progress = max(0, min(1, self.progress + rate * dt))
         if set:
             self.progress = progress
