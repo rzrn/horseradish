@@ -2,7 +2,7 @@ import re
 import time
 from typing import List, Tuple, Optional, Union
 
-from twisted.internet import reactor
+import asyncio
 
 from piqueserver import commands
 from piqueserver.release import format_release
@@ -59,7 +59,7 @@ class FeatureConnection(ServerConnection):
         if client_ip in self.protocol.bans:
             name, reason, timestamp = self.protocol.bans[client_ip]
 
-            if timestamp is not None and reactor.seconds() >= timestamp:
+            if timestamp is not None and time.time() >= timestamp:
                 protocol.remove_ban(client_ip)
                 protocol.save_bans()
             else:
@@ -252,7 +252,7 @@ class FeatureConnection(ServerConnection):
                     self.send_chat('Switching teams is not allowed')
                     return False
                 if (self.last_switch is not None and
-                        reactor.seconds() - self.last_switch < teamswitch_interval):
+                        time.monotonic() - self.last_switch < teamswitch_interval):
                     self.send_chat(
                         'You must wait before switching teams again')
                     return False
@@ -269,7 +269,7 @@ class FeatureConnection(ServerConnection):
                     return False
                 self.send_chat('Team is full, moved to %s' % other_team.name)
                 return other_team
-        self.last_switch = reactor.seconds()
+        self.last_switch = time.monotonic()
 
     def on_chat(self, value: str, global_message: bool) -> Union[str, bool]:
         """
@@ -293,7 +293,7 @@ class FeatureConnection(ServerConnection):
                 return False
 
         # antispam:
-        current_time = reactor.seconds()
+        current_time = time.monotonic()
         self.chat_limiter.record_event(current_time)
         if self.chat_limiter.above_limit():
             self.mute = True
@@ -336,7 +336,15 @@ class FeatureConnection(ServerConnection):
                 self.protocol.add_ban(self.address[0], reason, duration,
                                       self.name)
 
-    def send_lines(self, lines: List[str], key: str = 'unknown') -> None:
+    async def async_send_lines(self, lines : List[str], key : str, delay : float = 1.0):
+        for line in lines:
+            self.send_chat(line)
+            await asyncio.sleep(delay)
+
+        if key != 'unknown':
+            self.current_send_lines_types.remove(key)
+
+    def send_lines(self, lines : List[str], key : str = 'unknown') -> None:
         """
         Send a list of lines to the player.
 
@@ -364,15 +372,7 @@ class FeatureConnection(ServerConnection):
 
             self.current_send_lines_types.append(key)
 
-        current_time = 0
-        for line in lines:
-            reactor.callLater(current_time, self.send_chat, line)
-            current_time += 2
-
-        reactor.callLater(current_time, self._completed_send_lines, key)
-
-    def _completed_send_lines(self, type: str) -> None:
-        self.current_send_lines_types.remove(type)
+        asyncio.create_task(self.async_send_lines(lines, key))
 
     def on_hack_attempt(self, reason):
         log.warning('Hack attempt detected from {name}: {reason}',
