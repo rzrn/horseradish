@@ -40,12 +40,15 @@ there is one spawn location for blue and two spawn locations for green::
 .. codeauthor:: Yourself
 """
 
+import functools
 import random
 import math
 from pyspades.contained import BlockAction, SetColor, BlockLine
 from pyspades import world
 from pyspades.constants import DESTROY_BLOCK, TEAM_CHANGE_KILL, CTF_MODE
-from twisted.internet import reactor
+
+import asyncio
+
 from piqueserver.commands import command, admin
 
 # If ALWAYS_ENABLED is False, then the 'arena' key must be set to True in
@@ -257,6 +260,40 @@ class Gate:
         return False
 
 
+class DelayableTask:
+    def __init__(self, delay, func, *args, **kwargs):
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+
+        self.loop = asyncio.get_running_loop()
+        self.defer = self.loop.call_later(delay, self.execute)
+
+    def execute(self):
+        self.func(*self.args, **self.kwargs)
+        self.defer = None
+
+    def delay(self, amount):
+        if defer := self.defer:
+            rem = defer.when() - self.loop.time()
+
+            self.defer = None
+            defer.cancel()
+
+            if defer.cancelled():
+                pass
+            elif rem > 0:
+                self.defer = self.loop.call_later(
+                    rem + amount, self.execute
+                )
+
+    def cancel(self):
+        if defer := self.defer:
+            defer.cancel()
+
+        self.defer = None
+
+
 def apply_script(protocol, connection, config):
     class ArenaConnection(connection):
         get_coord = False
@@ -389,7 +426,7 @@ def apply_script(protocol, connection, config):
             if self.arena_old_fog_color is None and TEAM_COLOR_TIME > 0:
                 self.arena_old_fog_color = self.fog_color
                 self.set_fog_color(team.color)
-                reactor.callLater(TEAM_COLOR_TIME, self.arena_reset_fog_color)
+                asyncio.get_running_loop().call_later(TEAM_COLOR_TIME, self.arena_reset_fog_color)
             if killer is None or killer.team is not team:
                 for player in team.get_players():
                     if player.world_object is not None and not player.world_object.dead:
@@ -509,10 +546,9 @@ def apply_script(protocol, connection, config):
                 player.refill()
 
         def begin_arena_countdown(self):
-            if self.arena_limit_timer is not None:
-                if self.arena_limit_timer.cancelled == 0 and self.arena_limit_timer.called == 0:
-                    self.arena_limit_timer.cancel()
-                    self.arena_limit_timer = None
+            if defer := self.arena_limit_timer:
+                defer.cancel()
+            self.arena_limit_timer = None
             if self.arena_counting_down:
                 return
             self.arena_running = False
@@ -524,17 +560,17 @@ def apply_script(protocol, connection, config):
             self.arena_spawn()
             self.broadcast_chat('The round will begin in %i seconds.' %
                                 SPAWN_ZONE_TIME)
+
             self.arena_countdown_timers = [
-                reactor.callLater(SPAWN_ZONE_TIME, self.begin_arena)]
+                DelayableTask(SPAWN_ZONE_TIME, self.begin_arena)]
             for time in range(1, 6):
-                self.arena_countdown_timers.append(reactor.callLater(
+                self.arena_countdown_timers.append(DelayableTask(
                     SPAWN_ZONE_TIME - time, self.broadcast_chat, str(time)))
 
         def delay_arena_countdown(self, amount):
             if self.arena_counting_down:
                 for timer in self.arena_countdown_timers:
-                    if timer.cancelled == 0 and timer.called == 0:
-                        timer.delay(amount)
+                    timer.delay(amount)
 
         def begin_arena(self):
             self.arena_counting_down = False
@@ -555,8 +591,9 @@ def apply_script(protocol, connection, config):
                 self.broadcast_chat(
                     'There is a time limit of %s for this round.' %
                     MAX_ROUND_TIME_TEXT)
-                self.arena_limit_timer = reactor.callLater(
-                    MAX_ROUND_TIME, self.arena_time_limit)
+                self.arena_limit_timer = asyncio.get_running_loop().call_later(
+                    MAX_ROUND_TIME, self.arena_time_limit
+                )
 
         def on_base_spawn(self, x, y, z, base, entity_id):
             if not self.arena_enabled:

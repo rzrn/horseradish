@@ -82,7 +82,8 @@ from pyspades.common import make_color
 from pyspades.contained import SetColor
 from piqueserver.commands import command, admin, get_team
 from piqueserver.config import config, cast_duration
-from twisted.internet.task import LoopingCall
+
+import asyncio
 from random import randint
 import colorsys
 import time
@@ -377,6 +378,7 @@ def apply_script(protocol, connection, config):
         spawn_range = 0
         cp_protect_range = 0
         check_loop = None
+        check_loop_interval = 3
         reset_intel_blue_timer = 0
         reset_intel_green_timer = 0
 
@@ -397,7 +399,7 @@ def apply_script(protocol, connection, config):
                     return 0
                 elif team.flag.player is None:
                     timer_val += 1
-                    if timer_val >= RESET_INTEL_AFTER_DROP.get() / self.check_loop.interval:
+                    if timer_val >= RESET_INTEL_AFTER_DROP.get() / self.check_loop_interval:
                         reset_intel_position(self, team)
                         return 0
                     return timer_val
@@ -405,11 +407,13 @@ def apply_script(protocol, connection, config):
                     return 0
             return timer_val
 
-        def check_intel_locations(self):
-            self.reset_intel_blue_timer = self.check_intel_location(
-                self.blue_team, self.reset_intel_blue_timer)
-            self.reset_intel_green_timer = self.check_intel_location(
-                self.green_team, self.reset_intel_green_timer)
+        async def check_intel_locations(self):
+            while True:
+                await asyncio.sleep(self.check_loop_interval)
+                self.reset_intel_blue_timer = self.check_intel_location(
+                    self.blue_team, self.reset_intel_blue_timer)
+                self.reset_intel_green_timer = self.check_intel_location(
+                    self.green_team, self.reset_intel_green_timer)
 
         def on_map_change(self, map):
             extensions = self.map_info.extensions
@@ -438,12 +442,11 @@ def apply_script(protocol, connection, config):
             self.map_info.get_entity_location = get_entity_location
             self.map_info.get_spawn_location = get_spawn_location
 
-            if self.check_loop is not None:
-                self.check_loop.stop()
             self.reset_intel_blue_timer = 0
             self.reset_intel_green_timer = 0
-            self.check_loop = LoopingCall(self.check_intel_locations)
-            self.check_loop.start(3, now=False)
+            if defer := self.check_loop:
+                defer.cancel()
+            self.check_loop = self.create_task(self.check_intel_locations())
 
             return protocol.on_map_change(self, map)
 

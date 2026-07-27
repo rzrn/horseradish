@@ -25,8 +25,8 @@ Options
 Originally created by: TheGrandmaster / hompy
 """
 
-from twisted.internet.reactor import callLater
-from twisted.internet.task import LoopingCall
+import asyncio
+
 from pyspades import contained as loaders
 from pyspades.constants import *
 
@@ -163,8 +163,9 @@ def apply_script(protocol, connection, config):
                     self.protocol.attacker_dummy_calls = []
                 for i in range(score_multiplier - 1):
                     delay = i * 0.1
-                    dummy_call = callLater(delay,
-                                           self.protocol.attacker_dummy_score)
+                    dummy_call = asyncio.get_running_loop().call_later(
+                        delay, self.protocol.attacker_dummy_score
+                    )
                     self.protocol.attacker_dummy_calls.append(dummy_call)
             self.protocol.cancel_defender_return_call()
             self.protocol.start_defender_score_loop()
@@ -175,8 +176,9 @@ def apply_script(protocol, connection, config):
                 return False
             if ON_FLAG_TAKE_FLASHES_FOG:
                 self.protocol.fog_flash(self.team.color)
-            if self.protocol.defender_score_loop.running:
-                self.protocol.defender_score_loop.stop()
+            if defer := self.protocol.defender_score_loop:
+                defer.cancel()
+            self.protocol.defender_score_loop = None
             return connection.on_flag_take(self)
 
         def on_flag_drop(self):
@@ -196,13 +198,12 @@ def apply_script(protocol, connection, config):
         def on_map_change(self, map):
             self.attacker = self.teams[ATTACKER_TEAM]
             self.defender = self.attacker.other
-            self.defender_score_loop = LoopingCall(self.defender_score_cycle)
             self.start_defender_score_loop()
             protocol.on_map_change(self, map)
 
         def on_map_leave(self):
-            if self.defender_score_loop and self.defender_score_loop.running:
-                self.defender_score_loop.stop()
+            if defer := self.defender_score_loop:
+                defer.cancel()
             self.defender_score_loop = None
             self.end_attacker_dummy_calls()
             protocol.on_map_leave(self)
@@ -218,14 +219,17 @@ def apply_script(protocol, connection, config):
             return protocol.on_flag_spawn(self, x, y, z, flag, entity_id)
 
         def start_defender_score_loop(self):
-            if self.defender_score_loop.running:
-                self.defender_score_loop.stop()
-            score_interval = DEFENDER_SCORE_INTERVAL_OPTION.get()
-            self.defender_score_loop.start(score_interval, now=False)
+            if defer := self.defender_score_loop:
+                defer.cancel()
+            self.defender_score_loop = self.create_task(self.defender_score_cycle())
 
-        def defender_score_cycle(self):
-            dummy = DummyPlayer(self, self.defender)
-            dummy.score()
+        async def defender_score_cycle(self):
+            score_interval = DEFENDER_SCORE_INTERVAL_OPTION.get()
+
+            while True:
+                await asyncio.sleep(score_interval)
+                dummy = DummyPlayer(self, self.defender)
+                dummy.score()
 
         def attacker_dummy_score(self):
             self.attacker_dummy.score()
@@ -239,8 +243,7 @@ def apply_script(protocol, connection, config):
         def end_attacker_dummy_calls(self):
             if self.attacker_dummy_calls:
                 for dummy_call in self.attacker_dummy_calls:
-                    if dummy_call and dummy_call.active():
-                        dummy_call.cancel()
+                    dummy_call.cancel()
             self.attacker_dummy_calls = None
             self.attacker_dummy = None
 
@@ -252,6 +255,6 @@ def apply_script(protocol, connection, config):
         def fog_flash(self, color):
             old_color = self.get_fog_color()
             self.set_fog_color(color)
-            callLater(0.2, self.set_fog_color, old_color)
+            asyncio.get_running_loop().call_later(0.2, self.set_fog_color, old_color)
 
     return InfiltrationProtocol, InfiltrationConnection
