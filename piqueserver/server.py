@@ -193,7 +193,9 @@ def random_choice_cycle(choices):
 
 
 def log_task_exception(task):
-    if exc := task.exception():
+    if task.cancelled():
+        pass
+    elif exc := task.exception():
         log.critical("Unhandled error in asyncio.Task", exc_info = exc)
 
 
