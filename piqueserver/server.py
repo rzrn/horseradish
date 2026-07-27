@@ -138,7 +138,6 @@ rubberband_distance = config.option('rubberband_distance', default=10)
 user_blocks_only = config.option('user_blocks_only', False)
 logging_profile_option = logging_config.option('profile', False)
 set_god_build = config.option('set_god_build', False)
-irc_options = config.option('irc', {})
 status_server_enabled = config.section(
     'status_server').option('enabled', False)
 logging_rotate_daily = logging_config.option('rotate_daily', False)
@@ -216,7 +215,6 @@ class FeatureProtocol(ServerProtocol):
     bans = None
     everyone_is_admin = False
     player_memory = None
-    irc_relay = None
     balanced_teams = None
     timestamps = None
     building = True
@@ -368,10 +366,6 @@ class FeatureProtocol(ServerProtocol):
         if user_blocks_only.get():
             self.user_blocks = set()
         self.set_god_build = set_god_build.get()
-        irc = irc_options.get()
-        if irc.get('enabled', False):
-            from piqueserver.irc import IRCRelay
-            self.irc_relay = IRCRelay(self, irc)
         self.start_time = time.time()
         self.end_calls = []
         # TODO: why is this here?
@@ -544,7 +538,7 @@ class FeatureProtocol(ServerProtocol):
                          name=planned_map.full_name, reason=message)
                 self.broadcast_chat(
                     '{} Next map: {}.'.format(message, planned_map.full_name),
-                    irc=True)
+                )
                 await asyncio.sleep(10)
             else:
                 log.info("advancing to map '{name}'",
@@ -837,13 +831,6 @@ class FeatureProtocol(ServerProtocol):
                         ip=ip,
                         time=dt)
 
-    def irc_say(self, msg: str, me: bool = False) -> None:
-        if self.irc_relay:
-            if me:
-                self.irc_relay.me(msg, do_filter=True)
-            else:
-                self.irc_relay.send(msg, do_filter=True)
-
     async def send_tip_loop(self, delay):
         while True:
             await asyncio.sleep(delay)
@@ -852,13 +839,10 @@ class FeatureProtocol(ServerProtocol):
             self.broadcast_chat(line)
 
     # pylint: disable=arguments-differ
-    def broadcast_chat(self, value, global_message=True, sender=None,
-                       team=None, irc=False):
+    def broadcast_chat(self, value, global_message=True, sender=None, team=None):
         """
         Send a chat message to many users
         """
-        if irc:
-            self.irc_say('* %s' % value)
         ServerProtocol.broadcast_chat(
             self, value, global_message, sender, team)
 
@@ -909,7 +893,7 @@ class FeatureProtocol(ServerProtocol):
 
     def on_game_end(self):
         if self.advance_on_win <= 0:
-            self.irc_say('Round ended!', me=True)
+            pass
         elif next(self.win_count) % self.advance_on_win == 0:
             self.advance_rotation('Game finished!')
 

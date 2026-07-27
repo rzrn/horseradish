@@ -38,7 +38,7 @@ def change_planned_map(connection, *pre_maps):
     try:
         protocol.planned_map = check_rotation([planned_map])[0]
         protocol.broadcast_chat('%s changed next map to %s' %
-                                (name, planned_map), irc=True)
+                                (name, planned_map))
     except MapNotFound:
         return 'Map %s not found' % (maps[0])
 
@@ -61,7 +61,7 @@ def change_rotation(connection, *pre_maps):
     except MapNotFound as e:
         return 'Invalid map in map rotation (%s)' % e.map
     protocol.broadcast_chat("%s changed map rotation to %s." %
-                            (name, map_list), irc=True)
+                            (name, map_list))
 
 
 @command('rotationadd', admin_only=True)
@@ -85,7 +85,7 @@ def rotation_add(connection, *pre_maps):
     except MapNotFound as e:
         return 'Invalid map in map rotation (%s)' % e.map
     protocol.broadcast_chat("%s added %s to map rotation." %
-                            (name, " ".join(pre_maps)), irc=True)
+                            (name, " ".join(pre_maps)))
 
 
 @command('revertrotation', admin_only=True)
@@ -100,7 +100,6 @@ def revert_rotation(connection):
     protocol.set_map_rotation(maps)
 
     map_text = ', '.join(maps)
-    protocol.irc_say(f'* {name} reverted map rotation to {map_text}')
     return f'You reverted the map rotation to {map_text}'
 
 

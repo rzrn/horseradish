@@ -24,7 +24,6 @@ EXTENDED_RATIO = False
 
 # "ratio" must be AFTER "votekick" in the config.txt script list
 RATIO_ON_VOTEKICK = True
-IRC_ONLY = False
 
 
 @command()
@@ -82,10 +81,7 @@ def apply_script(protocol, connection, config):
                 self, instigator, victim, reason)
             if result is None and RATIO_ON_VOTEKICK:
                 message = ratio(instigator, "#%i" % victim.player_id)
-                if IRC_ONLY:
-                    self.irc_say('* ' + message)
-                else:
-                    self.broadcast_chat(message, irc=True)
+                self.broadcast_chat(message)
             return result
 
     return RatioProtocol, RatioConnection

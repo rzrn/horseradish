@@ -50,7 +50,7 @@ def running_man(connection):
     if not protocol.running_man:
         protocol.drop_all_links()
     message = S_ENABLED if protocol.running_man else S_DISABLED
-    protocol.broadcast_chat(message, irc=True)
+    protocol.broadcast_chat(message)
 
 
 @command(admin_only=True)
@@ -58,7 +58,7 @@ def relink(connection):
     if not connection.protocol.running_man:
         return S_NOT_ENABLED
     connection.protocol.drop_all_links()
-    connection.protocol.broadcast_chat(S_UNLINK_ALL, irc=True)
+    connection.protocol.broadcast_chat(S_UNLINK_ALL)
 
 
 @command(admin_only=True)

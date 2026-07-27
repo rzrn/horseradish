@@ -19,7 +19,7 @@ def protect(connection, value=None):
     protocol = connection.protocol
     if value is None:
         protocol.protected = None
-        protocol.broadcast_chat('All areas unprotected', irc=True)
+        protocol.broadcast_chat('All areas unprotected')
     else:
         if protocol.protected is None:
             protocol.protected = set()
@@ -28,7 +28,7 @@ def protect(connection, value=None):
         message = 'The area at %s is now %s' % (
             value.upper(),
             'protected' if pos in protocol.protected else 'unprotected')
-        protocol.broadcast_chat(message, irc=True)
+        protocol.broadcast_chat(message)
 
 
 def apply_script(protocol, connection, config):

@@ -62,7 +62,7 @@ def kill(connection, value=None):
     player.kill()
     if connection is not player:
         message = '%s killed %s' % (connection.name, player.name)
-        connection.protocol.broadcast_chat(message, irc=True)
+        connection.protocol.broadcast_chat(message)
 
 
 @command(admin_only=True)
@@ -77,7 +77,7 @@ def heal(connection, player):
     else:
         message = '%s was healed by %s' % (player.name, connection.name)
     player.refill()
-    connection.protocol.broadcast_chat(message, irc=True)
+    connection.protocol.broadcast_chat(message)
 
 
 @command()
@@ -91,7 +91,6 @@ def deaf(connection, value=None):
             return 'No administrator rights!'
         connection = get_player(connection.protocol, value)
     message = '%s deaf' % ('now' if not connection.deaf else 'no longer')
-    connection.protocol.irc_say('%s is %s' % (connection.name, message))
     message = "You're " + message
     if connection.deaf:
         connection.deaf = False

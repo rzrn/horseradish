@@ -40,7 +40,7 @@ def reset_game(connection):
     connection.protocol.on_game_end()
     connection.protocol.broadcast_chat(
         'Game has been reset by %s' % connection.name,
-        irc=True)
+    )
 
 
 @command(admin_only=True)
@@ -53,8 +53,6 @@ def lock(connection, value):
     team = get_team(connection, value)
     team.locked = True
     connection.protocol.broadcast_chat('%s team is now locked' % team.name)
-    connection.protocol.irc_say('* %s locked %s team' % (connection.name,
-                                                         team.name))
 
 
 @command(admin_only=True)
@@ -66,8 +64,6 @@ def unlock(connection, value):
     team = get_team(connection, value)
     team.locked = False
     connection.protocol.broadcast_chat('%s team is now unlocked' % team.name)
-    connection.protocol.irc_say('* %s unlocked %s team' % (connection.name,
-                                                           team.name))
 
 
 @command(admin_only=True)
@@ -96,11 +92,10 @@ def switch(connection, player, team=None):
                 and connection in protocol.players.values()):
             connection.send_chat('Switched %s to %s team' % (player.name,
                                                              player.team.name))
-        protocol.irc_say('* %s silently switched teams' % player.name)
     else:
         player.respawn_time = protocol.respawn_time
         player.set_team(new_team)
-        protocol.broadcast_chat('%s switched teams' % player.name, irc=True)
+        protocol.broadcast_chat('%s switched teams' % player.name)
 
 
 @command('setbalance', admin_only=True)
@@ -118,12 +113,8 @@ def set_balance(connection, value):
 
     if should_balance:
         protocol.broadcast_chat('now balancing teams')
-        connection.protocol.irc_say(
-            '* %s turned on balanced teams' % connection.name)
     else:
         protocol.broadcast_chat('now no longer balancing teams')
-        connection.protocol.irc_say(
-            '* %s turned off balanced teams' % connection.name)
 
 
 @command('togglebuild', 'tb', admin_only=True)
@@ -138,19 +129,12 @@ def toggle_build(connection, player=None):
         player.building = value
         msg = '%s can build again' if value else '%s is disabled from building'
         connection.protocol.broadcast_chat(msg % player.name)
-        connection.protocol.irc_say('* %s %s building for %s' %
-                                    (connection.name,
-                                     ['disabled', 'enabled'][int(value)],
-                                     player.name))
     else:
         value = not connection.protocol.building
         connection.protocol.building = value
         on_off = ['OFF', 'ON'][int(value)]
         connection.protocol.broadcast_chat(
             'Building has been toggled %s!' % on_off)
-        connection.protocol.irc_say(
-            '* %s toggled building %s' % (connection.name,
-                                          on_off))
 
 
 @command('togglekill', 'tk', admin_only=True)
@@ -165,19 +149,12 @@ def toggle_kill(connection, player=None):
         player.killing = value
         msg = '%s can kill again' if value else '%s is disabled from killing'
         connection.protocol.broadcast_chat(msg % player.name)
-        connection.protocol.irc_say('* %s %s killing for %s' %
-                                    (connection.name,
-                                     ['disabled', 'enabled'][int(value)],
-                                     player.name))
     else:
         value = not connection.protocol.killing
         connection.protocol.killing = value
         on_off = ['OFF', 'ON'][int(value)]
         connection.protocol.broadcast_chat(
             'Killing has been toggled %s!' % on_off)
-        connection.protocol.irc_say(
-            '* %s toggled killing %s' % (connection.name,
-                                         on_off))
 
 
 @command('toggleteamkill', 'ttk', admin_only=True)
@@ -191,8 +168,6 @@ def toggle_teamkill(connection):
     on_off = ['OFF', 'ON'][int(value)]
     connection.protocol.broadcast_chat(
         'Friendly fire has been toggled %s!' % on_off)
-    connection.protocol.irc_say('* %s toggled friendly fire %s' % (
-        connection.name, on_off))
 
 
 @command('globalchat', admin_only=True)
@@ -213,7 +188,7 @@ def global_chat(connection, value=None):
     connection.protocol.broadcast_chat(
         'Global chat %s' % (
             'enabled' if connection.protocol.global_chat else 'disabled'),
-        irc=True)
+    )
 
 
 @command('timelimit', admin_only=True)
@@ -227,7 +202,7 @@ def set_time_limit(connection, duration):
     protocol = connection.protocol
     # takes time in minutes
     protocol.set_time_limit(limit/60)
-    protocol.broadcast_chat('Time limit set to {}'.format(span), irc=True)
+    protocol.broadcast_chat('Time limit set to {}'.format(span))
 
 
 @command(admin_only=True)

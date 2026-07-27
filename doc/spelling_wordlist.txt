@@ -17,7 +17,6 @@ popup
 aimbot
 ip
 logfile
-irc
 str
 foo
 bar

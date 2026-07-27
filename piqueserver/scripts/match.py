@@ -1,6 +1,6 @@
 """
 Match script, useful for public matches. Features verbose announcements
-on IRC and a custom timer.
+and a custom timer.
 
 Commands
 ^^^^^^^^
@@ -19,11 +19,13 @@ from time import monotonic
 import asyncio
 
 import json
+from pyspades.logger import getLogger
 from piqueserver.commands import command, admin
 from piqueserver.config import config
 
 
 config_dir = config.config_dir
+log = getLogger()
 
 
 @command('timer', admin_only=True)
@@ -106,7 +108,7 @@ def apply_script(protocol, connection, config):
                 return 'Timer is running already.'
             self.timer_end = monotonic() + end
             self.broadcast_chat('Timer started, ending in %s minutes'
-                                % (end / 60), irc=True)
+                                % (end / 60))
             self.display_timer(True)
 
         def stop_timer(self):
@@ -123,23 +125,21 @@ def apply_script(protocol, connection, config):
             next_call = 60
             if not silent:
                 if time_left <= 0:
-                    self.broadcast_chat('Timer ended!', irc=True)
+                    self.broadcast_chat('Timer ended!')
                     self.timer_end = None
                     return
                 elif minutes_left <= 1:
-                    self.broadcast_chat('%s seconds left' % int(time_left),
-                                        irc=True)
+                    self.broadcast_chat('%s seconds left' % int(time_left))
                     next_call = max(1, int(time_left / 2.0))
                 else:
-                    self.broadcast_chat('%s minutes left' % int(minutes_left),
-                                        irc=True)
+                    self.broadcast_chat('%s minutes left' % int(minutes_left))
             self.timer_call = asyncio.get_running_loop().call_later(next_call, self.display_timer)
 
         async def display_messages(self):
             while True:
                 if self.messages:
                     message = self.messages.pop(0)
-                    self.irc_say(message)
+                    log.info(message)
 
                 await asyncio.sleep(3)
 

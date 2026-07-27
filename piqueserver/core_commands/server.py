@@ -22,7 +22,6 @@ def server_name(connection, *arg):
     protocol.set_server_name(name)
     message = "%s changed servername to '%s'" % (connection.name, name)
     log.info("{message}", message=message)
-    connection.protocol.irc_say("* " + message)
     if connection in connection.protocol.players.values():
         return message
     return None
@@ -74,6 +73,5 @@ def toggle_master(connection):
     protocol.set_master_state(not protocol.master)
     message = ("toggled master broadcast %s" % ['OFF', 'ON'][
         int(protocol.master)])
-    protocol.irc_say("* %s " % connection.name + message)
     if connection in connection.protocol.players.values():
         return "You " + message

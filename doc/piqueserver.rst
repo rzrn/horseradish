@@ -44,14 +44,6 @@ piqueserver\.console module
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.irc module
------------------------
-
-.. automodule:: piqueserver.irc
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 piqueserver\.map module
 -----------------------
 

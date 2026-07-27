@@ -82,8 +82,6 @@ class FeatureConnection(ServerConnection):
         log.info('{name} (IP {ip}, ID {pid}) entered the game!',
                  name=self.printable_name,
                  ip=self.address[0], pid=self.player_id)
-        self.protocol.irc_say('* %s (IP %s, ID %s) entered the game!' %
-                              (self.name, self.address[0], self.player_id))
         if self.user_types is None:
             if self.protocol.everyone_is_admin:
                 self.on_user_login('admin', False)
@@ -99,8 +97,6 @@ class FeatureConnection(ServerConnection):
     def on_disconnect(self) -> None:
         if self.name is not None:
             log.info('{name} disconnected!', name=self.printable_name)
-            self.protocol.irc_say('* %s (IP %s) disconnected' %
-                                  (self.name, self.address[0]))
             self.protocol.player_memory.append((self.name, self.address[0]))
         else:
             log.info('{ip} disconnected', ip=self.address[0])
@@ -205,9 +201,9 @@ class FeatureConnection(ServerConnection):
             return False
         if self.god:
             self.protocol.broadcast_chat(
-                '%s, killing in god mode is forbidden!' % self.name, irc=True)
+                '%s, killing in god mode is forbidden!' % self.name)
             self.protocol.broadcast_chat(
-                '%s returned to being a mere human.' % self.name, irc=True)
+                '%s returned to being a mere human.' % self.name)
             self.god = False
             self.god_build = False
 
@@ -286,8 +282,7 @@ class FeatureConnection(ServerConnection):
 
         if global_message:
             if self.protocol.global_chat:
-                # forward message to IRC
-                self.protocol.irc_say(message)
+                pass
             else:
                 self.send_chat('(Chat not sent - global chat disabled)')
                 return False
@@ -300,7 +295,7 @@ class FeatureConnection(ServerConnection):
             self.protocol.broadcast_chat(
                 '%s has been muted for excessive spam' % (
                     self.name),
-                irc=True)
+            )
 
         log.info("<{name}> {message}", name=escape_control_codes(
             self.name), message=escape_control_codes(value))
@@ -313,7 +308,7 @@ class FeatureConnection(ServerConnection):
                 message = '{} was kicked: {}'.format(self.name, reason)
             else:
                 message = '%s was kicked' % self.name
-            self.protocol.broadcast_chat(message, irc=True)
+            self.protocol.broadcast_chat(message)
             log.info('{message}', message=message)
         # FIXME: Client should handle disconnect events the same way in both
         # main and initial loading network loops
@@ -328,7 +323,7 @@ class FeatureConnection(ServerConnection):
             message = '{} banned for {}{}'.format(self.name,
                                                   prettify_timespan(duration), reason)
         if self.protocol.on_ban_attempt(self, reason, duration):
-            self.protocol.broadcast_chat(message, irc=True)
+            self.protocol.broadcast_chat(message)
             self.protocol.on_ban(self, reason, duration)
             if self.address[0] == "127.0.0.1":
                 self.protocol.broadcast_chat("Ban ignored: localhost")
@@ -401,7 +396,6 @@ class FeatureConnection(ServerConnection):
         if verbose:
             message = ' logged in as %s' % (user_type)
             self.send_chat('You' + message)
-            self.protocol.irc_say("* " + self.name + message)
 
     def timed_out(self):
         if self.name is not None:

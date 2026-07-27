@@ -40,7 +40,6 @@ def toggle_rapid(connection, player):
     player.send_chat("You're %s" % message)
     if connection is not player and connection in protocol.players.values():
         connection.send_chat('%s is %s' % (player.name, message))
-    protocol.irc_say('* %s is %s' % (player.name, message))
 
 
 def resend_tool(player):

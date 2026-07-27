@@ -223,11 +223,6 @@ def apply_script(protocol, connection, config):
             for player in list(self.protocol.players.values()):
                 if player.admin:
                     player.send_chat(prefix + message)
-            irc_relay = self.protocol.irc_relay
-            if irc_relay:
-                if irc_relay.factory.bot and irc_relay.factory.bot.colors:
-                    prefix = '\x0304' + prefix + '\x0f'
-                irc_relay.send(prefix + message)
 
         def on_spawn(self, pos):
             self.first_orientation = True

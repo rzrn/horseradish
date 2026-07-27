@@ -16,7 +16,6 @@ Options
 
    [blockinfo]
    griefcheck_on_votekick = true
-   irc_only = false
 
 .. codeauthor:: hompy
 """
@@ -31,7 +30,6 @@ from piqueserver.config import config
 blockinfo_config = config.section("blockinfo")
 GRIEFCHECK_ON_VOTEKICK = blockinfo_config.option(
     "griefcheck_on_votekick", True)
-IRC_ONLY = blockinfo_config.option("irc_only", False)
 
 
 @command('griefcheck', 'gc')
@@ -162,10 +160,7 @@ def apply_script(protocol, connection, config):
                 self, instigator, victim, reason)
             if result is None and GRIEFCHECK_ON_VOTEKICK.get():
                 message = grief_check(instigator, "#%i" % victim.player_id)
-                if IRC_ONLY.get():
-                    self.irc_say('* ' + message)
-                else:
-                    self.broadcast_chat(message, irc=True)
+                self.broadcast_chat(message)
             return result
 
     return BlockInfoProtocol, BlockInfoConnection

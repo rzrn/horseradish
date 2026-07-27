@@ -11,7 +11,7 @@ def unstick(connection, player):
     /unstick [player]
     """
     connection.protocol.broadcast_chat("%s unstuck %s" %
-                                  (connection.name, player.name), irc=True)
+                                  (connection.name, player.name))
     player.set_location_safe(player.get_location())
 
 
@@ -95,10 +95,8 @@ def do_move(connection, args, silent=False):
         message = ('%s ' + ('silently ' if silent else '') + 'teleported %s '
                    'to location %s')
         message = message % (connection.name, player.name, position)
-    if silent:
-        connection.protocol.irc_say('* ' + message)
-    else:
-        connection.protocol.broadcast_chat(message, irc=True)
+    if silent is False:
+        connection.protocol.broadcast_chat(message)
 
 
 @command(admin_only=True)
@@ -141,10 +139,8 @@ def teleport(connection, player1, player2=None, silent=False):
         message = message % (player.name, target.name)
     x, y, z = target.get_location()
     player.set_location(((x - 0.5), (y - 0.5), (z + 0.5)))
-    if silent:
-        connection.protocol.irc_say('* ' + message)
-    else:
-        connection.protocol.broadcast_chat(message, irc=True)
+    if silent is False:
+        connection.protocol.broadcast_chat(message)
 
 
 @command('tpsilent', 'tps', admin_only=True)
@@ -171,4 +167,3 @@ def fly(connection, player):
     player.send_chat("You're %s" % message)
     if connection is not player and connection in protocol.players.values():
         connection.send_chat('%s is %s' % (player.name, message))
-    protocol.irc_say('* %s is %s' % (player.name, message))

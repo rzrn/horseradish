@@ -173,7 +173,6 @@ def say(connection, *arg):
     """
     value = ' '.join(arg)
     connection.protocol.broadcast_chat(value)
-    connection.protocol.irc_say(value)
 
 
 @command(admin_only=True)
@@ -187,7 +186,7 @@ def mute(connection, value):
         return '%s is already muted' % player.name
     player.mute = True
     message = '%s has been muted by %s' % (player.name, connection.name)
-    connection.protocol.broadcast_chat(message, irc=True)
+    connection.protocol.broadcast_chat(message)
 
 
 @command(admin_only=True)
@@ -201,7 +200,7 @@ def unmute(connection, value):
         return '%s is not muted' % player.name
     player.mute = False
     message = '%s has been unmuted by %s' % (player.name, connection.name)
-    connection.protocol.broadcast_chat(message, irc=True)
+    connection.protocol.broadcast_chat(message)
 
 
 @command(admin_only=True)
@@ -251,7 +250,6 @@ def invisible(connection, player):
     player.killing = not player.invisible
     if player.invisible:
         player.send_chat("You're now invisible")
-        protocol.irc_say('* %s became invisible' % player.name)
         kill_action = KillAction()
         kill_action.kill_type = choice([GRENADE_KILL, FALL_KILL])
         kill_action.player_id = kill_action.killer_id = player.player_id
@@ -264,7 +262,6 @@ def invisible(connection, player):
         )
     else:
         player.send_chat("You return to visibility")
-        protocol.irc_say('* %s became visible' % player.name)
         x, y, z = player.world_object.position.get()
         create_player = CreatePlayer()
         create_player.player_id = player.player_id
@@ -362,7 +359,7 @@ def god(connection, player=None):
         message = '%s entered GOD MODE!' % connection.name
     else:
         message = '%s returned to being a mere human' % connection.name
-    connection.protocol.broadcast_chat(message, irc=True)
+    connection.protocol.broadcast_chat(message)
 
 
 @command('godbuild', admin_only=True)
@@ -381,4 +378,3 @@ def god_build(connection, player):
     player.send_chat("You're %s" % message)
     if connection is not player and connection in protocol.players.values():
         connection.send_chat('%s is %s' % (player.name, message))
-    protocol.irc_say('* %s is %s' % (player.name, message))

@@ -93,11 +93,11 @@ def toggle_markers(connection, player=None):
             message = S_PLAYER_DISABLED
 
         message = message.format(player=player.name)
-        protocol.broadcast_chat(message, irc=True)
+        protocol.broadcast_chat(message)
     else:
         protocol.allow_markers = not protocol.allow_markers
         message = S_ENABLED if protocol.allow_markers else S_DISABLED
-        connection.protocol.broadcast_chat(message, irc=True)
+        connection.protocol.broadcast_chat(message)
 
 
 @command()

@@ -289,7 +289,7 @@ def target_player(func: Callable):
         # try and use first arg as player name or id to target
         elif len(args) > 0:
             args = (get_player(connection.protocol, args[0]), *args[1:])
-        # console or irc invokers are required to provide a target
+        # console invokers are required to provide a target
         else:
             raise ValueError("Target player is required")
         return func(connection, *args, **kwargs)
@@ -486,5 +486,5 @@ def _handle_command(connection, command, parameters):
 
 
 def handle_input(connection, user_input):
-    # for IRC and console
+    # for console
     return handle_command(connection, *parse_command(user_input))

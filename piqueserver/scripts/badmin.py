@@ -24,6 +24,7 @@ Commands
 from time import monotonic
 import asyncio
 
+from pyspades.logger import getLogger
 from pyspades.common import prettify_timespan
 from pyspades.constants import *
 from pyspades.collision import distance_3d_vector
@@ -60,6 +61,8 @@ slur_pattern = re.compile(".*nigger.*", re.IGNORECASE)
 grief_pattern = re.compile(
     ".*(gr.*f.*(ing|er)|grief|destroy).*", re.IGNORECASE)
 aimbot_pattern = re.compile(".*(aim|bot|ha(ck|x)|cheat).*", re.IGNORECASE)
+
+log = getLogger()
 
 
 def slur_match(player, msg):
@@ -219,8 +222,8 @@ def apply_script(protocol, connection, config):
             connection,
             punishment='warn',
             reason="Being a meany face"):
-        connection.protocol.irc_say(
-            "* @Badmin: %s is being punished. Type: %s (Reason: %s)" %
+        log.info(
+            "%s is being punished. Type: %s (Reason: %s)" %
             (connection.name, punishment, reason))
         if punishment == "ban":
             connection.ban('@Badmin: ' + reason,
@@ -242,8 +245,8 @@ def apply_script(protocol, connection, config):
 
         def on_votekick_start(self, connection, player, reason=None):
             if reason is None and BLANK_VOTEKICK_ENABLED:
-                connection.protocol.irc_say(
-                    "* @Badmin: %s is attempting a blank votekick (against %s)" %
+                log.info(
+                    "%s is attempting a blank votekick (against %s)" %
                     (connection.name, player.name))
                 return "@Badmin: You must input a reason for the votekick (/votekick name reason)"
             # print "before aimbot check"
@@ -271,14 +274,14 @@ def apply_script(protocol, connection, config):
                     return protocol.on_votekick_start(
                         self, connection, player, reason)
                 if score >= SCORE_AIMBOT_UNCERTAIN:
-                    connection.protocol.irc_say(
-                        "* @Badmin: Aimbot vote: (KDR: %s, Hit Acc: %s)" %
+                    log.info(
+                        "Aimbot vote: (KDR: %s, Hit Acc: %s)" %
                         (score, percent))
                     return protocol.on_votekick_start(
                         self, connection, player, reason)
                 if score < SCORE_AIMBOT_UNCERTAIN:
-                    connection.protocol.irc_say(
-                        "* @Badmin: I've cancelled an aimbot votekick! Kicker: %s, Kickee: %s, KDR: %s, Hit Acc: %s" %
+                    log.info(
+                        "I've cancelled an aimbot votekick! Kicker: %s, Kickee: %s, KDR: %s, Hit Acc: %s" %
                         (connection.name, player.name, score, percent))
                     return "@Badmin: This player is not aimbotting."
                     # print "went too far (aimbot)"
@@ -301,13 +304,13 @@ def apply_script(protocol, connection, config):
                     return protocol.on_votekick_start(
                         self, connection, player, reason)
                 if score >= SCORE_GRIEF_UNCERTAIN:
-                    connection.protocol.irc_say(
-                        "* @Badmin: Grief Score: %s" % score)
+                    log.info(
+                        "Grief Score: %s" % score)
                     return protocol.on_votekick_start(
                         self, connection, player, reason)
                 if score < SCORE_GRIEF_UNCERTAIN:
-                    connection.protocol.irc_say(
-                        "* @Badmin: I've cancelled a griefing votekick! Kicker: %s, Kickee: %s, Score: %s" %
+                    log.info(
+                        "I've cancelled a griefing votekick! Kicker: %s, Kickee: %s, Score: %s" %
                         (connection.name, player.name, score))
                     return "@Badmin: This player has not been griefing."
             return protocol.on_votekick_start(self, connection, player, reason)

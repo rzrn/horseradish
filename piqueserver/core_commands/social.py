@@ -51,11 +51,6 @@ def to_admin(connection, *arg):
     if not message:
         return "Enter a message you want to send, like /admin I'm stuck"
     prefix = '(TO ADMINS)'
-    irc_relay = protocol.irc_relay
-    if irc_relay:
-        if irc_relay.factory.bot and irc_relay.factory.bot.colors:
-            prefix = '\x0304' + prefix + '\x0f'
-        irc_relay.send(prefix + ' <%s> %s' % (connection.name, message))
     for player in protocol.players.values():
         if player.admin and player is not connection:
             player.send_chat('To ADMINS from %s: %s' %

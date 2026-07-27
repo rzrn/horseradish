@@ -45,7 +45,7 @@ class TimedMute:
             player.mute = True
             player.protocol.broadcast_chat(
                 '%s was muted indefinitely (Reason: %s)' %
-                (player.name, reason), irc=True)
+                (player.name, reason))
             return
 
         schedule = Scheduler(player.protocol)
@@ -54,7 +54,7 @@ class TimedMute:
 
         player.protocol.broadcast_chat(
             '%s was muted for %s seconds (Reason: %s)' %
-            (player.name, time, reason), irc=True)
+            (player.name, time, reason))
         player.mute = True
 
         self.player = player
@@ -64,7 +64,7 @@ class TimedMute:
         self.player.mute = False
         message = '%s was unmuted after %s seconds' % (
             self.player.name, self.time)
-        self.player.protocol.broadcast_chat(message, irc=True)
+        self.player.protocol.broadcast_chat(message)
 
 
 def apply_script(protocol, connection, config):

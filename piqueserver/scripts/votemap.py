@@ -107,10 +107,10 @@ class VoteMap:
         instigator = self.instigator
         protocol = self.protocol
         if instigator is None:
-            protocol.broadcast_chat('Time to vote!', irc=True)
+            protocol.broadcast_chat('Time to vote!')
         else:
             protocol.broadcast_chat(
-                '* %s initiated a map vote.' % instigator.name, irc=True)
+                '* %s initiated a map vote.' % instigator.name)
         self.schedule = schedule = Scheduler(protocol)
         schedule.call_later(self.vote_time, self.timeout)
         schedule.loop_call(30.0, self.update)
@@ -164,11 +164,11 @@ class VoteMap:
             tl = self.protocol.set_time_limit(self.extension_time, True)
             span = prettify_timespan(tl * 60.0)
             self.protocol.broadcast_chat('Mapvote ended. Current map will '
-                                         'continue for %s.' % span, irc=True)
+                                         'continue for %s.' % span)
             self.protocol.autoschedule_votemap()
         else:
             self.protocol.broadcast_chat('Mapvote ended. Next map will be: %s.' %
-                                         result, irc=True)
+                                         result)
             self.protocol.planned_map = check_rotation([result])[0]
         self.set_cooldown()
 

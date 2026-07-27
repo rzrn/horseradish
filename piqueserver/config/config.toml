@@ -261,24 +261,6 @@ port = 32886
 logging = true
 
 
-# settings for the irc chatbot that can report server events and respond to commands
-# disabled by default
-[irc]
-enabled = false
-nickname = "piqueserver"
-username = "piqueserver"
-realname = "piqueserver"
-server = "irc.quakenet.org"
-port = 6667
-channel = "#MyServerChannel"
-password = ""
-
-# prefixes irc users must use for bot to process as command or to send to game chat
-commandprefix = "!"
-chatprefix = "."
-
-
-
 [ssh]
 # Enable the ssh manhole server
 # Gives ssh access to a Python REPL connected to the running server

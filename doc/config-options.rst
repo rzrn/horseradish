@@ -345,29 +345,6 @@ login_retries
 
 The number of /login attempts allowed before users are auto-kicked. Default 3.
 
-irc
-+++
-
-This section configures an IRC chatbot that reports server events in the given channel::
-
-    [irc]
-    enabled = false
-    # IRC login details
-    nickname = "piqueserver"
-    username = "piqueserver"
-    realname = "piqueserver"
-    server = "irc.quakenet.org"
-    port = 6667
-
-    # channel to join into
-    channel = "#piquserver-bots"
-    # password for the channel
-    password = ""
-
-    # prefixes irc users must use for bot to process as command or to send to game chat
-    commandprefix = "!"
-    chatprefix = "."
-
 set_god_build
 +++++++++++++
 

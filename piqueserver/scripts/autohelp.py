@@ -30,15 +30,12 @@ def apply_script(protocol, connection, config):
         connection.protocol.broadcast_chat(
             "TO CHANGE YOUR NAME: Start Menu-> "
             "All Programs-> Ace of Spades-> Configuration")
-        connection.protocol.irc_say("* Sent nick help to %s" % connection.name)
 
     def send_help_airstrike(connection):
         connection.protocol.broadcast_chat(
             "TO USE AN AIRSTRIKE: Once you have 15 points, "
             "get a 6 killstreak ->                  "
             "Then type /airstrike G4 if you want the strike to hit G4")
-        connection.protocol.irc_say(
-            "* Sent airstrike help to %s" % connection.name)
 
     class AutoHelpConnection(connection):
         def on_chat(self, value, global_message):
