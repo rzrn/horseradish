@@ -42,7 +42,7 @@ class Scheduler:
         return call
 
     def loop_call(self, delay, func, *w, **kw):
-        loop = asyncio.create_task(looping_call(delay, func, w, kw))
+        loop = self.protocol.create_task(looping_call(delay, func, w, kw))
         self.loops.add(loop)
         return loop
 
