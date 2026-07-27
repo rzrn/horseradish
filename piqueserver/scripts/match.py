@@ -15,8 +15,8 @@ Commands
 """
 import os
 
-from twisted.internet import reactor
-from twisted.internet.task import LoopingCall
+from time import monotonic
+import asyncio
 
 import json
 from piqueserver.commands import command, admin
@@ -96,13 +96,15 @@ def apply_script(protocol, connection, config):
         def __init__(self, *arg, **kw):
             protocol.__init__(self, *arg, **kw)
             self.messages = []
-            self.send_message_loop = LoopingCall(self.display_messages)
-            self.send_message_loop.start(3)
+
+        async def on_event_loop_start(self):
+            await protocol.on_event_loop_start(self)
+            self.create_task(self.display_messages())
 
         def start_timer(self, end):
             if self.timer_end is not None:
                 return 'Timer is running already.'
-            self.timer_end = reactor.seconds() + end
+            self.timer_end = monotonic() + end
             self.broadcast_chat('Timer started, ending in %s minutes'
                                 % (end / 60), irc=True)
             self.display_timer(True)
@@ -116,7 +118,7 @@ def apply_script(protocol, connection, config):
                 return 'No timer in progress.'
 
         def display_timer(self, silent=False):
-            time_left = self.timer_end - reactor.seconds()
+            time_left = self.timer_end - monotonic()
             minutes_left = time_left / 60.0
             next_call = 60
             if not silent:
@@ -131,13 +133,15 @@ def apply_script(protocol, connection, config):
                 else:
                     self.broadcast_chat('%s minutes left' % int(minutes_left),
                                         irc=True)
-            self.timer_call = reactor.callLater(next_call, self.display_timer)
+            self.timer_call = asyncio.get_running_loop().call_later(next_call, self.display_timer)
 
-        def display_messages(self):
-            if not self.messages:
-                return
-            message = self.messages.pop(0)
-            self.irc_say(message)
+        async def display_messages(self):
+            while True:
+                if self.messages:
+                    message = self.messages.pop(0)
+                    self.irc_say(message)
+
+                await asyncio.sleep(3)
 
         # recording
 

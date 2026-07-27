@@ -21,7 +21,9 @@ Commands
 .. codeauthor:: ?
 """
 
-from twisted.internet import reactor
+from time import monotonic
+import asyncio
+
 from pyspades.common import prettify_timespan
 from pyspades.constants import *
 from pyspades.collision import distance_3d_vector
@@ -102,7 +104,7 @@ def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green 
     minutes = float(time or 2)
     if minutes < 0.0:
         raise ValueError("Minutes cannot be < 0")
-    time = reactor.seconds() - minutes * 60.0
+    time = monotonic() - minutes * 60.0
     blocks_removed = player.blocks_removed or []
     blocks = [b[1] for b in blocks_removed if b[0] >= time]
     player_name = player.name
@@ -233,7 +235,7 @@ def apply_script(protocol, connection, config):
 
         def on_chat(self, value, global_message):
             if slur_match(self, value) and LANGUAGE_FILTER_ENABLED:
-                reactor.callLater(1.0, send_slur_nick, self)
+                asyncio.get_running_loop().call_later(1.0, send_slur_nick, self)
             return connection.on_chat(self, value, global_message)
 
     class BadminProtocol(protocol):

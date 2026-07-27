@@ -22,8 +22,8 @@ import csv
 import re
 from math import sqrt, cos, pi
 
-from twisted.internet.task import LoopingCall
-from twisted.internet import reactor
+import asyncio
+from time import monotonic
 
 from pyspades.constants import (
     WEAPON_TOOL, WEAPON_KILL, HEADSHOT_KILL,
@@ -211,7 +211,7 @@ def apply_script(protocol, connection, config):
             self.first_orientation = True
             self.kill_times = []
             self.headshot_snap_times = []
-            self.bullet_loop = LoopingCall(self.on_bullet_fire)
+            self.bullet_loop = None
             self.shot_time = 0.0
             self.multiple_bullets_count = 0
             self.headshot_snap_warn_time = self.hit_percent_warn_time = 0.0
@@ -234,17 +234,20 @@ def apply_script(protocol, connection, config):
             return connection.on_spawn(self, pos)
 
         def bullet_loop_start(self, interval):
-            if not self.bullet_loop.running:
-                self.bullet_loop.start(interval)
+            if self.bullet_loop is None:
+                self.bullet_loop = self.protocol.create_task(
+                    self.on_bullet_fire(interval)
+                )
 
         def bullet_loop_stop(self):
-            if self.bullet_loop.running:
-                self.bullet_loop.stop()
+            if task := self.bullet_loop:
+                self.bullet_loop = None
+                task.cancel()
 
         def get_headshot_snap_count(self):
             pop_count = 0
             headshot_snap_count = 0
-            current_time = reactor.seconds()
+            current_time = monotonic()
             for old_time in self.headshot_snap_times:
                 if current_time - old_time <= HEADSHOT_SNAP_TIME:
                     headshot_snap_count += 1
@@ -281,7 +284,7 @@ def apply_script(protocol, connection, config):
                     # Didn't snap near a head
                     continue
 
-                current_time = reactor.seconds()
+                current_time = monotonic()
                 self.headshot_snap_times.append(current_time)
 
                 if self.get_headshot_snap_count() < HEADSHOT_SNAP_THRESHOLD:
@@ -308,7 +311,7 @@ def apply_script(protocol, connection, config):
             if self.tool != WEAPON_TOOL:
                 return connection.on_shoot_set(self, shoot)
 
-            if shoot and not self.bullet_loop.running:
+            if shoot and self.bullet_loop is None:
                 self.possible_targets = []
                 for enemy in self.team.other.get_players():
                     if point_distance2(self, enemy) <= FOG_DISTANCE2:
@@ -319,7 +322,7 @@ def apply_script(protocol, connection, config):
             return connection.on_shoot_set(self, shoot)
 
         def get_kill_count(self):
-            current_time = reactor.seconds()
+            current_time = monotonic()
             kill_count = 0
             pop_count = 0
             for old_time in self.kill_times:
@@ -338,7 +341,7 @@ def apply_script(protocol, connection, config):
             if kill_type != WEAPON_KILL and kill_type != HEADSHOT_KILL:
                 return connection.on_kill(self, by, kill_type, grenade)
 
-            by.kill_times.append(reactor.seconds())
+            by.kill_times.append(monotonic())
             if by.get_kill_count() >= KILL_THRESHOLD:
                 if KILLS_IN_TIME == BAN:
                     by.ban('Aimbot detected - kills in time window',
@@ -348,7 +351,7 @@ def apply_script(protocol, connection, config):
                     by.kick('Aimbot detected - kills in time window')
                     return
                 elif KILLS_IN_TIME == WARN_ADMIN:
-                    current_time = reactor.seconds()
+                    current_time = monotonic()
                     if ((current_time - by.kills_in_time_warn_time)
                             > WARN_INTERVAL_MINIMUM):
                         by.kills_in_time_warn_time = current_time
@@ -363,7 +366,7 @@ def apply_script(protocol, connection, config):
             elif MULTIPLE_BULLETS == KICK:
                 self.kick('Aimbot detected - multiple bullets')
             elif MULTIPLE_BULLETS == WARN_ADMIN:
-                current_time = reactor.seconds()
+                current_time = monotonic()
                 if ((current_time - self.multiple_bullets_warn_time)
                         > WARN_INTERVAL_MINIMUM):
                     self.multiple_bullets_warn_time = current_time
@@ -375,7 +378,7 @@ def apply_script(protocol, connection, config):
                 return connection.on_hit(
                     self, hit_amount, hit_player, hit_type, grenade)
 
-            current_time = reactor.seconds()
+            current_time = monotonic()
             shotgun_use = False
             if current_time - \
                     self.shot_time > (0.5 * hit_player.weapon_object.delay):
@@ -408,7 +411,7 @@ def apply_script(protocol, connection, config):
             elif HIT_PERCENT == KICK:
                 self.kick(message)
             elif HIT_PERCENT == WARN_ADMIN:
-                current_time = reactor.seconds()
+                current_time = monotonic()
                 if (current_time -
                         self.hit_percent_warn_time) > WARN_INTERVAL_MINIMUM:
                     self.hit_percent_warn_time = current_time
@@ -432,20 +435,24 @@ def apply_script(protocol, connection, config):
                     if shotgun_perc >= SHOTGUN_KICK_PERC:
                         self.hit_percent_eject(shotgun_perc)
 
-        def on_bullet_fire(self):
-            # Remembering the past offers a performance boost, particularly
-            # with the SMG
-            if self.last_target is not None:
-                if self.last_target.hp is not None:
-                    if self.check_near_miss(self.last_target):
-                        self.check_percent()
-                        return
-            for enemy in self.possible_targets:
-                if enemy.hp is not None and enemy is not self.last_target:
-                    if self.check_near_miss(enemy):
-                        self.last_target = enemy
-                        self.check_percent()
-                        return
+        async def on_bullet_fire(self, interval):
+            while True:
+                # Remembering the past offers a performance boost, particularly
+                # with the SMG
+                if self.last_target is not None:
+                    if self.last_target.hp is not None:
+                        if self.check_near_miss(self.last_target):
+                            self.check_percent()
+                            return
+
+                for enemy in self.possible_targets:
+                    if enemy.hp is not None and enemy is not self.last_target:
+                        if self.check_near_miss(enemy):
+                            self.last_target = enemy
+                            self.check_percent()
+                            return
+
+                await asyncio.sleep(interval)
 
         def check_near_miss(self, target):
             if self.world_object is not None and target.world_object is not None:

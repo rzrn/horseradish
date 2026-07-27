@@ -20,7 +20,8 @@ Options
 """
 
 from collections import deque
-from twisted.internet.task import LoopingCall
+import asyncio
+
 from pyspades.constants import GRENADE_DESTROY, SPADE_DESTROY, CTF_MODE, TC_MODE
 from piqueserver.config import config
 
@@ -118,14 +119,12 @@ def apply_script(protocol, connection, config):
 
         zone_cache = None
 
+        async def on_event_loop_start(self):
+            await protocol.on_event_loop_start(self)
 
-        def __init__(self, *arg, **kw):
             # we update the zones with a slow loop
             # (simpler than tracking every event that could update zones)
-            protocol.__init__(self, *arg, **kw)
-            self.zoc_loop = LoopingCall(self.zoc_tick)
-            if not self.zoc_loop.running:
-                self.zoc_loop.start(5.0)
+            self.zoc_loop = self.create_task(self.zoc_tick_loop())
 
         def _build_zoc(self, x, y, team):
             return {'team': team,
@@ -134,12 +133,15 @@ def apply_script(protocol, connection, config):
                     'top': y - zoc_radius.get(),
                     'bottom': y + zoc_radius.get()}
 
-        def zoc_tick(self):
-            self.cache_zones_of_control()
-            for player in list(self.players.values()):
-                player.zoc_destruction_points += zoc_points_per_tick.get()
-                if player.zoc_destruction_points > zoc_point_cap.get():
-                    player.zoc_destruction_points = zoc_point_cap.get()
+        async def zoc_tick_loop(self):
+            while True:
+                self.cache_zones_of_control()
+                for player in list(self.players.values()):
+                    player.zoc_destruction_points += zoc_points_per_tick.get()
+                    if player.zoc_destruction_points > zoc_point_cap.get():
+                        player.zoc_destruction_points = zoc_point_cap.get()
+
+                await asyncio.sleep(5.0)
 
         def cache_zones_of_control(self):
             zones = []

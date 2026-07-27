@@ -14,7 +14,8 @@ Options
 
 from pyspades.common import prettify_timespan
 from piqueserver.config import config, cast_duration
-from twisted.internet import reactor
+
+from time import monotonic
 
 spawn_protect_config = config.section("spawn_protect")
 protection_time = spawn_protect_config.option("protection_time", default="3sec", cast=cast_duration)
@@ -27,11 +28,11 @@ def apply_script(protocol, connection, config):
         spawn_timestamp = None
 
         def on_spawn(self, pos):
-            self.spawn_timestamp = reactor.seconds()
+            self.spawn_timestamp = monotonic()
             return connection.on_spawn(self, pos)
 
         def on_hit(self, hit_amount, hit_player, type, grenade):
-            cur_timestamp = reactor.seconds() - spawn_protect_time
+            cur_timestamp = monotonic() - spawn_protect_time
             if cur_timestamp < hit_player.spawn_timestamp:
                 timespan = -(cur_timestamp - hit_player.spawn_timestamp)
                 self.send_chat(

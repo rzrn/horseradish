@@ -21,8 +21,8 @@ Commands
 
 
 import random
-from twisted.internet import reactor
-from twisted.internet.task import LoopingCall
+from time import monotonic
+
 from pyspades.common import prettify_timespan
 from piqueserver.map import check_rotation
 from piqueserver.scheduler import Scheduler
@@ -99,7 +99,7 @@ class VoteMap:
             return True
         last = instigator.last_votemap
         if (last is not None and
-                reactor.seconds() - last < self.vote_interval):
+                monotonic() - last < self.vote_interval):
             return "You can't start a vote now."
         return True
 
@@ -174,7 +174,7 @@ class VoteMap:
 
     def set_cooldown(self):
         if self.instigator is not None and not self.instigator.admin:
-            self.instigator.last_votemap = reactor.seconds()
+            self.instigator.last_votemap = monotonic()
 
     def finish(self):
         self.schedule.reset()

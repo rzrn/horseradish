@@ -12,8 +12,10 @@ Intended for use in frantic last team standing or free for all matches.
 """
 
 from collections import deque
-from twisted.internet.reactor import callLater, seconds
-from twisted.internet.task import LoopingCall
+
+from time import monotonic
+import asyncio
+
 from pyspades import contained as loaders
 from pyspades.common import make_color
 from pyspades.constants import (
@@ -52,12 +54,6 @@ def resend_tool(player):
         player.send_contained(set_tool)
 
 
-def rapid_cycle(player):
-    resend_tool(player)
-    if not player.weapon_object.shoot:
-        player.rampage_rapid_loop.stop()
-
-
 def send_fog(player, color):
     fog_color = loaders.FogColor()
     fog_color.color = make_color(*color)
@@ -67,8 +63,9 @@ def send_fog(player, color):
 def fog_switch(player, colorgetter_a, colorgetter_b):
     if player.rampage:
         send_fog(player, colorgetter_a())
-        player.rampage_warning_call = callLater(0.5, fog_switch, player,
-                                                colorgetter_b, colorgetter_a)
+        player.rampage_warning_call = asyncio.get_running_loop().call_later(
+            0.5, fog_switch, player, colorgetter_b, colorgetter_a
+        )
 
 
 def apply_script(protocol, connection, config):
@@ -85,14 +82,17 @@ def apply_script(protocol, connection, config):
             self.rampage_kills.clear()
             self.rampage_reenable_rapid_hack_detect = self.rapid_hack_detect
             self.rapid_hack_detect = False
-            self.rampage_call = callLater(RAMPAGE_DURATION, self.end_rampage)
+
+            loop = asyncio.get_running_loop()
+            self.rampage_call = loop.call_later(RAMPAGE_DURATION, self.end_rampage)
             if RAMPAGE_DURATION > 4.0:
-                self.rampage_warning_call = callLater(
+                self.rampage_warning_call = loop.call_later(
                     RAMPAGE_DURATION - 3.0,
                     fog_switch,
                     self,
                     self.protocol.get_fog_color,
-                    RAMPAGE_FOG_FUNC)
+                    RAMPAGE_FOG_FUNC
+                )
             if RAMPAGE_REFILLS:
                 self.refill()
             if RAMPAGE_RELOADS:
@@ -113,26 +113,34 @@ def apply_script(protocol, connection, config):
         def end_rampage(self):
             self.rampage = False
             self.rapid_hack_detect = self.rampage_reenable_rapid_hack_detect
-            if self.rampage_call and self.rampage_call.active():
-                self.rampage_call.cancel()
+            if defer := self.rampage_call:
+                defer.cancel()
             self.rampage_call = None
-            if (self.rampage_warning_call and
-                    self.rampage_warning_call.active()):
-                self.rampage_warning_call.cancel()
+            if defer := self.rampage_warning_call:
+                defer.cancel()
             self.rampage_warning_call = None
-            if self.rampage_rapid_loop and self.rampage_rapid_loop.running:
-                self.rampage_rapid_loop.stop()
+            if defer := self.rampage_rapid_loop:
+                defer.cancel()
+            self.rampage_rapid_loop = None
             send_fog(self, self.protocol.fog_color)
+ 
+        async def rapid_looping_call(self):
+            while True:
+                resend_tool(self)
+
+                if not self.weapon_object.shoot:
+                    self.rampage_rapid_loop = None
+                    break
+
+                await asyncio.sleep(RAPID_INTERVALS[self.weapon])
 
         def on_connect(self):
-            self.rampage_rapid_loop = LoopingCall(rapid_cycle, self)
             self.rampage_kills = deque(maxlen=KILL_REQUIREMENT)
             connection.on_connect(self)
 
         def on_disconnect(self):
             if self.rampage:
                 self.end_rampage()
-            self.rampage_rapid_loop = None
             connection.on_disconnect(self)
 
         def on_reset(self):
@@ -152,7 +160,7 @@ def apply_script(protocol, connection, config):
                 if (not killer.rampage and killer.hp and
                     killer.team is not self.team and
                         (GRENADE_KILLS_COUNT or type != GRENADE_KILL)):
-                    now = seconds()
+                    now = monotonic()
                     killer.rampage_kills.append(now)
                     if (len(killer.rampage_kills) == KILL_REQUIREMENT and
                             killer.rampage_kills[0] >= now - TIME_REQUIREMENT):
@@ -166,10 +174,10 @@ def apply_script(protocol, connection, config):
 
         def on_shoot_set(self, fire):
             if (self.rampage and fire and
-                self.rampage_rapid_loop and
-                    not self.rampage_rapid_loop.running):
-                interval = RAPID_INTERVALS[self.weapon]
-                self.rampage_rapid_loop.start(interval, now=False)
+                self.rampage_rapid_loop is None):
+                self.rampage_rapid_loop = self.protocol.create_task(
+                    self.rapid_looping_call()
+                )
             connection.on_shoot_set(self, fire)
 
     def send_fog_rule(player):

@@ -19,7 +19,6 @@ Options
 """
 
 import os
-from twisted.internet import reactor
 from pyspades.logger import getLogger
 from piqueserver.config import config
 from piqueserver.commands import command
@@ -55,14 +54,13 @@ def get_path(map_name):
 
 def apply_script(protocol, connection, config):
     class SaveMapProtocol(protocol):
-        def __init__(self, *arg, **kw):
-            protocol.__init__(self, *arg, **kw)
-            def call():
-                at_shutdown = savemap_config.option('save_at_shutdown', False).get()
-                always = savemap_config.option('always_save_map', False).get()
-                if at_shutdown or always:
-                    self.save_map()
-            reactor.addSystemEventTrigger('before', 'shutdown', call)
+        async def shutdown(self):
+            at_shutdown = savemap_config.option('save_at_shutdown', False).get()
+            always = savemap_config.option('always_save_map', False).get()
+            if at_shutdown or always:
+                self.save_map()
+
+            await protocol.shutdown(self)
 
         async def set_map_name(self, rot_info: RotationInfo) -> None:
             if savemap_config.option('always_save_map', False).get():

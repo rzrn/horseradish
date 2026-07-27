@@ -58,8 +58,9 @@ from struct import unpack
 from random import choice
 from itertools import product
 from collections import deque, namedtuple
-from twisted.internet.reactor import seconds
-from twisted.internet.task import LoopingCall
+
+import asyncio
+
 from pyspades.contained import BlockAction, SetColor
 from pyspades.common import make_color
 from pyspades.constants import BUILD_BLOCK
@@ -205,41 +206,57 @@ class BuildQueue:
     def __init__(self, protocol, call_on_exhaustion=None):
         self.protocol = protocol
         self.blocks = deque()
-        self.loop = LoopingCall(self.cycle)
-        self.loop.start(self.interval)
         self.call_on_exhaustion = call_on_exhaustion
 
-    def cycle(self):
-        if not self.blocks:
-            self.loop.stop()
-            if self.call_on_exhaustion:
-                self.call_on_exhaustion()
-            return
-        blocks_left = self.blocks_per_cycle
-        last_color = None
-        while self.blocks and blocks_left:
-            x, y, z, color = self.blocks.popleft()
-            if color != last_color:
-                set_color = SetColor()
-                set_color.value = make_color(*color)
-                set_color.player_id = 32
-                self.protocol.broadcast_contained(set_color, save=True)
-                last_color = color
-            if not self.protocol.map.get_solid(x, y, z):
-                block_action = BlockAction()
-                block_action.value = BUILD_BLOCK
-                block_action.player_id = 32
-                block_action.x = x
-                block_action.y = y
-                block_action.z = z
-                self.protocol.broadcast_contained(block_action, save=True)
-                self.protocol.map.set_point(x, y, z, color)
-                blocks_left -= 1
-        self.protocol.update_entities()
+        self.start()
+
+    def start(self):
+        if self.loop is None:
+            self.loop = self.protocol.create_task(self.cycle())
+
+    def stop(self):
+        if defer := self.loop:
+            self.loop = None
+            defer.cancel()
+
+    async def cycle(self):
+        while True:
+            if not self.blocks:
+                self.loop = None
+
+                if func := self.call_on_exhaustion:
+                    func()
+
+                break
+
+            blocks_left = self.blocks_per_cycle
+            last_color = None
+
+            while self.blocks and blocks_left:
+                x, y, z, color = self.blocks.popleft()
+                if color != last_color:
+                    set_color = SetColor()
+                    set_color.value = make_color(*color)
+                    set_color.player_id = 32
+                    self.protocol.broadcast_contained(set_color, save=True)
+                    last_color = color
+                if not self.protocol.map.get_solid(x, y, z):
+                    block_action = BlockAction()
+                    block_action.value = BUILD_BLOCK
+                    block_action.player_id = 32
+                    block_action.x = x
+                    block_action.y = y
+                    block_action.z = z
+                    self.protocol.broadcast_contained(block_action, save=True)
+                    self.protocol.map.set_point(x, y, z, color)
+                    blocks_left -= 1
+
+            self.protocol.update_entities()
+
+            await asyncio.sleep(self.interval)
 
     def push_block(self, x, y, z, color):
-        if not self.loop.running:
-            self.loop.start(self.interval)
+        self.start()
         self.blocks.append((x, y, z, color))
 
 
@@ -257,43 +274,53 @@ class GrowModel:
         self.open = [model.pivot]
         self.closed = set()
         self.build_queue = BuildQueue(protocol, self.queue_exhausted)
-        self.grow_loop = LoopingCall(self.grow_cycle)
-        self.grow_loop.start(GROW_INTERVAL)
 
-    def grow_cycle(self):
-        new_nodes = set()
-        for xyz in self.open:
-            if xyz not in self.model.voxels or xyz in self.closed:
-                continue
-            self.closed.add(xyz)
-            x, y, z = xyz
-            new_nodes.add((x, y, z - 1))
-            new_nodes.add((x, y, z + 1))
-            new_nodes.add((x, y - 1, z))
-            new_nodes.add((x, y + 1, z))
-            new_nodes.add((x - 1, y, z))
-            new_nodes.add((x + 1, y, z))
-            p_x, p_y, p_z = self.model.pivot
-            x, y, z = x + self.x - p_x, y + self.y - p_y, z + self.z - p_z
-            if x < 0 or y < 0 or z < 0 or x >= 512 or y >= 512 or z >= LOWEST_Z:
-                continue
-            voxel = self.model.voxels[xyz]
-            self.build_queue.push_block(x, y, z, (voxel.r, voxel.g, voxel.b))
-        self.open = new_nodes
-        if not new_nodes:
-            self.grow_loop.stop()
+        self.start_grow_loop()
+
+    def start_grow_loop(self):
+        if self.grow_loop is None:
+            self.grow_loop = self.protocol.create_task(self.grow_cycle())
+
+    def stop_grow_loop(self):
+        if defer := self.grow_loop:
+            self.grow_loop = None
+            defer.cancel()
+
+    async def grow_cycle(self):
+        while True:
+            new_nodes = set()
+            for xyz in self.open:
+                if xyz not in self.model.voxels or xyz in self.closed:
+                    continue
+                self.closed.add(xyz)
+                x, y, z = xyz
+                new_nodes.add((x, y, z - 1))
+                new_nodes.add((x, y, z + 1))
+                new_nodes.add((x, y - 1, z))
+                new_nodes.add((x, y + 1, z))
+                new_nodes.add((x - 1, y, z))
+                new_nodes.add((x + 1, y, z))
+                p_x, p_y, p_z = self.model.pivot
+                x, y, z = x + self.x - p_x, y + self.y - p_y, z + self.z - p_z
+                if x < 0 or y < 0 or z < 0 or x >= 512 or y >= 512 or z >= LOWEST_Z:
+                    continue
+                voxel = self.model.voxels[xyz]
+                self.build_queue.push_block(x, y, z, (voxel.r, voxel.g, voxel.b))
+            self.open = new_nodes
+
+            if not new_nodes:
+                self.grow_loop = None
+                break
+
+            await asyncio.sleep(GROW_INTERVAL)
 
     def queue_exhausted(self):
         if not self.open:
             self.release()
 
     def release(self):
-        if self.build_queue.loop.running:
-            self.build_queue.loop.stop()
-        self.build_queue.loop = None
-        if self.grow_loop.running:
-            self.grow_loop.stop()
-        self.grow_loop = None
+        self.build_queue.stop()
+        self.stop_grow_loop()
         self.protocol.growers.remove(self)
 
 

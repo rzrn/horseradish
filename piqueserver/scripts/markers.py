@@ -38,7 +38,10 @@ from collections import deque, defaultdict
 from functools import partial
 from itertools import islice, chain
 from random import choice
-from twisted.internet.reactor import callLater, seconds
+
+from time import monotonic
+import asyncio
+
 from pyspades.world import cube_line
 from pyspades.contained import BlockAction, BlockLine, SetColor, ChatMessage
 from pyspades.common import make_color, to_coordinates
@@ -138,7 +141,8 @@ class BaseMarker():
         # find markers we're colliding with
         has_timer = self.duration is not None
         collisions = []
-        current_time = seconds()
+        loop = asyncio.get_running_loop()
+        current_time = loop.time()
         worst_time = current_time + self.duration if has_timer else None
         for marker in protocol.markers:
             intersect = marker.blocks & self.blocks
@@ -146,11 +150,11 @@ class BaseMarker():
                 self.blocks -= intersect
                 collisions.append(marker)
                 if has_timer and marker.expire_call:
-                    worst_time = min(worst_time, marker.expire_call.getTime())
+                    worst_time = min(worst_time, marker.expire_call.when())
         # forward expiration time so that colliding markers vanish all at once
         if has_timer:
             delay = worst_time - current_time
-            self.expire_call = callLater(delay, self.expire)
+            self.expire_call = loop.call_later(delay, self.expire)
         self.build()
         team.marker_count[self.__class__] += 1
         protocol.markers.append(self)
@@ -158,8 +162,8 @@ class BaseMarker():
             self.background = self.background_class(protocol, team, x, y)
 
     def release(self):
-        if self.expire_call and self.expire_call.active():
-            self.expire_call.cancel()
+        if defer := self.expire_call:
+            defer.cancel()
         self.expire_call = None
         self.team.marker_count[self.__class__] -= 1
         self.protocol.markers.remove(self)
@@ -663,13 +667,13 @@ def apply_script(protocol, connection, config):
                 self.send_chat(S_REACHED_LIMIT)
                 return
             new_marker = marker_class(self.protocol, self.team, *location)
-            self.last_marker = seconds()
+            self.last_marker = monotonic()
 
         def on_animation_update(self, jump, crouch, sneak, sprint):
             markers_allowed = (VV_ENABLED and self.allow_markers and
                                self.protocol.allow_markers)
             if markers_allowed and sneak and self.world_object.sneak != sneak:
-                now = seconds()
+                now = monotonic()
                 if (self.last_marker is None or
                         now - self.last_marker > COOLDOWN):
                     presses = self.sneak_presses
@@ -703,7 +707,7 @@ def apply_script(protocol, connection, config):
                     if global_message:
                         self.send_chat(S_TEAMCHAT)
                     elif (self.last_marker is not None and
-                          seconds() - self.last_marker <= COOLDOWN):
+                          monotonic() - self.last_marker <= COOLDOWN):
                         self.send_chat(S_WAIT)
                     else:
                         location = None
@@ -764,14 +768,15 @@ def apply_script(protocol, connection, config):
             if REVEAL_ENEMIES and self.protocol.allow_markers:
                 delay = 0.25
                 for call in self.team.marker_calls:
-                    if call.active():
-                        call.cancel()
+                    call.cancel()
                 self.team.marker_calls = []
+
+                loop = asyncio.get_running_loop()
+
                 for player in enemy_team.get_players():
                     x, y, z = player.get_location()
                     delay += 0.15
-                    call = callLater(
-                        delay, Enemy, self.protocol, self.team, x, y)
+                    call = loop.call_later(delay, Enemy, self.protocol, self.team, x, y)
                     self.team.marker_calls.append(call)
             connection.on_flag_capture(self)
 
@@ -805,8 +810,7 @@ def apply_script(protocol, connection, config):
             for team in (self.blue_team, self.green_team):
                 team.intel_marker = None
                 for call in team.marker_calls:
-                    if call.active():
-                        call.cancel()
+                    call.cancel()
                 team.marker_calls = None
                 team.marker_count = None
             protocol.on_map_leave(self)

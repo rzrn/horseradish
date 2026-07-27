@@ -5,7 +5,7 @@ Helps Deuces automagically when they ask in the chat for help.
 """
 
 import re
-from twisted.internet import reactor
+import asyncio
 
 deuce_name_pattern = re.compile(r"Deuce\d?\d?$")
 nick_chat_pattern = re.compile(
@@ -41,11 +41,14 @@ def apply_script(protocol, connection, config):
             "* Sent airstrike help to %s" % connection.name)
 
     class AutoHelpConnection(connection):
-
         def on_chat(self, value, global_message):
+            loop = asyncio.get_running_loop()
+
             if deuce_howto_match(self, value):
-                reactor.callLater(1.0, send_help_nick, self)
+                loop.call_later(1.0, send_help_nick, self)
+
             if airstrike_howto_match(self, value):
-                reactor.callLater(1.0, send_help_airstrike, self)
+                loop.call_later(1.0, send_help_airstrike, self)
+
             return connection.on_chat(self, value, global_message)
     return protocol, AutoHelpConnection

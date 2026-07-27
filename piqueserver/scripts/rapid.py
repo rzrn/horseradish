@@ -13,8 +13,8 @@ Set ALWAYS_RAPID to TRUE to automatically get rapid when you login.
 .. codeauthor:: hompy
 """
 
-from twisted.internet.reactor import callLater
-from twisted.internet.task import LoopingCall
+import asyncio
+
 from pyspades import contained as loaders
 from piqueserver.commands import command, get_player, target_player
 
@@ -30,11 +30,10 @@ def toggle_rapid(connection, player):
 
     player.rapid = rapid = not player.rapid
     player.rapid_hack_detect = not rapid
-    if rapid:
-        player.rapid_loop = LoopingCall(resend_tool, player)
-    else:
-        if player.rapid_loop and player.rapid_loop.running:
-            player.rapid_loop.stop()
+
+    if rapid is False:
+        if defer := player.rapid_loop:
+            defer.cancel()
         player.rapid_loop = None
 
     message = 'now rapid' if rapid else 'no longer rapid'
@@ -65,14 +64,15 @@ def apply_script(protocol, connection, config):
             connection.on_login(self, name)
 
         def on_reset(self):
-            if self.rapid_loop and self.rapid_loop.running:
-                self.rapid_loop.stop()
+            if defer := self.rapid_loop:
+                defer.cancel()
+            self.rapid_loop = None
             connection.on_reset(self)
 
         def on_disconnect(self):
             self.rapid = False
-            if self.rapid_loop and self.rapid_loop.running:
-                self.rapid_loop.stop()
+            if defer := self.rapid_loop:
+                defer.cancel()
             self.rapid_loop = None
             connection.on_disconnect(self)
 
@@ -80,7 +80,7 @@ def apply_script(protocol, connection, config):
             if self.rapid:
                 delay = max(0.0, RAPID_BLOCK_DELAY - self.latency / 1000.0)
                 if delay > 0.0:
-                    callLater(delay, resend_tool, self)
+                    asyncio.get_running_loop().call_later(delay, resend_tool, self)
                 else:
                     resend_tool(self)
             connection.on_block_build(self, x, y, z)
@@ -90,12 +90,24 @@ def apply_script(protocol, connection, config):
                 resend_tool(self)
             connection.on_grenade_thrown(self, grenade)
 
+        async def rapid_looping_call(self):
+            while True:
+                resend_tool(self)
+
+                await asyncio.sleep(RAPID_INTERVAL)
+
         def on_shoot_set(self, fire):
-            if self.rapid and self.rapid_loop:
-                if not self.rapid_loop.running and fire:
-                    self.rapid_loop.start(RAPID_INTERVAL)
-                elif self.rapid_loop.running and not fire:
-                    self.rapid_loop.stop()
+            if self.rapid:
+                if defer := self.rapid_loop:
+                    if fire is False:
+                        self.rapid_loop = None
+                        defer.cancel()
+                else:
+                    if fire is True:
+                        self.rapid_loop = self.protocol.create_task(
+                            self.rapid_looping_call()
+                        )
+
             connection.on_shoot_set(self, fire)
 
     return protocol, RapidConnection

@@ -12,7 +12,8 @@ May not work well with squads.
 """
 
 from random import choice
-from twisted.internet.reactor import seconds
+from time import monotonic
+
 from pyspades.world import Grenade
 from pyspades.contained import GrenadePacket
 from pyspades.collision import distance_3d_vector
@@ -100,10 +101,10 @@ def apply_script(protocol, connection, config):
                         self.link.send_chat(message)
                     elif (dist > LINK_WARNING_DISTANCE and
                           (self.last_warning is None or
-                           seconds() - self.last_warning > 2.0)):
+                           monotonic() - self.last_warning > 2.0)):
 
-                        self.last_warning = seconds()
-                        self.link.last_warning = seconds()
+                        self.last_warning = monotonic()
+                        self.link.last_warning = monotonic()
 
                         message = S_LINK_WARNING.format(player=self.link.name)
                         self.send_chat(message)

@@ -35,7 +35,8 @@ Options
 """
 
 from math import ceil, floor
-from twisted.internet import reactor
+import asyncio
+
 from piqueserver.config import config, cast_duration
 
 spectator_ctrl_config = config.section("spectator_control")
@@ -62,21 +63,22 @@ def apply_script(protocol, connection, config):
                 if self.rights is None or (not self.admin and not self.rights.specpower):  # not an admin
                     # this check is necessary as you can join spectator from
                     # being a spectator
-                    if self.spec_check is None or not self.spec_check.active():
+                    if self.spec_check is None or self.spec_check.cancelled() is False:
                         self.send_chat(
                             'Warning! Spectators are kicked after %s seconds!' %
                             (kick_time.get()))
                         time = ceil((kick_time.get() / 4) * 3)
-                        self.spec_check = reactor.callLater(
-                            time, self.check_spec_time, 1)
+                        self.spec_check = asyncio.get_running_loop().call_later(
+                            time, self.check_spec_time, 1
+                        )
             elif not team.spectator:
-                if self.spec_check is not None and self.spec_check.active():
+                if self.spec_check is not None:
                     self.spec_check.cancel()
                     self.spec_check = None
             return connection.on_team_join(self, team)
 
         def on_disconnect(self):
-            if self.spec_check is not None and self.spec_check.active():
+            if self.spec_check is not None:
                 self.spec_check.cancel()
             self.spec_check = None
             return connection.on_disconnect(self)
@@ -95,8 +97,9 @@ def apply_script(protocol, connection, config):
                 self.send_chat(
                     'Warning! If you do not leave spectator, you will be kicked in %s seconds!' %
                     (seconds))
-                self.spec_check = reactor.callLater(
-                    seconds, self.check_spec_time, 2)
+                self.spec_check = asyncio.get_running_loop().call_later(
+                    seconds, self.check_spec_time, 2
+                )
             elif id == 2:
                 self.kick(
                     'You have been kicked for remaining in spectator for too long.')

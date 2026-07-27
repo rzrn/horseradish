@@ -41,7 +41,7 @@ example extension from mapname.txt:
 
 from random import choice
 from piqueserver.commands import command, admin
-from twisted.internet.reactor import callLater
+import asyncio
 from pyspades.constants import DESTROY_BLOCK, SPADE_DESTROY, BUILD_BLOCK
 from pyspades.collision import collision_3d
 from pyspades.common import Vertex3, make_color
@@ -167,7 +167,7 @@ class Minefield:
         grenade_packet.velocity = velocity.get()
         protocol.broadcast_contained(grenade_packet)
         if z >= 61.5:
-            callLater(fuse + 0.1, self.spawnDecal, connection, x, y, z)
+            asyncio.get_running_loop().call_later(fuse + 0.1, self.spawnDecal, connection, x, y, z)
 
 
 def parseField(ext):
@@ -269,7 +269,9 @@ def apply_script(protocol, connection, config):
             if m:
                 if spawnUp:
                     z -= 1
-                callLater(waitTime, m.spawnNade, connection,
-                          x + 0.5, y + 0.5, z + 0.5)
+                asyncio.get_running_loop().call_later(
+                    waitTime, m.spawnNade, connection,
+                    x + 0.5, y + 0.5, z + 0.5
+                )
 
     return MineProtocol, MineConnection

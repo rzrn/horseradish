@@ -5,23 +5,30 @@ garbage found.
 .. codeauthor:: mat^2
 """
 
-from twisted.internet import reactor
-from twisted.internet.task import LoopingCall
+import asyncio
 import gc
 
 INTERVAL = 60 * 10
 VERBOSE = False
 
-
 def apply_script(protocol, connection, config):
-    def run_gc():
-        ret = gc.collect()
-        if VERBOSE:
-            print('gc.collect() ->', ret)
-        if not gc.garbage:
-            return
-        print('Memory leak detected!')
-        print('Contents of gc.garbage:', gc.garbage)
-    loop = LoopingCall(run_gc)
-    loop.start(INTERVAL, now=False)
-    return protocol, connection
+    async def garbage_collector_loop():
+        while True:
+            await asyncio.sleep(INTERVAL)
+
+            ret = gc.collect()
+            if VERBOSE:
+                print('gc.collect() ->', ret)
+            if not gc.garbage:
+                pass
+            else:
+                print('Memory leak detected!')
+                print('Contents of gc.garbage:', gc.garbage)
+
+    class GarbageCollectorProtocol(protocol):
+        async def on_event_loop_start(self):
+            await protocol.on_event_loop_start(self)
+            self.create_task(garbage_collector_loop())
+
+
+    return GarbageCollectorProtocol, connection

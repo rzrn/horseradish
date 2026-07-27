@@ -16,7 +16,8 @@ How to install and configure:
 from random import randint
 from pyspades.constants import (BLUE_BASE, GREEN_BASE, BLUE_FLAG, GREEN_FLAG,
                                 SPADE_TOOL, GRENADE_TOOL, WEAPON_TOOL)
-from twisted.internet import reactor
+
+import asyncio
 
 # If ALWAYS_ENABLED is False, then babel
 # can be enabled by setting 'babel': True
@@ -157,11 +158,14 @@ def apply_script(protocol, connection, config):
                 getattr(self.protocol.map_info.info, 'fog', (128, 232, 255)))
 
         def on_flag_take(self):
+            loop = asyncio.get_running_loop()
+
             if self.auto_kill_intel_hog_call is not None:
                 self.auto_kill_intel_hog_call.cancel()
                 self.auto_kill_intel_hog_call = None
-            self.auto_kill_intel_hog_call = reactor.callLater(
-                allowed_intel_hold_time, self.auto_kill_intel_hog)
+            self.auto_kill_intel_hog_call = loop.call_later(
+                allowed_intel_hold_time, self.auto_kill_intel_hog
+            )
             # flash team color in sky
             if self.team is self.protocol.blue_team:
                 self.protocol.set_fog_color(
@@ -169,11 +173,13 @@ def apply_script(protocol, connection, config):
             if self.team is self.protocol.green_team:
                 self.protocol.set_fog_color(
                     getattr(self.protocol.map_info.info, 'fog', (0, 255, 0)))
-            reactor.callLater(0.25, self.restore_default_fog_color)
+            loop.call_later(0.25, self.restore_default_fog_color)
             return connection.on_flag_take(self)
 
         # return intel to platform if dropped
         def on_flag_drop(self):
+            loop = asyncio.get_running_loop()
+
             x = self.world_object.position.x
             y = self.world_object.position.y
             z = self.world_object.position.z
@@ -188,7 +194,7 @@ def apply_script(protocol, connection, config):
                 self.reset_flag()
             self.protocol.set_fog_color(
                 getattr(self.protocol.map_info.info, 'fog', (255, 0, 0)))
-            reactor.callLater(0.25, self.restore_default_fog_color)
+            loop.call_later(0.25, self.restore_default_fog_color)
             return connection.on_flag_drop(self)
 
         def reset_flag(self):

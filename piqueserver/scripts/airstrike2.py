@@ -12,7 +12,10 @@ Commands
 
 from math import ceil, sin, cos
 from random import uniform, vonmisesvariate
-from twisted.internet import reactor
+
+import asyncio
+from time import monotonic
+
 from pyspades.contained import GrenadePacket
 from pyspades.common import to_coordinates, Vertex3
 from pyspades.world import Grenade
@@ -84,25 +87,28 @@ class Nag:
         self.args = args
         self.kw = kw
 
+    def fire(self):
+        self.call = None
+
+        self.f(*self.args, **self.kw)
+
     def start_or_reset(self):
-        if self.call and self.call.active():
-            # In Twisted==18.9.0, reset() is broken when using
-            # AsyncIOReactor
-            # self.call.reset(ZOOMV_TIME)
+        loop = asyncio.get_running_loop()
+
+        if self.active():
             self.call.cancel()
-            self.call = reactor.callLater(
-                ZOOMV_TIME, self.f, *self.args, **self.kw)
+            self.call = loop.call_later(ZOOMV_TIME, self.fire)
         else:
-            self.call = reactor.callLater(
-                self.seconds, self.f, *self.args, **self.kw)
+            self.call = loop.call_later(self.seconds, self.fire)
 
     def stop(self):
-        if self.call and self.call.active():
-            self.call.cancel()
+        if call := self.call:
+            call.cancel()
+
         self.call = None
 
     def active(self):
-        return self.call and self.call.active()
+        return self.call is not None and self.call.cancelled() is False
 
     def __del__(self):
         self.stop()
@@ -126,9 +132,11 @@ def apply_script(protocol, connection, config):
             message = S_ENEMY.format(coords=coords)
             self.protocol.broadcast_chat(message, global_message=False,
                                          team=self.team.other)
-            self.team.last_airstrike = reactor.seconds()
+            self.team.last_airstrike = monotonic()
 
-            reactor.callLater(ARRIVAL_DELAY, self.do_airstrike, x, y, z)
+            asyncio.get_running_loop().call_later(
+                ARRIVAL_DELAY, self.do_airstrike, x, y, z
+            )
 
         def do_airstrike(self, x, y, z):
             if self.name is None:
@@ -152,12 +160,13 @@ def apply_script(protocol, connection, config):
                     grenade_x += uniform(*jitter)
                     grenade_y += uniform(-spread, spread)
                     delay = i * 0.85 + j * 0.11
-                    call = reactor.callLater(
+                    call = asyncio.get_running_loop().call_later(
                         delay,
                         self.create_airstrike_grenade,
                         grenade_x,
                         grenade_y,
-                        grenade_z)
+                        grenade_z
+                    )
                     self.airstrike_grenade_calls.append(call)
 
         def create_airstrike_grenade(self, x, y, z):
@@ -198,12 +207,11 @@ def apply_script(protocol, connection, config):
         def end_airstrike(self):
             if self.airstrike_grenade_calls:
                 for grenade_call in self.airstrike_grenade_calls:
-                    if grenade_call and grenade_call.active():
-                        grenade_call.cancel()
+                    grenade_call.cancel()
             self.airstrike_grenade_calls = None
 
         def start_zoomv(self):
-            now = reactor.seconds()
+            now = monotonic()
             last_strike = getattr(self.team, 'last_airstrike', None)
             if last_strike is not None and now - last_strike < TEAM_COOLDOWN:
                 remaining = ceil(TEAM_COOLDOWN - (now - last_strike))
@@ -229,9 +237,9 @@ def apply_script(protocol, connection, config):
 
         def send_zoomv_chat(self, message):
             last_message = self.last_zoomv_message
-            if last_message is None or reactor.seconds() - last_message >= 1.0:
+            if last_message is None or monotonic() - last_message >= 1.0:
                 self.send_chat(message)
-                self.last_zoomv_message = reactor.seconds()
+                self.last_zoomv_message = monotonic()
 
         def on_team_changed(self, old_team):
             self.end_airstrike()

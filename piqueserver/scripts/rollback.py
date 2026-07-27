@@ -28,7 +28,7 @@ import os
 import time
 import operator
 
-from twisted.internet.task import LoopingCall
+import asyncio
 from pyspades.vxl import VXLData
 from pyspades.contained import BlockAction, SetColor
 from pyspades.constants import *
@@ -129,8 +129,7 @@ def apply_script(protocol, connection, config):
             self.rollback_last_chat = self.rollback_start_time
             self.rollback_rows = 0
             self.rollback_total_rows = end_x - start_x
-            self.cycle_call = LoopingCall(self.rollback_cycle)
-            self.cycle_call.start(self.rollback_time_between_cycles)
+            self.cycle_call = self.create_task(self.rollback_cycle())
 
         def cancel_rollback(self, connection):
             if not self.rollback_in_progress:
@@ -140,14 +139,20 @@ def apply_script(protocol, connection, config):
 
         def end_rollback(self, result):
             self.rollback_in_progress = False
-            self.cycle_call.stop()
+            self.cycle_call.cancel()
             self.cycle_call = None
             self.packet_generator = None
             self.update_entities()
             message = S_ROLLBACK_ENDED.format(result=result)
             self.broadcast_chat(message, irc=True)
 
-        def rollback_cycle(self):
+        async def rollback_cycle(self):
+            while True:
+                self.rollback_tick()
+
+                await asyncio.sleep(self.rollback_time_between_cycles)
+
+        def rollback_tick(self):
             if not self.rollback_in_progress:
                 return
             try:

@@ -14,7 +14,7 @@ Commands
 
 from math import modf
 
-from twisted.internet.task import LoopingCall
+import asyncio
 from piqueserver.commands import command, admin
 from pyspades.color import wrap, interpolate_hsb, interpolate_rgb, hsb_to_rgb, rgb_distance
 
@@ -33,12 +33,10 @@ def day_speed(connection, value=None):
     protocol = connection.protocol
     protocol.time_multiplier = value
     if value == 0.0:
-        if protocol.daycycle_loop.running:
-            protocol.daycycle_loop.stop()
+        protocol.stop_daycycle_loop()
         return S_STOPPED
     else:
-        if not protocol.daycycle_loop.running:
-            protocol.daycycle_loop.start(protocol.day_update_frequency)
+        protocol.start_daycycle_loop()
         return S_SPEED_SET.format(multiplier=value)
 
 
@@ -65,14 +63,12 @@ def apply_script(protocol, connection, config):
         day_update_frequency = None
         time_multiplier = None
 
-        def __init__(self, *arg, **kw):
-            protocol.__init__(self, *arg, **kw)
-            self.daycycle_loop = LoopingCall(self.update_day_color)
+        async def on_event_loop_start(self):
+            await protocol.on_event_loop_start(self)
+
             self.reset_daycycle()
 
         def reset_daycycle(self):
-            if not self.daycycle_loop:
-                return
             self.current_color = None
             self.current_time = 7.00
             self.day_duration = 24 * 60 * 60.00
@@ -96,8 +92,24 @@ def apply_script(protocol, connection, config):
                                       self.day_update_frequency)
             self.target_color_index = 0
             self.next_color()
-            if not self.daycycle_loop.running:
-                self.daycycle_loop.start(self.day_update_frequency)
+
+            self.start_daycycle_loop()
+
+        def start_daycycle_loop(self):
+            if self.daycycle_loop is None:
+                self.daycycle_loop = self.create_task(
+                    self.update_day_color_loop(self.day_update_frequency)
+                )
+
+        def stop_daycycle_loop(self):
+            if defer := self.daycycle_loop:
+                self.daycycle_loop = None
+                defer.cancel()
+
+        async def update_day_color_loop(self, interval):
+            while True:
+                self.update_day_color()
+                await asyncio.sleep(interval)
 
         def update_day_color(self):
             if self.current_time >= 24.00:
@@ -133,7 +145,9 @@ def apply_script(protocol, connection, config):
                 self.target_color = hsb_to_rgb(*self.target_color)
 
         def on_map_change(self, map_):
-            self.reset_daycycle()
+            if self.daycycle_loop is not None:
+                self.reset_daycycle()
+
             protocol.on_map_change(self, map_)
 
     return DayCycleProtocol, connection
