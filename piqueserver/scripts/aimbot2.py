@@ -274,6 +274,9 @@ def apply_script(protocol, connection, config):
 
             self_pos = self.world_object.position
             for enemy in self.team.other.get_players():
+                if enemy.world_object is None:
+                    continue
+
                 enemy_pos = enemy.world_object.position
                 position_v = (enemy_pos.x - self_pos.x, enemy_pos.y -
                               self_pos.y, enemy_pos.z - self_pos.z)
@@ -314,8 +317,9 @@ def apply_script(protocol, connection, config):
             if shoot and self.bullet_loop is None:
                 self.possible_targets = []
                 for enemy in self.team.other.get_players():
-                    if point_distance2(self, enemy) <= FOG_DISTANCE2:
-                        self.possible_targets.append(enemy)
+                    if d := point_distance2(self, enemy):
+                        if d <= FOG_DISTANCE2:
+                            self.possible_targets.append(enemy)
                 self.bullet_loop_start(self.weapon_object.delay)
             elif not shoot:
                 self.bullet_loop_stop()
