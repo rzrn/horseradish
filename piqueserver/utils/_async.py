@@ -1,15 +1,6 @@
 import asyncio
 from asyncio import Future
-from twisted.internet.defer import Deferred
 from typing import Awaitable, Optional, Callable
-
-
-def as_future(d: Deferred) -> Future:
-    return d.asFuture(asyncio.get_event_loop())
-
-
-def as_deferred(f: Awaitable) -> Deferred:
-    return Deferred.fromFuture(asyncio.ensure_future(f))
 
 
 # TODO: this looks ugly and probably is not really needed

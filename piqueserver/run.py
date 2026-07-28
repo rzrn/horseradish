@@ -10,6 +10,37 @@ import json
 import urllib.request
 import hashlib
 
+from contextlib import redirect_stdout, redirect_stderr
+from io import StringIO, TextIOBase
+
+from pyspades.logger import getLogger
+import logging
+
+
+log = getLogger()
+endlines = ('\n', '\r\n', '\r')
+class LoggerTextIO(TextIOBase):
+    def __init__(self, loglevel):
+        super().__init__()
+
+        self.loglevel = loglevel
+        self.buffer = ""
+
+    def write(self, s):
+        self.buffer += s
+
+        for line in StringIO(self.buffer, newline = ''):
+            if line.endswith(endlines):
+                log.log(self.loglevel, "{line}", line = line.rstrip())
+            else:
+                # Last line, without line endings
+                self.buffer = line
+                break
+        else:
+            # No `break` occurred, hence no remaining text in `buffer`
+            self.buffer = ""
+
+
 PKG_NAME = 'piqueserver'
 
 def get_git_rev():
@@ -123,20 +154,6 @@ def update_geoip(target_dir):
 
 
 def main():
-    # We need to install the asyncio reactor before we add any imports like
-    # `twisted.internet.*` which install the default reactor.  We keep it here
-    # and not at package level to avoid installing the reactor more than once.
-    # Twisted throws an exception if you install the reactor more than once.
-    import asyncio
-
-    if sys.platform == 'win32':
-        # we (or twisted) do not support the ProactorEventLoop as it does not
-        # support adding file readers
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
-    from twisted.internet import asyncioreactor
-    asyncioreactor.install()
-
     from piqueserver.config import config, TOML_FORMAT, JSON_FORMAT
 
     description = '%s is an open-source Python server implementation ' \
@@ -254,8 +271,19 @@ def main():
     if args.json_parameters:
         config.update_from_dict(json.loads(args.json_parameters))
 
-    from piqueserver import server
-    server.run()
+    import asyncio
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    stdout = LoggerTextIO(logging.INFO)
+    stderr = LoggerTextIO(logging.ERROR)
+
+    with redirect_stdout(stdout), redirect_stderr(stderr):
+        from piqueserver import server
+        server.run(loop)
+
+    loop.close()
 
 
 if __name__ == "__main__":

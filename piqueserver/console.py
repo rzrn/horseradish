@@ -15,60 +15,37 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-
+from threading import Thread
 from typing import List
 import traceback
+import sys
 
-from twisted.internet import reactor
-from twisted.protocols.basic import LineReceiver
+import asyncio
 
 from pyspades.types import AttributeSet
 from piqueserver import commands
 
-stdout = sys.__stdout__
 
-if sys.platform == 'win32':
-    # StandardIO on Windows does not work, so we create a silly replacement
-    import msvcrt  # pylint: disable=import-error
+class StdinDaemonThread(Thread):
+    def __init__(self, loop = None):
+        super().__init__(daemon = True)
+        self.queue = asyncio.Queue()
 
-    class StandardIO:
-        disconnecting = False
-        interval = 0.01
-        input = ''
+        if loop is None:
+            self.loop = asyncio.get_running_loop()
+        else:
+            self.loop = loop
 
-        def __init__(self, protocol):
-            self.protocol = protocol
-            protocol.makeConnection(self)
-            self.get_input()
+    def run(self):
+        while True:
+            recv = input()
+            self.loop.call_soon_threadsafe(self.queue.put_nowait, recv)
 
-        def get_input(self):
-            while msvcrt.kbhit():
-                c = msvcrt.getwche()
-                if c == '\r':  # new line
-                    c = '\n'
-                    self.input += c
-                    self.protocol.dataReceived(self.input.encode())
-                    self.input = ''
-                elif c in ('\xE0', '\x00'):
-                    # ignore special characters
-                    msvcrt.getwch()
-                elif c == '\x08':  # delete
-                    self.input = self.input[:-1]
-                else:
-                    self.input += c
-            reactor.callLater(self.interval, self.get_input)
-
-        def write(self, data):
-            stdout.write(data)
-
-        def writeSequence(self, seq):
-            stdout.write(''.join(seq))
-else:
-    from twisted.internet.stdio import StandardIO
+    async def input(self):
+        return await self.queue.get()
 
 
-class ConsoleInput(LineReceiver):
+class ConsoleInput:
     name = 'Console'
     admin = True
     delimiter = b'\n'
@@ -80,19 +57,6 @@ class ConsoleInput(LineReceiver):
         for user_type in self.user_types:
             self.rights.update(commands.get_rights(user_type))
 
-    def lineReceived(self, line):
-        if not line:
-            return
-
-        try:
-            result = commands.handle_input(self, line.decode())
-        # pylint: disable=broad-except
-        except Exception:
-            traceback.print_exc()
-        else:
-            if result is not None:
-                print(result)
-
     # methods used to emulate the behaviour of regular Connection objects to
     # prevent errors when command writers didn't test that their scripts would
     # work when run on the console
@@ -103,6 +67,27 @@ class ConsoleInput(LineReceiver):
         print("\n".join(lines))
 
 
-def create_console(protocol):
+async def create_console(protocol):
     console = ConsoleInput(protocol)
-    StandardIO(console)
+
+    # The reason for this insanity is that this thread will be automatically
+    # closed without waiting for `input()` as it is a daemon thread.
+    thrdin = StdinDaemonThread()
+    thrdin.start()
+
+    while True:
+        # This appears to be the most portable way to do it.
+        # Since we are not passing gigabytes through stdin anyway,
+        # there is no reason to add unnecessary complexity.
+        recv = await thrdin.input()
+
+        if not recv:
+            continue
+
+        try:
+            retval = commands.handle_input(console, recv)
+        except Exception:
+            traceback.print_exc()
+        else:
+            if retval is not None:
+                print(retval)

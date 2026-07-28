@@ -34,9 +34,6 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 import aiohttp
 from pyspades.enet import Address, Packet, Peer
-from twisted.internet import reactor
-from twisted.internet.defer import ensureDeferred
-from twisted.internet.tcp import Port
 
 from logging import FileHandler, StreamHandler, getLevelName
 from logging.handlers import TimedRotatingFileHandler
@@ -45,13 +42,12 @@ from logging.handlers import TimedRotatingFileHandler
 import piqueserver.core_commands  # pylint: disable=unused-import
 from piqueserver import commands, extensions
 from piqueserver.config import cast_duration, config
-from piqueserver.console import create_console
 from piqueserver.map import Map, MapNotFound, RotationInfo, check_rotation
 from piqueserver.networkdict import NetworkDict
 from piqueserver.player import FeatureConnection
 from piqueserver.release import check_for_releases, format_release
 from piqueserver.scheduler import Scheduler
-from piqueserver.utils import as_deferred, EndCall
+from piqueserver.utils import EndCall
 from piqueserver.statusserver import StatusServer
 from pyspades.bytes import NoDataLeft
 from pyspades.constants import (CTF_MODE, ERROR_SHUTDOWN, TC_MODE,
@@ -252,7 +248,7 @@ class FeatureProtocol(ServerProtocol):
                 log_filename = os.path.join(config.config_dir, log_filename)
             ensure_dir_exists(log_filename)
 
-            stream_handler = StreamHandler(sys.stdout)
+            stream_handler = StreamHandler(sys.__stdout__)
 
             if logging_rotate_daily.get():
                 file_handler = TimedRotatingFileHandler(filename = log_filename, when = "midnight", interval = 1)
@@ -268,11 +264,6 @@ class FeatureProtocol(ServerProtocol):
                 datefmt  = "%Y-%m-%dT%H:%M:%S%z",
                 handlers = [stream_handler, file_handler]
             )
-
-            from twisted.logger import globalLogBeginner, STDLibLogObserver
-
-            observers = [STDLibLogObserver()]
-            globalLogBeginner.beginLoggingTo(observers)
 
             log.info('piqueserver started on {time}', time=time.strftime('%c'))
 
@@ -368,8 +359,6 @@ class FeatureProtocol(ServerProtocol):
         self.set_god_build = set_god_build.get()
         self.start_time = time.time()
         self.end_calls = []
-        # TODO: why is this here?
-        create_console(self)
 
         for user_type, func_names in rights.get().items():
             for func_name in func_names:
@@ -381,11 +370,6 @@ class FeatureProtocol(ServerProtocol):
         self.port = port_option.get()
         ServerProtocol.__init__(self, self.port, interface)
         self.host.intercept = self.receive_callback
-
-        ensureDeferred(as_deferred(self.on_event_loop_start()))
-
-        reactor.addSystemEventTrigger(
-            'before', 'shutdown', lambda: ensureDeferred(as_deferred(self.shutdown())))
 
     async def on_event_loop_start(self):
         if ssh_enabled.get():
@@ -919,18 +903,6 @@ class FeatureProtocol(ServerProtocol):
 
         return task
 
-    def listenTCP(self, *arg, **kw) -> Port:
-        return reactor.listenTCP(
-            *arg, interface=network_interface.get(), **kw)
-
-    def connectTCP(self, *arg, **kw):
-        return reactor.connectTCP(
-            *arg,
-            bindAddress=(
-                network_interface.get(),
-                0),
-            **kw)
-
     # before-end calls
 
     def call_end(self, delay: int, func: Callable, *arg, **kw) -> EndCall:
@@ -944,18 +916,40 @@ class FeatureProtocol(ServerProtocol):
         return self.advance_call.when() - asyncio.get_running_loop().time()
 
 
-def run() -> None:
+def wait_for_pending(loop):
+    pending = asyncio.all_tasks(loop)
+    for task in pending:
+        task.cancel()
+
+    coro = asyncio.wait(pending)
+    try:
+        loop.run_until_complete(coro)
+    except KeyboardInterrupt:
+        print("Waiting for active tasks to finish...")
+        for task in pending:
+            print("* {}".format(task))
+        print("Press Ctrl-C again to force quit.")
+
+        try:
+            loop.run_until_complete(coro)
+        except KeyboardInterrupt:
+            print("Force quitting...")
+
+def run(loop) -> None:
     """
     runs the server
     """
+
+    t1 = time.monotonic()
 
     # load and apply regular scripts
     script_names = scripts_option.get()
     script_dir = os.path.join(config.config_dir, 'scripts/')
     script_objects = extensions.load_scripts_regular_extension(
         script_names, script_dir)
-    (protocol_class, connection_class) = extensions.apply_scripts(
-        script_objects, config, FeatureProtocol, FeatureConnection)
+    protocol_class, connection_class = extensions.apply_scripts(
+        script_objects, config, FeatureProtocol, FeatureConnection
+    )
 
     # load and apply the game_mode script
     game_mode_name = game_mode.get()
@@ -971,7 +965,7 @@ def run() -> None:
 
     # instantiate the protocol class once. It will set timers and hooks to keep
     # itself running once we start the reactor
-    protocol_class(interface, config.get_dict())
+    protocol = protocol_class(interface, config.get_dict())
 
     log.debug('Checking for unregistered config items...')
     unused = config.check_unused()
@@ -979,11 +973,48 @@ def run() -> None:
         log.warning('The following config items are not used:')
         pprint(unused)
 
-    log.info('Started server...')
+    loop.run_until_complete(protocol.on_event_loop_start())
 
-    profile = logging_profile_option.get()
-    if profile:
-        import cProfile
-        cProfile.runctx('reactor.run()', None, globals())
+    t2 = time.monotonic()
+
+    log.info(
+        'Loading took {elapsed:.2f} s. Listening on port {port}',
+        elapsed = t2 - t1, port = protocol.port
+    )
+
+    if ssh_enabled.get() is False:
+        from piqueserver.console import create_console
+        loop.create_task(create_console(protocol))
     else:
-        reactor.run()
+        # FIXME: AsyncSSH manages to break the global `input()`,
+        # so for now we disable local console if SSH is enabled.
+        log.warning('Use an SSH client to access the interactive console')
+
+    if logging_profile_option.get():
+        import cProfile
+
+        # TODO: I have doubts about using this for asynchronous code.
+        profiler = cProfile.Profile()
+        profiler.enable()
+    else:
+        profiler = None
+
+    try:
+        loop.run_forever()
+    except KeyboardInterrupt:
+        # TODO: catch SIGTERM and SIGBREAK
+        print("Received SIGINT, shutting down.")
+
+    if profiler is not None:
+        profiler.disable()
+
+    try:
+        loop.run_until_complete(protocol.shutdown())
+    except KeyboardInterrupt:
+        print("Received SIGINT, cancelling finalization.")
+
+    wait_for_pending(loop)
+
+    if profiler is not None:
+        # Make sure that finalizing tasks are not blocked by this.
+        profiler.print_stats(sort = 'cumulative')
