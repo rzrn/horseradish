@@ -17,7 +17,7 @@ from pyspades.logger import getLogger
 import logging
 
 
-log = getLogger()
+log = getLogger("stdio")
 endlines = ('\n', '\r\n', '\r')
 class LoggerTextIO(TextIOBase):
     def __init__(self, loglevel):
