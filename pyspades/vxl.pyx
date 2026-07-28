@@ -281,3 +281,11 @@ cdef class VXLData:
             map = self.map
             self.map = NULL
             delete_vxl(map)
+
+    # Callbacks for subclasses to implement custom per-class behavior
+
+    async def on_map_loaded(self, protocol):
+        pass
+
+    async def on_map_unloaded(self, protocol):
+        pass
