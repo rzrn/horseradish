@@ -39,6 +39,7 @@ if use_ubsan:
 
 if use_linetrace:
     macros['CYTHON_TRACE'] = '1'
+    macros['CYTHON_USE_SYS_MONITORING'] = '0'
     Options.generate_cleanup_code = True
 
 enet_libraries = []
