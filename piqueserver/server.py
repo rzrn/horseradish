@@ -540,15 +540,14 @@ class FeatureProtocol(ServerProtocol):
         Sets the map by its name.
         """
 
-        map_info = await self.make_map(rot_info)
-
-        if self.map_info is not None:
-            self.on_map_leave()
-
         if map_data := self.map:
             await map_data.on_map_unloaded(self)
 
+        map_info = await self.make_map(rot_info)
         await map_info.data.on_map_loaded(self)
+
+        if self.map_info is not None:
+            self.on_map_leave()
 
         self.map_info = map_info
         self.max_score = self.default_cap_limit if self.map_info.cap_limit is None else self.map_info.cap_limit
