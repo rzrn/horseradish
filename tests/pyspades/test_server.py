@@ -2,7 +2,7 @@
 test pyspades/server.py
 """
 
-from twisted.trial import unittest
+import unittest
 from pyspades import server
 
 class BaseConnectionTest(unittest.TestCase):

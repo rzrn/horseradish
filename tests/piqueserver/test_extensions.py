@@ -3,7 +3,7 @@ test piqueserver/extensions.py
 """
 import os
 
-from twisted.trial import unittest
+import unittest
 
 from piqueserver import extensions
 from piqueserver.config import config

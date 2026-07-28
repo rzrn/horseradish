@@ -5,7 +5,7 @@ test pyspades/common.pyx
 
 import math
 
-from twisted.trial import unittest
+import unittest
 
 from pyspades import common
 

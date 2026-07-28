@@ -1,5 +1,5 @@
 
-from twisted.trial import unittest
+import unittest
 from unittest.mock import Mock
 
 from pyspades import world

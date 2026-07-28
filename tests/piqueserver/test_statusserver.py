@@ -1,4 +1,3 @@
-from twisted.trial import unittest
 from unittest.mock import Mock, patch
 from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 from aiohttp import web

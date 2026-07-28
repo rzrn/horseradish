@@ -1,7 +1,7 @@
 """
 tests for bytes.pyx
 """
-from twisted.trial import unittest
+import unittest
 
 from pyspades.bytes import ByteReader, ByteWriter
 

@@ -2,7 +2,7 @@
 test pyspades/protocol.py
 """
 
-from twisted.trial import unittest
+import unittest
 from pyspades import constants
 
 class BaseConnectionTest(unittest.TestCase):

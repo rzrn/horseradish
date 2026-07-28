@@ -2,7 +2,7 @@
 test pyspades/protocol.py
 """
 
-from twisted.trial import unittest
+import unittest
 from pyspades import player, server, contained
 from pyspades.team import Team
 from unittest.mock import Mock

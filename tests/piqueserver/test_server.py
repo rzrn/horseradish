@@ -2,7 +2,7 @@
 test piqueserver/server.py
 """
 
-from twisted.trial import unittest
+import unittest
 import piqueserver.server
 
 
