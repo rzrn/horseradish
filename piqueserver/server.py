@@ -715,6 +715,8 @@ class FeatureProtocol(ServerProtocol):
         async def do_vacuum_bans():
             """do the actual clearing of bans"""
 
+            current_time = time.time()
+
             bans_count = len(self.bans)
             log.info("Starting ban vacuum with {count} bans", count = bans_count)
             start_time = time.monotonic()
@@ -727,7 +729,7 @@ class FeatureProtocol(ServerProtocol):
                 if ban_exipry is None:
                     # entry never expires
                     continue
-                if ban[1][2] < start_time:
+                if ban[1][2] < current_time:
                     # expired
                     del self.bans[ban[0]]
 
