@@ -33,9 +33,6 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 import aiohttp
 from pyspades.enet import Address, Packet, Peer
 
-from logging import FileHandler, StreamHandler, getLevelName
-from logging.handlers import TimedRotatingFileHandler
-
 # won't be used; just need to be executed
 import horseradish.core_commands  # pylint: disable=unused-import
 from horseradish import commands, extensions
@@ -83,8 +80,6 @@ respawn_waves = config.option('respawn_waves', default=False)
 game_mode = config.option('game_mode', default='ctf')
 random_rotation = config.option('random_rotation', default=False)
 passwords = config.option('passwords', default={})
-logfile = logging_config.option('logfile', default='./logs/log.txt')
-loglevel = logging_config.option('loglevel', default='INFO')
 map_rotation = config.option('rotation', default=['classicgen', 'random'],
                              validate=lambda x: isinstance(x, list))
 default_time_limit = config.option(
@@ -134,7 +129,6 @@ logging_profile_option = logging_config.option('profile', False)
 set_god_build = config.option('set_god_build', False)
 status_server_enabled = config.section(
     'status_server').option('enabled', False)
-logging_rotate_daily = logging_config.option('rotate_daily', False)
 tip_frequency = config.option(
     'tips_frequency', default="5sec", cast=lambda x: cast_duration(x)/60)
 register_master_option = config.option('master', False)
@@ -239,31 +233,7 @@ class FeatureProtocol(ServerProtocol):
     default_fog = (128, 232, 255)
 
     def __init__(self, interface: bytes, config_dict: Dict[str, Any]) -> None:
-        # logfile path relative to config dir if not abs path
-        log_filename = logfile.get()
-        if log_filename.strip():  # catches empty filename
-            if not os.path.isabs(log_filename):
-                log_filename = os.path.join(config.config_dir, log_filename)
-            ensure_dir_exists(log_filename)
-
-            stream_handler = StreamHandler(sys.__stdout__)
-
-            if logging_rotate_daily.get():
-                file_handler = TimedRotatingFileHandler(filename = log_filename, when = "midnight", interval = 1)
-            else:
-                file_handler = FileHandler(log_filename)
-
-            import logging
-
-            logging.basicConfig(
-                level    = getLevelName(loglevel.get()),
-                style    = "{",
-                format   = "{asctime} [{name}#{levelname}] {message}",
-                datefmt  = "%Y-%m-%dT%H:%M:%S%z",
-                handlers = [stream_handler, file_handler]
-            )
-
-            log.info('Server started on {time}', time=time.strftime('%c'))
+        log.info('Server started on {time}', time = time.strftime('%c'))
 
         self.config = config_dict
         if random_rotation.get():

@@ -16,6 +16,8 @@ from io import StringIO, TextIOBase
 from pyspades.logger import getLogger
 import logging
 
+from logging import FileHandler, StreamHandler, getLevelName
+from logging.handlers import TimedRotatingFileHandler
 
 log = getLogger("stdio")
 endlines = ('\n', '\r\n', '\r')
@@ -275,6 +277,36 @@ def main():
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
+
+    logging_config = config.section('logging')
+
+    logfile = logging_config.option('logfile', default='./logs/log.txt')
+    loglevel = logging_config.option('loglevel', default='INFO')
+    logging_rotate_daily = logging_config.option('rotate_daily', False)
+
+    # logfile path relative to config dir if not abs path
+    log_filename = logfile.get()
+    if log_filename.strip():  # catches empty filename
+        if not os.path.isabs(log_filename):
+            log_filename = os.path.join(config.config_dir, log_filename)
+
+        from horseradish.server import ensure_dir_exists # MOVE TO UTILS
+        ensure_dir_exists(log_filename)
+
+        stream_handler = StreamHandler(sys.__stdout__)
+
+        if logging_rotate_daily.get():
+            file_handler = TimedRotatingFileHandler(filename = log_filename, when = "midnight", interval = 1)
+        else:
+            file_handler = FileHandler(log_filename)
+
+        logging.basicConfig(
+            level    = getLevelName(loglevel.get()),
+            style    = "{",
+            format   = "{asctime} [{name}#{levelname}] {message}",
+            datefmt  = "%Y-%m-%dT%H:%M:%S%z",
+            handlers = [stream_handler, file_handler]
+        )
 
     stdout = LoggerTextIO(logging.INFO)
     stderr = LoggerTextIO(logging.ERROR)
