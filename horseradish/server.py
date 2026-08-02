@@ -250,9 +250,9 @@ class FeatureProtocol(ServerProtocol):
         try:
             with open(os.path.join(config.config_dir, bans_file.get()), 'r') as f:
                 self.bans.read_list(json.load(f))
-            log.debug("loaded {count} bans", count=len(self.bans))
+            log.debug("Loaded {count} bans", count = len(self.bans))
         except FileNotFoundError:
-            log.debug("skip loading bans: file unavailable",
+            log.debug("Skip loading bans: file unavailable",
                       count=len(self.bans))
         except IOError as e:
             log.error('Could not read bans file ({path}): {exception!r}',
@@ -267,7 +267,7 @@ class FeatureProtocol(ServerProtocol):
         self.player_memory = deque(maxlen=100)
         if len(self.name) > MAX_SERVER_NAME_SIZE:
             log.warning(
-                '(server name too long; it will be truncated to "{name}")',
+                'Server name too long; it will be truncated to "{name}"',
                 name=self.name[:MAX_SERVER_NAME_SIZE]
             )
         self.respawn_time = respawn_time_option.get()
@@ -387,9 +387,8 @@ class FeatureProtocol(ServerProtocol):
 
     async def get_external_ip(self, ip_getter: str):
         log.info(
-            ('Retrieving external IP from {ip_getter} to generate server'
-             ' identifier.'),
-            ip_getter=ip_getter
+            'Retrieving external IP from {ip_getter} to generate server identifier',
+            ip_getter = ip_getter
         )
 
         try:
@@ -481,15 +480,16 @@ class FeatureProtocol(ServerProtocol):
 
         async def do_advance():
             if message is not None:
-                log.info("advancing to map '{name}' ({reason}) in 10 seconds",
-                         name=planned_map.full_name, reason=message)
+                log.info(
+                    "Advancing to map '{name}' ({reason}) in 10 seconds",
+                    name = planned_map.full_name, reason=message
+                )
                 self.broadcast_chat(
                     '{} Next map: {}.'.format(message, planned_map.full_name),
                 )
                 await asyncio.sleep(10)
             else:
-                log.info("advancing to map '{name}'",
-                         name=planned_map.full_name)
+                log.info("Advancing to map '{name}'", name = planned_map.full_name)
 
             await self.set_map_name(planned_map)
 
@@ -782,10 +782,10 @@ class FeatureProtocol(ServerProtocol):
             return
         dt = time.monotonic() - current_time
         if dt > 1.0:
-            log.warning('processing {data!r} from {ip} took {time}',
-                        data=packet.data,
-                        ip=ip,
-                        time=dt)
+            log.warning(
+                'Processing {data!r} from {ip} took {time}',
+                data = packet.data, ip = ip, time = dt
+            )
 
     async def send_tip_loop(self, delay):
         while True:
@@ -795,12 +795,11 @@ class FeatureProtocol(ServerProtocol):
             self.broadcast_chat(line)
 
     # pylint: disable=arguments-differ
-    def broadcast_chat(self, value, global_message=True, sender=None, team=None):
+    def broadcast_chat(self, value, global_message = True, sender = None, team = None):
         """
         Send a chat message to many users
         """
-        ServerProtocol.broadcast_chat(
-            self, value, global_message, sender, team)
+        ServerProtocol.broadcast_chat(self, value, global_message, sender, team)
 
     # backwards compatability
     def send_chat(self, *args, **kwargs):
@@ -914,7 +913,7 @@ def run(loop) -> None:
 
     t1 = time.monotonic()
 
-    # load and apply regular scripts
+    # Load and apply regular scripts
     script_names = scripts_option.get()
     script_dir = os.path.join(config.config_dir, 'scripts/')
     script_objects = extensions.load_scripts_regular_extension(
@@ -923,20 +922,22 @@ def run(loop) -> None:
         script_objects, config, FeatureProtocol, FeatureConnection
     )
 
-    # load and apply the game_mode script
+    # Load and apply the `game_mode/` script
     game_mode_name = game_mode.get()
     game_mode_dir = os.path.join(config.config_dir, 'game_modes/')
     game_mode_object = extensions.load_script_game_mode(
         game_mode_name, game_mode_dir)
-    (protocol_class, connection_class) = extensions.apply_scripts(
-        game_mode_object, config, protocol_class, connection_class)
+    protocol_class, connection_class = extensions.apply_scripts(
+        game_mode_object, config, protocol_class, connection_class
+    )
 
     protocol_class.connection_class = connection_class
 
     interface = network_interface.get().encode('utf-8')
 
-    # instantiate the protocol class once. It will set timers and hooks to keep
-    # itself running once we start the reactor
+    # Instantiate the protocol class once.
+    # It will set timers and hooks to keep
+    # itself running once we start the reactor.
     protocol = protocol_class(interface, config.get_dict())
 
     log.debug('Checking for unregistered config items...')
