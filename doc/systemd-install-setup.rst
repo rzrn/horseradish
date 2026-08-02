@@ -4,71 +4,65 @@ Example Linux Setup with Systemd
 Overview
 --------
 
-These instructions will give you a flexible and secure setup for Piqueserver
-that starts automatically at boot, restarts on crashes, and collects logs.
+These instructions will give you a flexible and secure setup that starts
+automatically at boot, restarts on crashes, and collects logs.
 
 It also allows you to run as many instances as you want in parallel.
 
 Instructions
 ------------
 
-Install latest piqueserver using pip or whatever other method you like.
-
-.. code:: bash
-
-   # pip3 install piqueserver
-
-Create a dedicated directory for piqueserver data. You can put this anywhere
+Create a dedicated directory for your server data. You can put this anywhere
 you like. It is a good idea to put some identifier for your server, such as
 ``ctf`` in the folder name, in case you want to create more server configs in
 the future.
 
 .. code:: bash
 
-   # mkdir -p /var/lib/piqueserver/servername/
+   # mkdir -p /var/lib/aos/servername/
 
 We want a seperate group to be able to restrict permissions in a more
 granular way
 
 .. code:: bash
 
-   # groupadd --system piqueserver
+   # groupadd --system aos
 
-Optionally join your own user to the ``piqueserver`` group to be able to
-edit files in the piqueserver directory freely.
+Optionally join your own user to the ``aos`` group to be able to
+edit files in the server directory freely.
 
 .. code:: bash
 
-   # usermod -a -G piqueserver yourusername
+   # usermod -a -G aos yourusername
 
 We want to copy the default config directory over.
 
 .. code:: bash
 
-   # piqueserver --copy-config -d /var/lib/piqueserver/servername
+   # horseradish --copy-config -d /var/lib/aos/servername
 
-Edit a new file, ``/etc/systemd/system/piqueserver@.service`` and insert
+Edit a new file, ``/etc/systemd/system/horseradish@.service`` and insert
 the following contents.
 
 .. code:: ini
 
    [Unit]
-   Description=Piqueserver
+   Description=Horseradish
 
    [Service]
-   ExecStart=/usr/local/bin/piqueserver -d /var/lib/piqueserver/%i
-   User=piqueserver
-   Group=piqueserver
+   ExecStart=/usr/local/bin/horseradish -d /var/lib/aos/%i
+   User=aos
+   Group=aos
    Restart=always
 
    # Security Sandbox Settings
-   Group=piqueserver
+   Group=aos
    DynamicUser=true
    # only allow access to the state folder, nothing else
    ProtectHome=true
    TemporaryFileSystem=/var:ro
    PrivateDevices=true
-   StateDirectory=piqueserver/%i
+   StateDirectory=aos/%i
 
    # disallow any unusual syscalls
    SystemCallFilter=@system-service
@@ -81,18 +75,18 @@ systemctl.
 
 .. code:: bash
 
-   # systemctl start piqueserver@servername
-   # systemctl stop piqueserver@servername
-   # systemctl status piqueserver@servername
+   # systemctl start horseradish@servername
+   # systemctl stop horseradish@servername
+   # systemctl status horseradish@servername
 
 You will probably want to start the server at boot. To do this, run:
 
 .. code:: bash
 
-   # systemctl enable piqueserver@servername
+   # systemctl enable horseradish@servername
 
 To tail the logs, run
 
 .. code:: bash
 
-   # journalctl -f -u piqueserver@servername
+   # journalctl -f -u horseradish@servername

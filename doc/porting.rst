@@ -1,18 +1,14 @@
 Porting scripts
 ===============
 
-Piqueserver still supports scripting just as PySnip did! However, since Piqueserver has had much 
-refactoring and improvements since forking from PySnip, some scripts that work with PySnip, may 
-not work immediately with Piqueserver. Never fear! The piqueserver team has avoided breaking 
-changes regarding scripts as much as possible, and here are some details on some points that 
-could be breaking changes.
-
-.. tip:: Do `reach out to the piqueserver team <https://github.com/piqueserver/piqueserver#point_right-chat-with-us>`_ we can help you out!
+The server still supports scripting just as PySnip did. However, since it has had much 
+refactoring and improvements since forking from piqueserver and PySnip, some scripts that work
+with PySnip or piqueserver, may not work immediately.
 
 Automated port to Python 3
 --------------------------
 
-Since Piqueserver doesn't support Python 2 anymore we have to port the scripts to Python 3.
+Since Python 2 isn't supported for a long time we have to port the scripts to Python 3.
 Most of the porting can be automated with tools like `2to3 <https://docs.python.org/3.0/library/2to3.html>`_.
 We can later fix issues related to py2->py3 as they arise.
 
@@ -27,10 +23,10 @@ Fix feature_server module imports
     from commands import ...
     from scheduler import ...
     # NEW
-    from piqueserver.map import ...
-    from piqueserver.commands import ...
-    from piqueserver.scheduler import ...
-    from piqueserver.map import ...
+    from horseradish.map import ...
+    from horseradish.commands import ...
+    from horseradish.scheduler import ...
+    from horseradish.map import ...
 
 ``map.DEFAULT_LOAD_DIR`` and other constants
 --------------------------------------------
@@ -39,7 +35,7 @@ This constant in `feature_server/map.py` is no longer, along with potentially ot
 .. code:: python
 
     import os
-    from piqueserver.config import config
+    from horseradish.config import config
     map_dir = os.path.join(config.config_dir, 'maps')
 
 
@@ -62,7 +58,7 @@ Fix packet imports
 ------------------
 
 pyspades (and PySnip) have `various packet instances <https://github.com/infogulch/pyspades/blob/protocol075/pyspades/server.py#L43-L74>`_ in `pyspades.server` and those instances were used/shared by multiple scripts.
-Which can get messy and cause bugs. In piqueserver those instances are no longer present and scripts have to create those instances themselves.
+Which can get messy and cause bugs. Those instances are no longer present and scripts have to create those instances themselves.
 
 .. code:: python
 
@@ -76,7 +72,7 @@ Which can get messy and cause bugs. In piqueserver those instances are no longer
 
 Debugging import errors
 ---------------------------
-Import errors in scripts causes piqueserver to throw `NotImplementedError` which is vague(sorry!). 
+Import errors in scripts causes the server to throw `NotImplementedError` which is vague (sorry!). 
 For debugging those import errors use python(shell) or ipython they'll point you to which exact import is causing issues.
 
 .. code:: python
@@ -87,7 +83,7 @@ For debugging those import errors use python(shell) or ipython they'll point you
     <ipython-input-1-01d8c693f582> in <module>
     ----> 1 import buildandsplat
 
-    ~/piqueserver/piqueserver/game_modes/buildandsplat.py in <module>
+    ~/horseradish/horseradish/game_modes/buildandsplat.py in <module>
         25 from pyspades.common import Vertex3, make_color, get_color
         26 from pyspades.constants import *
     ---> 27 from subprocess import add, admin, get_player, name
@@ -103,6 +99,3 @@ Final
 Try out the script and see if anything breaks.
 If the errors seem py2->py3 related refer to `this cheatsheet <http://python-future.org/compatible_idioms.html>`_.
 Piqueserver team has done a `giant port of scripts <https://github.com/piqueserver/piqueserver/pull/181>`_ in v0.1.1 it can be used as a reference.
-If you get stuck please `reach out to the piqueserver team <https://github.com/piqueserver/piqueserver#point_right-chat-with-us>`_ we are happy to help!
-
-

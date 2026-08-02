@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# piqueserver documentation build configuration file, created by
+# documentation build configuration file, created by
 # sphinx-quickstart on Sat Dec 30 14:31:44 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -68,7 +68,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'piqueserver'
+project = 'horseradish'
 copyright = '2018, piqueserver dev team'
 author = 'piqueserver dev team'
 
@@ -77,10 +77,10 @@ author = 'piqueserver dev team'
 # built documents.
 #
 
-# read version info from the piqueserver project
+# read version info
 here = os.path.abspath(os.path.dirname(__file__))
 _version = {}
-with open(os.path.join(here, '../piqueserver/version.py')) as f:
+with open(os.path.join(here, '../horseradish/version.py')) as f:
     exec(f.read(), _version)
 
 # The short X.Y.Z version.
@@ -147,7 +147,7 @@ html_sidebars = {
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'piqueserverdoc'
+htmlhelp_basename = 'horseradishdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -174,7 +174,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'piqueserver.tex', 'piqueserver Documentation',
+    (master_doc, 'horseradish.tex', 'Horseradish Documentation',
      'piqueserver dev team', 'manual'),
 ]
 
@@ -184,7 +184,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'piqueserver', 'piqueserver Documentation',
+    (master_doc, 'horseradish', 'Horseradish Documentation',
      [author], 1)
 ]
 
@@ -195,8 +195,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'piqueserver', 'piqueserver Documentation',
-     author, 'piqueserver', 'One line description of project.',
+    (master_doc, 'horseradish', 'Horseradish Documentation',
+     author, 'horseradish', 'One line description of project.',
      'Miscellaneous'),
 ]
 

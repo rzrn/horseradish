@@ -1,69 +1,69 @@
-piqueserver\.core\_commands package
+horseradish\.core\_commands package
 ===================================
 
 Submodules
 ----------
 
-piqueserver\.core\_commands\.game module
+horseradish\.core\_commands\.game module
 ----------------------------------------
 
-.. automodule:: piqueserver.core_commands.game
+.. automodule:: horseradish.core_commands.game
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.core\_commands\.info module
+horseradish\.core\_commands\.info module
 ----------------------------------------
 
-.. automodule:: piqueserver.core_commands.info
+.. automodule:: horseradish.core_commands.info
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.core\_commands\.map module
+horseradish\.core\_commands\.map module
 ---------------------------------------
 
-.. automodule:: piqueserver.core_commands.map
+.. automodule:: horseradish.core_commands.map
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.core\_commands\.moderation module
+horseradish\.core\_commands\.moderation module
 ----------------------------------------------
 
-.. automodule:: piqueserver.core_commands.moderation
+.. automodule:: horseradish.core_commands.moderation
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.core\_commands\.movement module
+horseradish\.core\_commands\.movement module
 --------------------------------------------
 
-.. automodule:: piqueserver.core_commands.movement
+.. automodule:: horseradish.core_commands.movement
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.core\_commands\.player module
+horseradish\.core\_commands\.player module
 ------------------------------------------
 
-.. automodule:: piqueserver.core_commands.player
+.. automodule:: horseradish.core_commands.player
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.core\_commands\.server module
+horseradish\.core\_commands\.server module
 ------------------------------------------
 
-.. automodule:: piqueserver.core_commands.server
+.. automodule:: horseradish.core_commands.server
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.core\_commands\.social module
+horseradish\.core\_commands\.social module
 ------------------------------------------
 
-.. automodule:: piqueserver.core_commands.social
+.. automodule:: horseradish.core_commands.social
     :members:
     :undoc-members:
     :show-inheritance:
@@ -72,7 +72,7 @@ piqueserver\.core\_commands\.social module
 Module contents
 ---------------
 
-.. automodule:: piqueserver.core_commands
+.. automodule:: horseradish.core_commands
     :members:
     :undoc-members:
     :show-inheritance:

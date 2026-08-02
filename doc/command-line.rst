@@ -6,28 +6,23 @@ View of help output
 
 ::
 
-   $ piqueserver --help
-   usage: piqueserver [-h] [-c CONFIG_FILE] [-j JSON_PARAMETERS] [-d CONFIG_DIR]
-                      [--copy-config] [--update-geoip]
+    $ horseradish --help
+    usage: horseradish [-h] [-c CONFIG_FILE] [-j JSON_PARAMETERS] [-d CONFIG_DIR] [--copy-config] [--update-geoip] [--version]
 
-   piqueserver is an open-source Python server implementation for the voxel-based
-   game "Ace of Spades".
+    horseradish is an open-source Python server implementation for the voxel-based game "Ace of Spades".
 
-   optional arguments:
-     -h, --help            show this help message and exit
-     -c CONFIG_FILE, --config-file CONFIG_FILE
-                           specify the config file - default is "config.json" in
-                           the config dir
-     -j JSON_PARAMETERS, --json-parameters JSON_PARAMETERS
-                           add extra json parameters (overrides the ones present
-                           in the config file)
-     -d CONFIG_DIR, --config-dir CONFIG_DIR
-                           specify the directory which contains maps, scripts,
-                           etc (in correctly named subdirs) - default is
-                           ~/.config/piqueserver
-     --copy-config         copies the default/example config dir to its default
-                           location or as specified by "-d"
-     --update-geoip        download the latest geoip database                                                                                                                                                                                     
+    options:
+      -h, --help            show this help message and exit
+      -c, --config-file CONFIG_FILE
+                            specify the config file - default is "config.toml" in the config dir
+      -j, --json-parameters JSON_PARAMETERS
+                            add extra settings in json format (overrides the config present in the config file)
+      -d, --config-dir CONFIG_DIR
+                            specify the directory which contains maps, scripts, etc (in correctly named subdirs) - default is
+                            ~/.config/horseradish
+      --copy-config         copies the default/example config dir to its default location or as specified by "-d"
+      --update-geoip        download the latest geoip database
+      --version             show the version and exit
 
 Explanation
 -----------
@@ -47,7 +42,7 @@ Defaults to ``config.json`` is the configuration directory.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Specifies the directory to use for its configuration. Defaults to
-``$XDG_CONFIG_HOME/piqueserver/`` or ``$HOME/.config/piqueserver/`` if
+``$XDG_CONFIG_HOME/horseradish/`` or ``$HOME/.config/horseradish/`` if
 the former environment variable isn’t set. This directory is also used
 by ``--copy-config`` as the target directory for copying the example
 configuration, as well as the base path when giving a relative path to
@@ -65,7 +60,7 @@ existing config.
 ``-j`` or ``--json-parameters``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Example: ``piqueserver -j '{"profile":true}'``
+Example: ``horseradish -j '{"profile":true}'``
 
 Takes the json object and uses it to override fields from the json
 configuration file. Useful for testing out a quick change where you

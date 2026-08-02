@@ -16,9 +16,8 @@ required to proceed further.
 Module initialization
 ^^^^^^^^^^^^^^^^^^^^^
 
-The asyncio and twisted reactors are initialized. The files defining the game
-logic in ``piqueserver/`` and ``pyspades/`` are imported via
-`piqueserver.server`.
+The asyncio event loop is initialized. The files defining the game
+logic in ``horseradish/`` and ``pyspades/`` are imported via `horseradish.server`.
 
 Script Loading
 ^^^^^^^^^^^^^^

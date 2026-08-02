@@ -1,7 +1,7 @@
 Network ports
 =============
 
-Piqueserver needs a few firewall ports open for various things.
+The server needs a few firewall ports open for various things.
 
 The game server
 ---------------

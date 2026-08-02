@@ -1,242 +1,242 @@
-Included Piqueserver Scripts
-============================
+Included Scripts
+================
 
-This is an Overview over the scripts that currently ship with piqueserver
+This is an overview over the default scripts
 
 Scripts
 -------
 
-piqueserver\.scripts\.afk script
+horseradish\.scripts\.afk script
 ++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.afk
+.. automodule:: horseradish.scripts.afk
 
-piqueserver\.scripts\.aimbot2 script
+horseradish\.scripts\.aimbot2 script
 ++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.aimbot2
+.. automodule:: horseradish.scripts.aimbot2
 
-piqueserver\.scripts\.airstrike2 script
+horseradish\.scripts\.airstrike2 script
 +++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.airstrike2
+.. automodule:: horseradish.scripts.airstrike2
 
-piqueserver\.scripts\.antijerk script
+horseradish\.scripts\.antijerk script
 +++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.antijerk
+.. automodule:: horseradish.scripts.antijerk
 
-piqueserver\.scripts\.autohelp script
+horseradish\.scripts\.autohelp script
 +++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.autohelp
+.. automodule:: horseradish.scripts.autohelp
 
-piqueserver\.game\_modes\.babel\_script module
+horseradish\.game\_modes\.babel\_script module
 ++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.babel_script
+.. automodule:: horseradish.scripts.babel_script
 
-piqueserver\.scripts\.badmin script
+horseradish\.scripts\.badmin script
 +++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.badmin
+.. automodule:: horseradish.scripts.badmin
 
-piqueserver\.scripts\.blockinfo script
+horseradish\.scripts\.blockinfo script
 ++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.blockinfo
+.. automodule:: horseradish.scripts.blockinfo
 
-piqueserver\.scripts\.daycycle script
+horseradish\.scripts\.daycycle script
 +++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.daycycle
+.. automodule:: horseradish.scripts.daycycle
 
-piqueserver\.scripts\.demolitionman script
+horseradish\.scripts\.demolitionman script
 ++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.demolitionman
+.. automodule:: horseradish.scripts.demolitionman
 
-piqueserver\.scripts\.dirtnade script
+horseradish\.scripts\.dirtnade script
 +++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.dirtnade
+.. automodule:: horseradish.scripts.dirtnade
 
-piqueserver\.scripts\.disco script
+horseradish\.scripts\.disco script
 ++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.disco
+.. automodule:: horseradish.scripts.disco
 
-piqueserver\.scripts\.flagreturn script
+horseradish\.scripts\.flagreturn script
 +++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.flagreturn
+.. automodule:: horseradish.scripts.flagreturn
 
-piqueserver\.scripts\.geoip script
+horseradish\.scripts\.geoip script
 ++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.geoip
+.. automodule:: horseradish.scripts.geoip
 
-piqueserver\.scripts\.grownade script
+horseradish\.scripts\.grownade script
 +++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.grownade
+.. automodule:: horseradish.scripts.grownade
 
-piqueserver\.scripts\.map\_extensions script
+horseradish\.scripts\.map\_extensions script
 ++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.map_extensions
+.. automodule:: horseradish.scripts.map_extensions
 
-piqueserver\.scripts\.mapmakingtools script
+horseradish\.scripts\.mapmakingtools script
 +++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.mapmakingtools
+.. automodule:: horseradish.scripts.mapmakingtools
 
-piqueserver\.scripts\.markers script
+horseradish\.scripts\.markers script
 ++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.markers
+.. automodule:: horseradish.scripts.markers
 
-piqueserver\.scripts\.match script
+horseradish\.scripts\.match script
 ++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.match
+.. automodule:: horseradish.scripts.match
 
-piqueserver\.scripts\.medkit script
+horseradish\.scripts\.medkit script
 +++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.medkit
+.. automodule:: horseradish.scripts.medkit
 
-piqueserver\.scripts\.memcheck script
+horseradish\.scripts\.memcheck script
 +++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.memcheck
+.. automodule:: horseradish.scripts.memcheck
 
-piqueserver\.scripts\.minefield script
+horseradish\.scripts\.minefield script
 ++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.minefield
+.. automodule:: horseradish.scripts.minefield
 
-piqueserver\.scripts\.nointelonwalls script
+horseradish\.scripts\.nointelonwalls script
 +++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.nointelonwalls
+.. automodule:: horseradish.scripts.nointelonwalls
 
-piqueserver\.scripts\.nospadingwalls script
+horseradish\.scripts\.nospadingwalls script
 +++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.nospadingwalls
+.. automodule:: horseradish.scripts.nospadingwalls
 
-piqueserver\.scripts\.paint script
+horseradish\.scripts\.paint script
 ++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.paint
+.. automodule:: horseradish.scripts.paint
 
-piqueserver\.scripts\.passreload script
+horseradish\.scripts\.passreload script
 +++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.passreload
+.. automodule:: horseradish.scripts.passreload
 
-piqueserver\.scripts\.protect script
+horseradish\.scripts\.protect script
 ++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.protect
+.. automodule:: horseradish.scripts.protect
 
-piqueserver\.scripts\.rampage script
+horseradish\.scripts\.rampage script
 ++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.rampage
+.. automodule:: horseradish.scripts.rampage
 
-piqueserver\.scripts\.rangedamage script
+horseradish\.scripts\.rangedamage script
 ++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.rangedamage
+.. automodule:: horseradish.scripts.rangedamage
 
-piqueserver\.scripts\.rapid script
+horseradish\.scripts\.rapid script
 ++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.rapid
+.. automodule:: horseradish.scripts.rapid
 
-piqueserver\.scripts\.ratio script
+horseradish\.scripts\.ratio script
 ++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.ratio
+.. automodule:: horseradish.scripts.ratio
 
-piqueserver\.scripts\.analyze script
+horseradish\.scripts\.analyze script
 ++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.analyze
+.. automodule:: horseradish.scripts.analyze
 
-piqueserver\.scripts\.rollback script
+horseradish\.scripts\.rollback script
 +++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.rollback
+.. automodule:: horseradish.scripts.rollback
 
-piqueserver\.scripts\.runningman script
+horseradish\.scripts\.runningman script
 +++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.runningman
+.. automodule:: horseradish.scripts.runningman
 
-piqueserver\.scripts\.savemap script
+horseradish\.scripts\.savemap script
 ++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.savemap
+.. automodule:: horseradish.scripts.savemap
 
-piqueserver\.scripts\.smartnade script
+horseradish\.scripts\.smartnade script
 ++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.smartnade
+.. automodule:: horseradish.scripts.smartnade
 
-piqueserver\.scripts\.spadenadefix script
+horseradish\.scripts\.spadenadefix script
 +++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.spadenadefix
+.. automodule:: horseradish.scripts.spadenadefix
 
-piqueserver\.scripts\.spawn\_protect script
+horseradish\.scripts\.spawn\_protect script
 +++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.spawn_protect
+.. automodule:: horseradish.scripts.spawn_protect
 
-piqueserver\.scripts\.spectatorcontrol script
+horseradish\.scripts\.spectatorcontrol script
 +++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.spectatorcontrol
+.. automodule:: horseradish.scripts.spectatorcontrol
 
-piqueserver\.scripts\.squad script
+horseradish\.scripts\.squad script
 ++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.squad
+.. automodule:: horseradish.scripts.squad
 
-piqueserver\.scripts\.strongblock script
+horseradish\.scripts\.strongblock script
 ++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.strongblock
+.. automodule:: horseradish.scripts.strongblock
 
-piqueserver\.scripts\.timedmute script
+horseradish\.scripts\.timedmute script
 ++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.timedmute
+.. automodule:: horseradish.scripts.timedmute
 
-piqueserver\.scripts\.trusted script
+horseradish\.scripts\.trusted script
 ++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.trusted
+.. automodule:: horseradish.scripts.trusted
 
-piqueserver\.scripts\.votekick script
+horseradish\.scripts\.votekick script
 +++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.votekick
+.. automodule:: horseradish.scripts.votekick
 
-piqueserver\.scripts\.votemap script
+horseradish\.scripts\.votemap script
 ++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.votemap
+.. automodule:: horseradish.scripts.votemap
 
-piqueserver\.scripts\.welcome script
+horseradish\.scripts\.welcome script
 ++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.welcome
+.. automodule:: horseradish.scripts.welcome
 
-piqueserver\.scripts\.zoc script
+horseradish\.scripts\.zoc script
 ++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.scripts.zoc
+.. automodule:: horseradish.scripts.zoc

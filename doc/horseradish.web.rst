@@ -1,10 +1,10 @@
-piqueserver\.web package
+horseradish\.web package
 ========================
 
 Module contents
 ---------------
 
-.. automodule:: piqueserver.web
+.. automodule:: horseradish.web
     :members:
     :undoc-members:
     :show-inheritance:

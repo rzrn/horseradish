@@ -4,8 +4,8 @@ Architecture
 Overview
 --------
 
-The piqueserver codebase is made up out of two main packages: `pyspades` and
-`piqueserver`. The `piqueserver` module used to be named ``feature_server``.
+The codebase is made up out of two main packages: `pyspades` and `horseradish`.
+The `horseradish` module used to be named ``feature_server``.
 The original developers wanted to make the pyspades a generic AoS protocol and
 server implementation which the ``feature_server`` module then subclassed and
 specialized.
@@ -17,12 +17,11 @@ contains certain functionality. In general, this is the rule of thumb:
  * `pyspades`: Anything that involves sending and receiving of packets and
    acting on those, keeping game state.
 
- * `piqueserver`: Anything player-facing, for example commands,
+ * `horseradish`: Anything player-facing, for example commands,
    configuration, etc.
 
 Note however the numerous exceptions to this. For example, parts of the command
-logic are in `pyspades`, while a lot of server validation logic is in
-`piqueserver`
+logic are in `pyspades`, while a lot of server validation logic is in `horseradish`.
 
 Classes
 -------
@@ -39,7 +38,7 @@ documentations or in the files themselves.
 Extension Scripts
 -----------------
 
-Piqueserver supports extension scripts aka "scripts" that modify it's behaviour.
+The server supports extension scripts aka "scripts" that modify it's behaviour.
 The mechanism used to implement these is pretty ugly.
 
 Each script defines an ``apply_script(protocol, connection, config)`` function.
@@ -66,7 +65,7 @@ created inherits from all extension classes.
 
 This is a terrible idea for a number of reasons, but just the way things work currently:
 
-  * Extensions must meddle with the internals of piqueserver. This means that scripts
+  * Extensions must meddle with the internals of the server. This means that scripts
     are likely to break whenever any internals are changed, making substatial
     changes harder.
   

@@ -27,7 +27,7 @@ Ensure we’re ready for release
     tox
 
     # ensure the server is runnable
-    piqueserver -d piqueserver/config
+    horseradish -d horseradish/config
 
 
 Notes before continuing
@@ -44,7 +44,7 @@ the version info.
 Build the sdist
 ---------------
 
-Prerequisites: Linux computer, ``python3.7`` (or greater), ``pip`` (same
+Prerequisites: Linux computer, ``python3.10`` (or greater), ``pip`` (same
 version as the python you’re using), ``twine``
 
 The source distribution is OS agnostic, so this is the easiest to start
@@ -62,8 +62,8 @@ with.
     pip install -r requirements.txt -r dev-requirements.txt
 
 
--  IMPORTANT: update ``piqueserver/version.py`` with the new version numbers (this should be the
-   single source of version info for piqueserver).
+-  IMPORTANT: update ``horseradish/version.py`` with the new version numbers (this should be the
+   single source of version info).
 
 -  build and upload the source distribution:
 
@@ -75,14 +75,7 @@ with.
 Build Linux binary wheels
 -------------------------
 
-Prerequisites: same as for sdist, plus ``docker``
-
--  make sure docker is running and you have a recent version of the pypa
-   manylinux1 docker image
-
-::
-
-    sudo docker pull quay.io/pypa/manylinux1_x86_64
+Prerequisites: same as for sdist
 
 -  build and upload the linux binary wheels:
 

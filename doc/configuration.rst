@@ -1,8 +1,8 @@
-Configuring Piqueserver
+Configuring your server
 =======================
 
-Piqueserver is configured through a config file, usually named
-:file:`config.toml`.  Piqueserver uses the configuration language TOML (Tom's
+The server is configured through a config file, usually named
+:file:`config.toml`.  It uses the configuration language TOML (Tom's
 Obvious Markup Language). A detailed description of TOML can be found `in the
 TOML readme <https://github.com/toml-lang/toml/blob/master/README.md>`_, but a
 short example is provided below.
@@ -10,7 +10,7 @@ short example is provided below.
 .. note::
     PySpades, PySnip and versions of piqueserver before 1.0.0 used a JSON file
     for settings. These files will still be read, if no config.toml is
-    available. However, the structure piqueserver expects might differ.
+    available. However, the structure might differ.
 
 TOML Syntax
 -----------
@@ -66,7 +66,6 @@ are available when substitution is available for a config option::
         "you are playing {game_mode}",
         "Map is {map_name} by {map_author}.",
         "Map description: {map_description}.",
-        "(server powered by piqueserver)",
     ]
 
 Individual config options might have additional substitutions available. This is
@@ -81,7 +80,7 @@ Config directory structure
 
 The configuration directory follows a strict structure.
 
-By default the configuration directory lives at ``$XDG_CONFIG_HOME/piqueserver/`` with a fallback to ``$HOME/.config/piqueserver/``, as specified by the `XDG Base Directory Specification <https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html>`_.
+By default the configuration directory lives at ``$XDG_CONFIG_HOME/horseradish/`` with a fallback to ``$HOME/.config/horseradish/``, as specified by the `XDG Base Directory Specification <https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html>`_.
 
 This can be overridden by the `-d` command line option.
 
@@ -89,7 +88,7 @@ This can be overridden by the `-d` command line option.
 
     .
     ├── bans.txt               # Player bans get stored in this file; it is created automatically.
-    ├── config.toml            # The main configuration file. By default piqueserver will look for config.toml in the config directory.
+    ├── config.toml            # The main configuration file. By default the server will look for config.toml in the config directory.
     │                          # This can be overridden by the -c command line option.
     ├── game_modes             # Scripts that are specifically game modes will be stored here.
     │   └── buildandsplat.py   # Your custom game mode script
@@ -98,7 +97,7 @@ This can be overridden by the `-d` command line option.
     ├── maps                   # Any map files should be stored in here. Where a map is specified by name in "rotation" config option
     │   ├── classicgen.txt     # the server will look for  a .txt or .txt/.vxl file with that name.
     │   └── random.txt
-    ├── scripts                # You can add other scripts not included with piqueserver here.
+    ├── scripts                # You can add custom scripts here.
     │   │                      # The server will load any scripts listed in "scripts" config option by name from here.
     │   └── showhp.py          # For example, if "showhp" is listed in the "scripts" config option, then scripts/showhp.py will be loaded.
     │

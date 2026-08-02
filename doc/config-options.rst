@@ -1,7 +1,7 @@
 Base Configuration Options
 ==========================
 
-These are the base configuration options available in piqueserver.
+These are the base configuration options available.
 
 General
 -------
@@ -13,7 +13,7 @@ name
 
 The Name of the server, as displayed on the master server list::
 
-    name = "piqueserver instance"
+    name = "Ace of Spades Server"
 
 This config option supports :ref:`substitution`.
 
@@ -252,24 +252,24 @@ scripts
 
 .. TODO Document this on a separate page
 
-Piqueserver ships with a set of scripts you can use to customize the features
+The server ships with a set of scripts you can use to customize the features
 of your server. They are loaded in order, "on top of" each other.
 
 Scripts can either be absolute python import paths
-(``piqueserver.scripts.aimbot2``) or the name of scripts in the scripts folder,
+(``horseradish.scripts.aimbot2``) or the name of scripts in the scripts folder,
 excluding the file extension (``mycustomscript`` for a script at
 ``scripts/mycustomscript.py``)::
 
     scripts = [
-        "piqueserver.scripts.rollback",
-        "piqueserver.scripts.protect",
+        "horseradish.scripts.rollback",
+        "horseradish.scripts.protect",
         "myscript",
     ]
 
 Logging
 +++++++
 
-Piqueserver can log events that happen to a text file::
+The server can log events that happen to a text file::
 
     [logging]
     # set log level

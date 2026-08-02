@@ -1,10 +1,10 @@
-piqueserver package
+horseradish package
 ===================
 
 Module contents
 ---------------
 
-.. automodule:: piqueserver
+.. automodule:: horseradish
     :members:
     :undoc-members:
     :show-inheritance:
@@ -14,104 +14,104 @@ Subpackages
 
 .. toctree::
 
-    piqueserver.core_commands
-    piqueserver.web
+    horseradish.core_commands
+    horseradish.web
 
 Submodules
 ----------
 
-piqueserver\.commands module
+horseradish\.commands module
 ----------------------------
 
-.. automodule:: piqueserver.commands
+.. automodule:: horseradish.commands
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.config module
+horseradish\.config module
 --------------------------
 
-.. automodule:: piqueserver.config
+.. automodule:: horseradish.config
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.console module
+horseradish\.console module
 ---------------------------
 
-.. automodule:: piqueserver.console
+.. automodule:: horseradish.console
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.map module
+horseradish\.map module
 -----------------------
 
-.. automodule:: piqueserver.map
+.. automodule:: horseradish.map
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.networkdict module
+horseradish\.networkdict module
 -------------------------------
 
-.. automodule:: piqueserver.networkdict
+.. automodule:: horseradish.networkdict
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.player module
+horseradish\.player module
 --------------------------
 
-.. automodule:: piqueserver.player
+.. automodule:: horseradish.player
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.run module
+horseradish\.run module
 -----------------------
 
-.. automodule:: piqueserver.run
+.. automodule:: horseradish.run
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scheduler module
+horseradish\.scheduler module
 -----------------------------
 
-.. automodule:: piqueserver.scheduler
+.. automodule:: horseradish.scheduler
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.server module
+horseradish\.server module
 --------------------------
 
-.. automodule:: piqueserver.server
+.. automodule:: horseradish.server
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.ssh module
+horseradish\.ssh module
 -----------------------
 
-.. automodule:: piqueserver.ssh
+.. automodule:: horseradish.ssh
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.statusserver module
+horseradish\.statusserver module
 --------------------------------
 
-.. automodule:: piqueserver.statusserver
+.. automodule:: horseradish.statusserver
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.version module
+horseradish\.version module
 ---------------------------
 
-.. automodule:: piqueserver.version
+.. automodule:: horseradish.version
     :members:
     :undoc-members:
     :show-inheritance:

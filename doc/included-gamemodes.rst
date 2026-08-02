@@ -1,47 +1,47 @@
 Included Game Modes
 ===================
 
-This is an Overview over the game modes that currently ship with piqueserver
+This is an overview over the default game modes
 
 Scripts
 -------
 
-piqueserver\.game\_modes\.arena gamemode
+horseradish\.game\_modes\.arena gamemode
 ++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.game_modes.arena
+.. automodule:: horseradish.game_modes.arena
 
-piqueserver\.game\_modes\.babel gamemode
+horseradish\.game\_modes\.babel gamemode
 ++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.game_modes.babel
+.. automodule:: horseradish.game_modes.babel
 
-piqueserver\.game\_modes\.freeforall gamemode
+horseradish\.game\_modes\.freeforall gamemode
 +++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.game_modes.freeforall
+.. automodule:: horseradish.game_modes.freeforall
 
-piqueserver\.game\_modes\.infiltration gamemode
+horseradish\.game\_modes\.infiltration gamemode
 +++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.game_modes.infiltration
+.. automodule:: horseradish.game_modes.infiltration
 
-piqueserver\.game\_modes\.onectf gamemode
+horseradish\.game\_modes\.onectf gamemode
 +++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.game_modes.onectf
+.. automodule:: horseradish.game_modes.onectf
 
-piqueserver\.game\_modes\.push gamemode
+horseradish\.game\_modes\.push gamemode
 +++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.game_modes.push
+.. automodule:: horseradish.game_modes.push
 
-piqueserver\.game\_modes\.tdm gamemode
+horseradish\.game\_modes\.tdm gamemode
 ++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.game_modes.tdm
+.. automodule:: horseradish.game_modes.tdm
 
-piqueserver\.game\_modes\.tow gamemode
+horseradish\.game\_modes\.tow gamemode
 ++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: piqueserver.game_modes.tow
+.. automodule:: horseradish.game_modes.tow
