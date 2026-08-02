@@ -11,27 +11,26 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = [
-    # piqueserver
-    "piqueserver",
-    "piqueserver.core_commands",
-    "piqueserver.game_modes",
-    "piqueserver.scripts",
-    "piqueserver.utils",
+    "horseradish",
+    "horseradish.core_commands",
+    "horseradish.game_modes",
+    "horseradish.scripts",
+    "horseradish.utils",
 
-    # pyspades
     "pyspades",
 
-    # data
-    "piqueserver.config",
-    "piqueserver.config.game_modes",
-    "piqueserver.config.scripts",
-    "piqueserver.config.maps",
-    "piqueserver.web",
-    "piqueserver.web.templates",
+    "horseradish.config",
+    "horseradish.config.game_modes",
+    "horseradish.config.scripts",
+    "horseradish.config.maps",
+    "horseradish.web",
 ]
 
+[tool.setuptools.package-data]
+horseradish = ["web/templates/*.html"]
+
 [tool.setuptools_scm]
-version_file = "piqueserver/_version.py"
+version_file = "horseradish/_version.py"
 
 [tool.tox]
 legacy_tox_ini = """
@@ -55,13 +54,13 @@ commands =
 [tool.coverage.run]
 branch = true
 source = [
-    "piqueserver",
+    "horseradish",
     "pyspades",
 ]
 
 omit = [
-    "piqueserver/scripts/*",
-    "piqueserver/game_modes/*",
+    "horseradish/scripts/*",
+    "horseradish/game_modes/*",
 ]
 
 plugins = [
@@ -69,7 +68,7 @@ plugins = [
 ]
 
 [project]
-name = "piqueserver"
+name = "horseradish"
 description = "Open-Source server implementation for Ace of Spades"
 readme = "README.rst"
 dynamic = ["version"]
@@ -79,10 +78,6 @@ authors = [
     { name = "Nate Shoffner", email = "nate.shoffner@gmail.com" },
     { name = "NotAFile", email = "notafile@gmail.com" },
     { name = "pyspades, PySnip and piqueserver contributors" },
-]
-
-maintainers = [
-    { name = "NotAFile", email = "notafile@gmail.com" },
 ]
 
 keywords = [
@@ -123,7 +118,7 @@ dependencies = [
 ]
 
 [project.scripts]
-piqueserver = "piqueserver.run:main"
+horseradish = "horseradish.run:main"
 
 [project.optional-dependencies]
 # '/from' command
@@ -149,10 +144,3 @@ dev = [
     "sphinx_rtd_theme",
     "asyncssh",
 ]
-
-[project.urls]
-Homepage = "https://piqueserver.org"
-Documentation = "https://docs.piqueserver.org/en/latest/"
-Repository = "https://github.com/piqueserver/piqueserver"
-Issues = "https://github.com/piqueserver/issues"
-Changelog = "https://github.com/piqueserver/piqueserver/releases"
