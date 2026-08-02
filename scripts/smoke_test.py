@@ -2,7 +2,7 @@
 """
 usage: smoke_test.py [-h] [--timeout TIMEOUT] [--config-dir CONFIG_DIR]
 
-Basic smoke test for pique
+Basic smoke test
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -40,9 +40,9 @@ async def _read_stream(stream, cb):
 
 
 async def smoketest(config_dir: str, timeout: int):
-    cmd = "piqueserver -d {}".format(config_dir)
+    cmd = "horseradish -d {}".format(config_dir)
     proc = await asyncio.create_subprocess_exec(
-        "piqueserver",
+        "horseradish",
         "-d",
         config_dir,
         stdout=asyncio.subprocess.PIPE,
@@ -61,15 +61,15 @@ async def smoketest(config_dir: str, timeout: int):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Basic smoke test for pique")
+    parser = argparse.ArgumentParser(description="Basic smoke test")
     parser.add_argument("--timeout", "-t", type=int,
                         default=45, help='Timeout for killing the proc')
     parser.add_argument(
         "--config-dir",
         "-d",
         type=str,
-        default="./piqueserver/config",
-        help='Pique config dir')
+        default="./horseradish/config",
+        help='Config directory')
     options = parser.parse_args()
     loop = asyncio.get_event_loop()
     proc = loop.run_until_complete(

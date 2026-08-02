@@ -19,7 +19,7 @@ import argparse
 import zipfile
 import json
 
-ARTIFACT_ENDPOINT = "https://api.github.com/repos/piqueserver/piqueserver/actions/artifacts"
+ARTIFACT_ENDPOINT = "https://api.github.com/repos/rzrn/horseradish/actions/artifacts"
 
 
 def get_artifact(artifact_id):
