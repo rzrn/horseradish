@@ -71,6 +71,7 @@ plugins = [
 name = "horseradish"
 description = "Open-Source server implementation for Ace of Spades"
 readme = "README.rst"
+license = "GPL-3.0-or-later"
 dynamic = ["version"]
 
 authors = [
@@ -96,7 +97,6 @@ classifiers = [
     "Operating System :: Unix",
     "Operating System :: Microsoft :: Windows",
     "Environment :: Console",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Programming Language :: Python",
     "Programming Language :: Cython",
     "Programming Language :: Python :: 3",
