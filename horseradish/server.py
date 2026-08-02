@@ -808,25 +808,6 @@ class FeatureProtocol(ServerProtocol):
                       DeprecationWarning, stacklevel=2)
         self.broadcast_chat(*args, **kwargs)
 
-    # log high CPU usage
-
-    def update_world(self):
-        last_time = self.last_time
-        current_time = time.monotonic()
-        if last_time is not None:
-            dt = current_time - last_time
-            if dt > 1.0:
-                log.warning('high CPU usage detected - {dt}', dt=dt)
-        self.last_time = current_time
-        ServerProtocol.update_world(self)
-        time_taken = time.monotonic() - current_time
-        if time_taken > 1.0:
-            log.warning(
-                'World update iteration took {time}, objects: {objects!r}',
-                time=time_taken,
-                objects=self.world.objects
-            )
-
     # events
 
     def on_map_change(self, the_map: VXLData) -> None:
