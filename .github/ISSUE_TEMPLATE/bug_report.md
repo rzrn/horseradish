@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a Bug in Piqueserver
+about: Report a bug
 title: ''
 labels: bug, triage
 assignees: ''
@@ -26,7 +26,7 @@ A description of what you expected to happen.
 
 **Server (please complete the following information):**
  - OS/Version: [e.g. Ubuntu 18.04]
- - Piqueserver Version: run `piqueserver --version` to see the version.
+ - Server Version: run `horseradish --version` to see the version.
  - Installation Method: pip, git, etc.
 
 **Client (if relevant)**
