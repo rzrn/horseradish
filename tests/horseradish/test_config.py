@@ -2,7 +2,7 @@ import tempfile
 from pprint import pprint
 
 import unittest
-from piqueserver.config import ConfigStore, JSON_FORMAT, TOML_FORMAT, cast_duration
+from horseradish.config import ConfigStore, JSON_FORMAT, TOML_FORMAT, cast_duration
 from io import StringIO
 
 SIMPLE_TOML_CONFIG = u"""
@@ -10,7 +10,7 @@ title = "something"
 testnumber = 42
 
 [server]
-name = "piqueserver instance"
+name = "Ace of Spades Server"
 game_mode = "ctf"
 port = 4567
 
@@ -97,12 +97,12 @@ class TestExampleConfig(unittest.TestCase):
 
         raw = server_config.get_dict()
         self.assertEqual(raw['port'], 4567)
-        self.assertEqual(raw['name'], 'piqueserver instance')
+        self.assertEqual(raw['name'], 'Ace of Spades Server')
 
         server_config.update_from_dict({'port': 1})
         raw = server_config.get_dict()
         self.assertEqual(raw['port'], 1)
-        self.assertEqual(raw['name'], 'piqueserver instance')
+        self.assertEqual(raw['name'], 'Ace of Spades Server')
 
         server_config.load_from_dict({'port': 1})
         self.assertEqual(server_config.get_dict(), {'port': 1})
@@ -160,7 +160,7 @@ class TestExampleConfig(unittest.TestCase):
         config = ConfigStore()
         f = StringIO(u'''
         {
-            "name": "piqueserver instance"
+            "name": "Ace of Spades Server"
         }
         ''')
         config.load_from_file(f, format_=JSON_FORMAT)
@@ -201,7 +201,7 @@ class TestExampleConfig(unittest.TestCase):
 
         self.assertEqual(raw['server']['things']['thing1'], 'something')
         self.assertEqual(raw['server']['things']['thing2'], 'added')
-        self.assertEqual(raw['server']['name'], 'piqueserver instance')
+        self.assertEqual(raw['server']['name'], 'Ace of Spades Server')
 
     def test_dump_to_file(self):
         config = ConfigStore()

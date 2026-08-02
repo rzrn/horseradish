@@ -5,7 +5,7 @@ import filecmp
 import time
 from os.path import join, isfile, getmtime
 
-from piqueserver.run import copytree
+from horseradish.run import copytree
 
 
 def _setup_dir():

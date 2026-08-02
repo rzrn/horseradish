@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import Mock
-from piqueserver.commands import command, _alias_map, target_player
+from horseradish.commands import command, _alias_map, target_player
 
 
 class TestCommandDecorator(unittest.TestCase):

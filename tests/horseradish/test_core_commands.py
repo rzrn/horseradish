@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import Mock
-from piqueserver.core_commands.moderation import get_ban_arguments, has_digits
+from horseradish.core_commands.moderation import get_ban_arguments, has_digits
 
 
 class TestCoreCommands(unittest.TestCase):

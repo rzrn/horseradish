@@ -1,6 +1,6 @@
 import pytest
 import unittest
-from piqueserver.release import format_release, check_for_releases
+from horseradish.release import format_release, check_for_releases
 import asyncio
 from unittest.mock import patch, MagicMock
 
@@ -22,7 +22,7 @@ class TestVersionCheck(unittest.TestCase):
 
         # python3.8+ uses AsyncMock for mocking async functions. Force MagicMock
         # until we can rely on that behaviour.
-        with patch('piqueserver.release.fetch_latest_release', return_value=f,
+        with patch('horseradish.release.fetch_latest_release', return_value=f,
                    new_callable=MagicMock):
             got = await check_for_releases()
             assert got == release
@@ -36,7 +36,7 @@ class TestVersionCheck(unittest.TestCase):
 
         # python3.8+ uses AsyncMock for mocking async functions. Force MagicMock
         # until we can rely on that behaviour.
-        with patch('piqueserver.release.fetch_latest_release', return_value=f,
+        with patch('horseradish.release.fetch_latest_release', return_value=f,
                    new_callable=MagicMock):
             got = await check_for_releases()
             assert got == None

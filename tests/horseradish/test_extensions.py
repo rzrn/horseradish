@@ -1,14 +1,14 @@
 """
-test piqueserver/extensions.py
+test horseradish/extensions.py
 """
 import os
 
 import unittest
 
-from piqueserver import extensions
-from piqueserver.config import config
-from piqueserver.server import FeatureProtocol
-from piqueserver.player import FeatureConnection
+from horseradish import extensions
+from horseradish.config import config
+from horseradish.server import FeatureProtocol
+from horseradish.player import FeatureConnection
 
 
 class TestExtensions(unittest.TestCase):

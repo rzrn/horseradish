@@ -1,11 +1,11 @@
 """
-test piqueserver/server.py
+test horseradish/server.py
 """
 
 import unittest
-import piqueserver.player
+import horseradish.player
 
 
 class TestServer(unittest.TestCase):
     def test_dummy(self):
-        piqueserver.player
+        horseradish.player

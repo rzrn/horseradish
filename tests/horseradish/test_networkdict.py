@@ -1,4 +1,4 @@
-from piqueserver.networkdict import NetworkDict
+from horseradish.networkdict import NetworkDict
 import unittest
 
 
