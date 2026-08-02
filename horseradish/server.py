@@ -42,7 +42,7 @@ from horseradish.networkdict import NetworkDict
 from horseradish.player import FeatureConnection
 from horseradish.release import check_for_releases, format_release
 from horseradish.scheduler import Scheduler
-from horseradish.utils import EndCall
+from horseradish.utils import EndCall, ensure_dir_exists
 from horseradish.statusserver import StatusServer
 from pyspades.bytes import NoDataLeft
 from pyspades.constants import (CTF_MODE, ERROR_SHUTDOWN, TC_MODE,
@@ -168,11 +168,6 @@ master_hosts = config.option("master_hosts", [
     {'host': 'master1.aos.coffee', 'port': 32886},
     {'host': 'master2.aos.coffee', 'port': 32886},
 ])
-
-def ensure_dir_exists(filename: str) -> None:
-    d = os.path.dirname(filename)
-    os.makedirs(d, exist_ok=True)
-
 
 def random_choice_cycle(choices):
     while True:

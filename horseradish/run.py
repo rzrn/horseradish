@@ -16,6 +16,8 @@ from io import StringIO, TextIOBase
 from pyspades.logger import getLogger
 import logging
 
+from horseradish.utils import ensure_dir_exists
+
 from logging import FileHandler, StreamHandler, getLevelName
 from logging.handlers import TimedRotatingFileHandler
 
@@ -290,7 +292,6 @@ def main():
         if not os.path.isabs(log_filename):
             log_filename = os.path.join(config.config_dir, log_filename)
 
-        from horseradish.server import ensure_dir_exists # MOVE TO UTILS
         ensure_dir_exists(log_filename)
 
         stream_handler = StreamHandler(sys.__stdout__)
