@@ -50,7 +50,10 @@ def check_game_mode(game_mode_name):
 
 
 def load_script_file(script_dir, script_name):
-    script_path = os.path.join(script_dir, "{}.py".format(script_name))
+    if os.path.isabs(script_name):
+        script_path = script_name
+    else:
+        script_path = os.path.join(script_dir, "{}.py".format(script_name))
 
     try:
         with open(script_path, 'r') as fin:
