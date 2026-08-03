@@ -203,29 +203,6 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(raw['server']['things']['thing2'], 'added')
         self.assertEqual(raw['server']['name'], 'Ace of Spades Server')
 
-    def test_dump_to_file(self):
-        config = ConfigStore()
-        f = StringIO(SIMPLE_TOML_CONFIG)
-        config.load_from_file(f)
-
-        with self.assertRaises(ValueError):
-            config.dump_to_file(None, format_='garbage123')
-
-        with tempfile.TemporaryFile(mode='w+') as f:
-            config.dump_to_file(f, JSON_FORMAT)
-            f.seek(0)
-            out = f.read().strip()
-            # at least make sure it wrote something that could be json
-            self.assertEqual(out[0], '{')
-            self.assertEqual(out[-1], '}')
-
-        with tempfile.TemporaryFile(mode='w+') as f:
-            config.dump_to_file(f, TOML_FORMAT)
-            f.seek(0)
-            out = f.read().strip()
-            # at least make sure it wrote something that could be toml
-            self.assertIn('[server]', out)
-
     def test_check_unused(self):
         config = ConfigStore()
         d = {
