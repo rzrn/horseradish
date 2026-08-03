@@ -892,6 +892,9 @@ def run(loop) -> None:
     runs the server
     """
 
+    # This enables scripts to import modules in the server directory.
+    sys.path.append(config.config_dir)
+
     t1 = time.monotonic()
 
     # Load and apply regular scripts
