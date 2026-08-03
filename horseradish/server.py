@@ -30,7 +30,6 @@ from ipaddress import AddressValueError, IPv4Address, ip_address, ip_network
 from pprint import pprint
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
-import aiohttp
 from pyspades.enet import Address, Packet, Peer
 
 # won't be used; just need to be executed
@@ -43,7 +42,6 @@ from horseradish.player import FeatureConnection
 from horseradish.release import check_for_releases, format_release
 from horseradish.scheduler import Scheduler
 from horseradish.utils import EndCall, ensure_dir_exists
-from horseradish.statusserver import StatusServer
 from pyspades.bytes import NoDataLeft
 from pyspades.constants import (CTF_MODE, ERROR_SHUTDOWN, TC_MODE,
                                 EXTENSION_CHATTYPE, EXTENSION_KICKREASON)
@@ -348,6 +346,7 @@ class FeatureProtocol(ServerProtocol):
                 log.exception("The SSH server launch failed.")
 
         if status_server_enabled.get():
+            from horseradish.statusserver import StatusServer
             self.status_server = StatusServer(self)
             start_server = await self.status_server.create()
             self.create_task(start_server)
@@ -386,6 +385,12 @@ class FeatureProtocol(ServerProtocol):
                  port=self.port)
 
     async def get_external_ip(self, ip_getter: str):
+        try:
+            import aiohttp
+        except ImportError:
+            log.warning('Could to retrieve external IP: `aiohttp` is not installed')
+            return
+
         log.info(
             'Retrieving external IP from {ip_getter} to generate server identifier',
             ip_getter = ip_getter

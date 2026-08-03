@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Optional, Dict, Any
 
-import aiohttp
 from packaging import version
 
 from pyspades.logger import getLogger
@@ -12,6 +11,8 @@ log = getLogger()
 
 
 async def fetch_latest_release() -> Dict[str, Any]:
+    import aiohttp
+
     endpoint = "https://api.github.com/repos/rzrn/horseradish/releases/latest"
     async with aiohttp.ClientSession() as session:
         async with session.get(endpoint) as response:
@@ -29,12 +30,15 @@ def format_release(release: Dict[str, Any]) -> str:
 async def check_for_releases() -> Optional[Dict[str, Any]]:
     """Checks for new release and returns it if new release is found."""
 
-    log.debug("checking latest version")
+    log.debug("Checking latest version")
     try:
         release = await fetch_latest_release()
     except IOError as e:
-        log.warning("could not fetch latest version: {err}", err=e)
-        return None
+        log.warning("Could not fetch latest version: {err}", err = e)
+        return
+    except ImportError:
+        log.warning("Could not fetch latest version: `aiohttp` is not installed")
+        return
 
     if latest_version := release.get("tag_name"):
         if version.parse(latest_version) > version.parse(__version__):

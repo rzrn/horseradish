@@ -44,12 +44,13 @@ To install with optional features:
 
 .. code:: bash
 
-    pip3 install .[ssh,from]
+    pip3 install .[ssh,from,web]
 
 Optional features:
 
-- `ssh`: enable ssh manhole server support
+- `ssh`: enable SSH manhole server support
 - `from`: enable the `from` command to geolocate players by ip
+- `web`: enable HTTP status server
 
 Running
 -------

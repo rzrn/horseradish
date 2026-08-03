@@ -14,17 +14,28 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
-import aiohttp
-from aiohttp import web
+
 from multidict import MultiDict
 
-from jinja2 import Environment, PackageLoader, select_autoescape
+import sys
 import json
 import time
-from PIL import Image
 from io import BytesIO
-from aiohttp.abc import AbstractAccessLogger
 from pyspades.logger import getLogger
+
+try:
+    import aiohttp
+    from aiohttp import web
+    from aiohttp.abc import AbstractAccessLogger
+
+    from PIL import Image
+
+    from jinja2 import Environment, PackageLoader, select_autoescape
+except ImportError as e:
+    print("ERROR: `horseradish` was not installed with the [web] option")
+    print("but status server was enabled in the settings")
+    print(e)
+    sys.exit(1)
 
 from horseradish.config import config, cast_duration
 
