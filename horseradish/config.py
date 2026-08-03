@@ -18,8 +18,12 @@ import json
 import os
 import sys
 
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
+
 import horseradish
-import toml
 from horseradish.utils import timeparse
 
 # supported config format constants to avoid typos
@@ -102,7 +106,7 @@ class ConfigStore():
         '''
         d = {}
         if format_ == TOML_FORMAT:
-            d = toml.load(fobj)
+            d = tomllib.load(fobj)
         elif format_ == JSON_FORMAT:
             d = json.load(fobj)
         else:

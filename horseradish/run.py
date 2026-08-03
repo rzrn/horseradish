@@ -264,7 +264,7 @@ def main():
     config.config_file = config_file
     print('Loading config from {!r}'.format(config_file))
     try:
-        with open(config_file) as fobj:
+        with open(config_file, 'rb') as fobj:
             config.load_from_file(fobj, format_=format_)
     except FileNotFoundError as e:
         print("Could not open Config file")

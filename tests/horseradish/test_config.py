@@ -3,9 +3,9 @@ from pprint import pprint
 
 import unittest
 from horseradish.config import ConfigStore, JSON_FORMAT, TOML_FORMAT, cast_duration
-from io import StringIO
+from io import BytesIO
 
-SIMPLE_TOML_CONFIG = u"""
+SIMPLE_TOML_CONFIG = b"""
 title = "something"
 testnumber = 42
 
@@ -31,7 +31,7 @@ class TestExampleConfig(unittest.TestCase):
 
     def test_simple(self):
         config = ConfigStore()
-        f = StringIO(SIMPLE_TOML_CONFIG)
+        f = BytesIO(SIMPLE_TOML_CONFIG)
         config.load_from_file(f)
 
         gravity = config.option('gravity', cast=bool, default=True)
@@ -51,7 +51,7 @@ class TestExampleConfig(unittest.TestCase):
 
     def test_validation(self):
         config = ConfigStore()
-        f = StringIO(SIMPLE_TOML_CONFIG)
+        f = BytesIO(SIMPLE_TOML_CONFIG)
         config.load_from_file(f)
 
         bounded = config.option('testboundednumber', cast=int,
@@ -68,7 +68,7 @@ class TestExampleConfig(unittest.TestCase):
     def test_get(self):
         config = ConfigStore()
         test = config.option('testthing')
-        f = StringIO(SIMPLE_TOML_CONFIG)
+        f = BytesIO(SIMPLE_TOML_CONFIG)
         config.load_from_file(f)
 
         self.assertEqual(test.get(), None)
@@ -79,7 +79,7 @@ class TestExampleConfig(unittest.TestCase):
 
     def test_nested(self):
         config = ConfigStore()
-        f = StringIO(SIMPLE_TOML_CONFIG)
+        f = BytesIO(SIMPLE_TOML_CONFIG)
         config.load_from_file(f)
 
         server_config = config.section('server')
@@ -110,7 +110,7 @@ class TestExampleConfig(unittest.TestCase):
 
     def test_reload(self):
         config = ConfigStore()
-        f = StringIO(SIMPLE_TOML_CONFIG)
+        f = BytesIO(SIMPLE_TOML_CONFIG)
         config.load_from_file(f)
 
         server_config = config.section('server')
@@ -148,7 +148,7 @@ class TestExampleConfig(unittest.TestCase):
 
     def test_fail_load(self):
         config = ConfigStore()
-        f = StringIO(SIMPLE_TOML_CONFIG)
+        f = BytesIO(SIMPLE_TOML_CONFIG)
 
         with self.assertRaises(ValueError):
             config.load_from_file(f, format_='aoeuaoeu')
@@ -158,7 +158,7 @@ class TestExampleConfig(unittest.TestCase):
 
     def test_json(self):
         config = ConfigStore()
-        f = StringIO(u'''
+        f = BytesIO(b'''
         {
             "name": "Ace of Spades Server"
         }
@@ -167,7 +167,7 @@ class TestExampleConfig(unittest.TestCase):
 
     def test_more_nested(self):
         config = ConfigStore()
-        f = StringIO(SIMPLE_TOML_CONFIG)
+        f = BytesIO(SIMPLE_TOML_CONFIG)
         config.load_from_file(f)
 
         server_config = config.section('server')
@@ -184,7 +184,7 @@ class TestExampleConfig(unittest.TestCase):
 
     def test_nested_update(self):
         config = ConfigStore()
-        f = StringIO(SIMPLE_TOML_CONFIG)
+        f = BytesIO(SIMPLE_TOML_CONFIG)
         config.load_from_file(f)
 
         updates = {

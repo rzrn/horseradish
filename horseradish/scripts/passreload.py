@@ -23,7 +23,7 @@ from horseradish.config import config
 def reloadconfig(connection):
     try:
         extension = os.path.splitext(config.config_file)[1][1:]
-        with open(config.config_file) as fobj:
+        with open(config.config_file, 'rb') as fobj:
             config.update_from_file(fobj, format_=extension.upper())
     except Exception as e:
         print('Error reloading config:', e)
