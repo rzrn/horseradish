@@ -1,7 +1,10 @@
 
 import os
+import sys
 import importlib.util
 import importlib.machinery
+
+from types import SimpleNamespace
 
 from pyspades.logger import getLogger
 
@@ -46,6 +49,28 @@ def check_game_mode(game_mode_name):
     return game_mode_name not in ('ctf', 'tc')
 
 
+def load_script_file(script_dir, script_name):
+    script_path = os.path.join(script_dir, "{}.py".format(script_name))
+
+    try:
+        with open(script_path, 'r') as fin:
+            source = fin.read()
+    except FileNotFoundError:
+        return
+
+    module = SimpleNamespace(__file__ = script_path, __name__ = script_name)
+    exec(compile(source, script_path, 'exec'), module.__dict__)
+
+    return module
+
+
+def find_spec(name):
+    try:
+        return importlib.util.find_spec(name)
+    except ModuleNotFoundError:
+        return
+
+
 def load_scripts(script_names, script_dir, script_type):
     '''Load script as module.
 
@@ -63,29 +88,21 @@ def load_scripts(script_names, script_dir, script_type):
     '''
     script_objects = []
 
-    finder = importlib.machinery.PathFinder()
-    for script in script_names:
-        spec_scripts = finder.find_spec(script, [script_dir])
-        spec_global = importlib.util.find_spec(script)
-        spec = spec_scripts or spec_global
-        if not spec:
+    for script_name in script_names:
+        if module := load_script_file(script_dir, script_name):
+            script_objects.append(module)
+        elif spec := find_spec(script_name):
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            script_objects.append(module)
+        else:
             log.error(
-                ("{script_type} '{script}' not found in either {script_dir} "
+                ("{script_type} '{script_name}' not found in either {script_dir} "
                  "directory or global scope"),
-                script_type=script_type,
-                script=script,
-                script_dir=script_dir
+                script_type = script_type,
+                script_name = script_name,
+                script_dir  = script_dir
             )
-            continue
-        # namespace module name to avoid shadowing global modules
-        # TODO: figure out if there are any right or better ways.
-        spec.name = 'horseradish._{}_namespace.{}'.format(script_type, script)
-        spec.loader.name = spec.name
-        # load module
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        script_objects.append(module)
-        continue
 
     return script_objects
 
@@ -103,7 +120,7 @@ def load_scripts_regular_extension(script_names, script_dir):
         [module]: The list of module objects containing the loaded scripts
 
     '''
-    return load_scripts(script_names, script_dir, 'script')
+    return load_scripts(script_names, script_dir, 'Script')
 
 
 def load_script_game_mode(script_name, script_dir):
@@ -121,7 +138,7 @@ def load_script_game_mode(script_name, script_dir):
 
     '''
     if check_game_mode(script_name):
-        return load_scripts([script_name], script_dir, 'gamemode')
+        return load_scripts([script_name], script_dir, 'Gamemode')
     return []
 
 
@@ -146,6 +163,7 @@ def apply_scripts(scripts, config, protocol_class, connection_class):
 
     for script in scripts:
         protocol_class, connection_class = script.apply_script(
-            protocol_class, connection_class, config.get_dict())
+            protocol_class, connection_class, config.get_dict()
+        )
 
-    return (protocol_class, connection_class)
+    return protocol_class, connection_class
