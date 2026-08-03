@@ -85,43 +85,46 @@ class Map:
 
     def load_information(self, rot_info: 'RotationInfo', load_dir: str) -> None:
         path = rot_info.get_meta_filename(load_dir)
-        namespace = 'horseradish_internal_map_' + rot_info.name
-        try:
-            loader = importlib.machinery.SourceFileLoader(namespace, path)
-            spec = importlib.util.spec_from_loader(loader.name, loader)
-            info = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(info)
-        except FileNotFoundError:
-            log.error("Map info file not found {path}", path=path)
-            info = None
-        except Exception as e:
-            log.error("Error while loading map info: {exception!r}",
-                      exception=e)
-            info = None
 
-        self.info = info
-        self.load_dir = load_dir
-        self.rot_info = rot_info
-        self.gen_script = getattr(info, 'gen_script', None)
+        self.__dict__.update(
+            __file__            = path,
+            __name__            = rot_info.name,
+            author              = '(unknown)',
+            version             = '1.0',
+            description         = '',
+            extensions          = dict(),
+            gen_script          = None,
+            load_dir            = load_dir,
+            rot_info            = rot_info,
+            script              = None,
+            time_limit          = None,
+            cap_limit           = None,
+            get_spawn_location  = None,
+            get_entity_location = None,
+            on_map_change       = None,
+            on_map_leave        = None,
+            on_block_destroy    = None,
+            is_indestructable   = None,
+            info                = self
+        )
+
+        try:
+            with open(path, 'r') as fin:
+                source = fin.read()
+        except FileNotFoundError:
+            log.error("Map info file not found {path}", path = path)
+
+        try:
+            exec(compile(source, path, 'exec'), self.__dict__)
+        except Exception as exc:
+            log.error("Error while loading map info", exc_info = exc)
+
         if self.gen_script:
             self.short_name = rot_info.name
             self.name = rot_info.full_name
         else:
-            self.name = getattr(info, 'name', self.rot_info.name)
+            self.name = getattr(self, 'name', self.rot_info.name)
             self.short_name = self.name
-        self.author = getattr(info, 'author', '(unknown)')
-        self.version = getattr(info, 'version', '1.0')
-        self.description = getattr(info, 'description', '')
-        self.extensions = getattr(info, 'extensions', {})
-        self.script = getattr(info, 'apply_script', None)
-        self.time_limit = getattr(info, 'time_limit', None)
-        self.cap_limit = getattr(info, 'cap_limit', None)
-        self.get_spawn_location = getattr(info, 'get_spawn_location', None)
-        self.get_entity_location = getattr(info, 'get_entity_location', None)
-        self.on_map_change = getattr(info, 'on_map_change', None)
-        self.on_map_leave = getattr(info, 'on_map_leave', None)
-        self.on_block_destroy = getattr(info, 'on_block_destroy', None)
-        self.is_indestructable = getattr(info, 'is_indestructable', None)
 
     def apply_script(self, protocol, connection, config):
         if self.script is not None:
