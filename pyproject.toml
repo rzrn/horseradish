@@ -109,9 +109,6 @@ requires-python = ">= 3.10"
 dependencies = [
     'tomli >= 1.1.0; python_version < "3.11"',
     "packaging >= 19.0",
-
-    # windows specific
-    'pypiwin32; platform_system=="Windows"',
 ]
 
 [project.scripts]
