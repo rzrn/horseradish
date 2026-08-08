@@ -138,11 +138,10 @@ ssh_port = ssh_config.option("port", 38827)
 ssh_server_host_keys = ssh_config.option("server_host_keys", "ssh_host_ed25519_key")
 ssh_authorized_client_keys = ssh_config.option("authorized_client_keys", "authorized_keys")
 
-default_ip_getter = 'https://services.buildandshoot.com/getip'
-ip_getter_option = config.option('ip_getter', default_ip_getter)
+ip_getter_option = config.option('ip_getter', '')
 name_option = config.option(
     'name', default='Ace of Spades Server #%s' % random.randrange(0, 2000))
-notify_new_releases = config.option("release_notifications", default=True)
+notify_new_releases = config.option("release_notifications", default = False)
 motd_option = config.option('motd')
 help_option = config.option('help', default=[
     'Server name: %(server_name)s',

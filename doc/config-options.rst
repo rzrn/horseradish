@@ -368,7 +368,7 @@ Note: this url must return solely the ip address in the response body.
 release_notifications
 +++++++++++++++++++++
 
-Check github for new releases and notify admins if new releases are found. Default True.
+Check GitHub for new releases and notify admins if new releases are found. Default False.
 
 everyone_is_admin
 +++++++++++++++++

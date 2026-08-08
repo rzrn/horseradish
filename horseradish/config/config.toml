@@ -255,7 +255,7 @@ profile = false
 # the web server which provides a json api and webpage to view a summary of the
 # game (including map, players, and server information)
 [status_server]
-enabled = true
+enabled = false
 port = 32886
 logging = true
 
