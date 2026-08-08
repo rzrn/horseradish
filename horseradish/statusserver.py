@@ -15,8 +15,6 @@
 
 import asyncio
 
-from multidict import MultiDict
-
 import sys
 import json
 import time
