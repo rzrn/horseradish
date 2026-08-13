@@ -30,11 +30,14 @@
 import atexit
 
 from cpython cimport bool
+from cpython.ref cimport PyObject
+
 from libc.stdint cimport uintptr_t
 
 cdef extern from "Python.h":
-    cdef void Py_INCREF(object o)
-    cdef void Py_DECREF(object o)
+    cdef void Py_INCREF(void * o)
+    cdef void Py_DECREF(void * o)
+    cdef void Py_XDECREF(void * o)
 
 cdef extern from "enet/types.h":
     ctypedef unsigned char enet_uint8
@@ -132,7 +135,7 @@ cdef extern from "enet/enet.h":
         enet_uint8 outgoingSessionID
         enet_uint8 incomingSessionID
         ENetAddress address
-        char *data
+        void * data
         ENetPeerState state
         size_t channelCount
         enet_uint32 incomingBandwidth
@@ -406,10 +409,12 @@ cdef class Address:
             self._enet_address.port = value
 
 cdef void __cdecl _packet_free_callback(ENetPacket* packet) noexcept with gil:
-    cdef object func = <object>packet.userData
+    cdef object func = <object> packet.userData
     func()
+
     # the packet is about to be destroyed, so decrease the refcount
-    Py_DECREF(func)
+    Py_DECREF(packet.userData)
+    packet.userData = NULL
 
 cdef class Packet:
     """
@@ -465,9 +470,11 @@ cdef class Packet:
 
     def set_free_callback(self, func):
         self._enet_packet.freeCallback = _packet_free_callback
-        Py_INCREF(func)
+
         # we're storing a reference, and need to INCREF accordingly
-        self._enet_packet.userData = <void*>func
+        cdef void * userData = <void *> func
+        self._enet_packet.userData = userData
+        Py_INCREF(userData)
 
     property data:
         def __get__(self):
@@ -526,7 +533,7 @@ cdef class Peer:
 
     """
 
-    cdef ENetPeer *_enet_peer
+    cdef ENetPeer * _enet_peer
 
     def __richcmp__(self, obj, op):
         if isinstance(obj, Peer):
@@ -676,12 +683,30 @@ cdef class Peer:
 
     property data:
         def __get__(self):
-            if self.check_valid():
-                return self._enet_peer.data
+            if self.check_valid() is False:
+                return
+
+            cdef void * data = self._enet_peer.data
+
+            if data == NULL:
+                return None
+            else:
+                return <object> data
 
         def __set__(self, value):
-            if self.check_valid():
-                self._enet_peer.data = value
+            if self.check_valid() is False:
+                return
+
+            cdef ENetPeer * peer = self._enet_peer
+            Py_XDECREF(peer.data)
+
+            cdef void * peerData = <void *> value
+
+            if value is None:
+                peer.data = NULL
+            else:
+                peer.data = peerData
+                Py_INCREF(peerData)
 
     property state:
         def __get__(self):
@@ -990,7 +1015,15 @@ cdef class Host:
         self._enet_host = NULL
 
     def __dealloc__(self):
+        cdef ENetPeer * peer
+
         if self.dealloc:
+            for k in range(self._enet_host.peerCount):
+                peer = &self._enet_host.peers[k]
+
+                Py_XDECREF(peer.data)
+                peer.data = NULL
+
             enet_host_destroy(self._enet_host)
 
     def connect(self, Address address, channelCount, data=0):
