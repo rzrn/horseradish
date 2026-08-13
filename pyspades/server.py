@@ -235,14 +235,13 @@ class ServerProtocol(BaseProtocol):
             entities.append(flag)
         return entities
 
-    async def update(self):
+    async def listen(self):
         while True:
             start_time = time.monotonic()
             # Notify if update starts more than 4ms later than requested
             lag = start_time - self.world_time - UPDATE_FREQUENCY
             if lag > 0.004:
-                log.debug(
-                    "LAG before world update: {lag:.0f} ms", lag=lag * 1000)
+                log.debug("LAG before world update: {lag:.0f} ms", lag = lag * 1000)
 
             self.network_update()
             # Map transfer
@@ -251,7 +250,7 @@ class ServerProtocol(BaseProtocol):
                         not player.peer.reliableDataInTransit):
                     player.continue_map_transfer()
             # Update world
-            while (time.monotonic() - self.world_time) > UPDATE_FREQUENCY:
+            while time.monotonic() - self.world_time > UPDATE_FREQUENCY:
                 self.loop_count += 1
                 try:
                     self.world.update(UPDATE_FREQUENCY)
@@ -267,7 +266,7 @@ class ServerProtocol(BaseProtocol):
             # Notify if update uses more than 70% of time budget
             lag = time.monotonic() - start_time
             if lag > (UPDATE_FREQUENCY * 0.7):
-                log.debug("world update LAG: {lag:.0f} ms", lag=lag * 1000)
+                log.debug("World update LAG: {lag:.0f} ms", lag = lag * 1000)
 
             delay = self.world_time + UPDATE_FREQUENCY - time.monotonic()
             await asyncio.sleep(delay)

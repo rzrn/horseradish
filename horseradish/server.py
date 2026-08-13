@@ -943,6 +943,8 @@ def run(loop) -> None:
         elapsed = t2 - t1, port = protocol.port
     )
 
+    protocol.update_loop = loop.create_task(protocol.listen())
+
     if ssh_enabled.get() is False:
         from horseradish.console import create_console
         loop.create_task(create_console(protocol))
@@ -961,7 +963,7 @@ def run(loop) -> None:
         profiler = None
 
     try:
-        loop.run_forever()
+        loop.run_until_complete(protocol.update_loop)
     except KeyboardInterrupt:
         # TODO: catch SIGTERM and SIGBREAK
         print("Received SIGINT, shutting down.")
