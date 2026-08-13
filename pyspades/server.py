@@ -116,7 +116,7 @@ class ServerProtocol(BaseProtocol):
                             abs(vec[1] * 1.02) +
                             abs(vec[2] * 1.01))
 
-        self.last_network_update = self.world_time = time.monotonic()
+        self.last_world_update = self.world_time = time.monotonic()
         self.loop_count = 0
 
     def _create_teams(self):
@@ -244,7 +244,7 @@ class ServerProtocol(BaseProtocol):
                 log.debug(
                     "LAG before world update: {lag:.0f} ms", lag=lag * 1000)
 
-            BaseProtocol.update(self)
+            self.network_update()
             # Map transfer
             for player in self.connections.values():
                 if (player.map_data is not None and
@@ -260,9 +260,9 @@ class ServerProtocol(BaseProtocol):
                     traceback.print_exc()
                 self.world_time += UPDATE_FREQUENCY
             # Update network
-            if time.monotonic() - self.last_network_update >= 1 / NETWORK_FPS:
-                self.last_network_update = self.world_time
-                self.update_network()
+            if time.monotonic() - self.last_world_update >= 1 / NETWORK_FPS:
+                self.last_world_update = self.world_time
+                self.broadcast_world_update()
 
             # Notify if update uses more than 70% of time budget
             lag = time.monotonic() - start_time
@@ -272,7 +272,7 @@ class ServerProtocol(BaseProtocol):
             delay = self.world_time + UPDATE_FREQUENCY - time.monotonic()
             await asyncio.sleep(delay)
 
-    def update_network(self):
+    def broadcast_world_update(self):
         if not len(self.players):
             return
         items = []

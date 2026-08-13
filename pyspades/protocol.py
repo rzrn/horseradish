@@ -108,7 +108,7 @@ class BaseProtocol:
     def remove_peer(self, peer):
         self.connections.pop(peer, None)
 
-    def update(self):
+    def network_update(self):
         try:
             while True:
                 if self.host is None:
