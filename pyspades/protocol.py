@@ -88,56 +88,29 @@ class BaseProtocol:
             self.host = enet.Host(address, self.max_connections, 1)
         except MemoryError:
             # pyenet raises memoryerror when the enet host could not be created
-            raise IOError("Failed  to Create Enet Host. Is the Port in use?")
+            raise IOError("Failed to create ENet Host. Is the port in use?")
 
         self.host.compress_with_range_coder()
         self.update_loop = asyncio.ensure_future(self.update())
         self.connections = {}
-        self.clients = {}
 
-    def connect(self, connection_class, host, port, version, channel_count=1,
-                timeout=5.0):
+    def connect(self, connection_class, host, port, version, channel_count = 1, timeout = 5.0):
         host = host.encode()
-        peer = self.host.connect(enet.Address(host, port), channel_count,
-                                 version)
+        peer = self.host.connect(enet.Address(host, port), channel_count, version)
+
         connection = connection_class(self, peer)
         connection.timeout_call = asyncio.get_running_loop().call_later(timeout, connection.timed_out)
-        self.clients[peer] = connection
+
+        peer.data = connection
+
         return connection
 
-    def on_connect(self, peer):
-        connection = self.connection_class(self, peer)
-        self.connections[peer] = connection
-        connection.on_connect()
-
-    def on_disconnect(self, peer):
-        try:
-            connection = self.connections.pop(peer)
-            connection.disconnected = True
-            connection.on_disconnect()
-        except KeyError:
-            return
-
-    def data_received(self, peer, packet):
-        connection = self.connections[peer]
-        connection.loader_received(packet)
-
     def remove_peer(self, peer):
-        if peer in self.connections:
-            del self.connections[peer]
-        elif peer in self.clients:
-            del self.clients[peer]
-            self.check_client()
-
-    def check_client(self):
-        if self.is_client and not self.clients:
-            self.update_loop.stop()
-            self.update_loop = None
-            self.host = None  # important for GC
+        self.connections.pop(peer, None)
 
     def update(self):
         try:
-            while 1:
+            while True:
                 if self.host is None:
                     return
                 try:
@@ -146,29 +119,34 @@ class BaseProtocol:
                     break
                 if event is None:
                     break
+
                 event_type = event.type
                 if event_type == enet.EVENT_TYPE_NONE:
                     break
+
                 peer = event.peer
-                is_client = peer in self.clients
-                if is_client:
-                    connection = self.clients[peer]
-                    if event_type == enet.EVENT_TYPE_CONNECT:
-                        connection.on_connect()
-                        connection.timeout_call.cancel()
-                    elif event_type == enet.EVENT_TYPE_DISCONNECT:
+                connection = peer.data
+
+                if event_type == enet.EVENT_TYPE_CONNECT:
+                    if connection is None:
+                         # For outcoming connections we fill `peer.data` before this point.
+                         connection = self.connection_class(self, peer)
+                         self.connections[peer] = connection
+                         peer.data = connection
+                    else:
+                         # This is installed for each incoming connection in `connect(...)`.
+                         connection.timeout_call.cancel()
+
+                    connection.on_connect()
+                elif event_type == enet.EVENT_TYPE_DISCONNECT:
+                    if connection.disconnected is False:
+                        connection.disconnected = True
                         connection.on_disconnect()
-                        del self.clients[peer]
-                        self.check_client()
-                    elif event.type == enet.EVENT_TYPE_RECEIVE:
-                        connection.loader_received(event.packet)
-                else:
-                    if event_type == enet.EVENT_TYPE_CONNECT:
-                        self.on_connect(peer)
-                    elif event_type == enet.EVENT_TYPE_DISCONNECT:
-                        self.on_disconnect(peer)
-                    elif event.type == enet.EVENT_TYPE_RECEIVE:
-                        self.data_received(peer, event.packet)
+
+                    self.remove_peer(peer)
+                    peer.data = None
+                elif event_type == enet.EVENT_TYPE_RECEIVE:
+                    connection.loader_received(event.packet)
         except:
             # make sure the LoopingCall doesn't catch this and stops
             import traceback
