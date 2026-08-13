@@ -20,9 +20,6 @@ The ByteReader/Bytewriter classes are used to read and write various data types
 from and to byte-like objects. This is used e.g. to read the contents of
 packets.
 """
-from libc.math cimport NAN
-
-from libc.stdint cimport int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t
 
 cdef extern from "bytes_c.cpp":
     int8_t read_i8le(const char * data)
@@ -69,9 +66,6 @@ cdef extern from "<sstream>" namespace "std":
 class NoDataLeft(Exception):
     pass
 
-DEF INT_ERROR = -0xFFFFFFFF >> 1
-DEF LONG_LONG_ERROR = -0xFFFFFFFFFFFFFFFF >> 1
-
 cdef class ByteReader:
     """Reads various data types from a bytes-like object"""
     def __init__(self, input_data, int start = 0, int size = -1):
@@ -108,7 +102,7 @@ cdef class ByteReader:
         self.pos += bytecount
         return ret
 
-    cpdef int readInt8LE(self) except INT_ERROR:
+    cpdef int readInt8LE(self) except 128:
         """read one byte of data as signed integer
 
         Returns:
@@ -118,7 +112,7 @@ cdef class ByteReader:
         cdef char * pos = self.check_available(1)
         return read_i8le(pos)
 
-    cpdef int readUInt8LE(self) except INT_ERROR:
+    cpdef int readUInt8LE(self) except 256:
         """read one byte of data as unsigned integer
 
         Returns:
@@ -128,7 +122,7 @@ cdef class ByteReader:
         cdef char * pos = self.check_available(1)
         return read_u8le(pos)
 
-    cpdef int readInt16LE(self) except INT_ERROR:
+    cpdef int readInt16LE(self) except 32768:
         """read two bytes of data as signed little-endian integer
 
         Returns:
@@ -138,7 +132,7 @@ cdef class ByteReader:
         cdef char * pos = self.check_available(2)
         return read_i16le(pos)
 
-    cpdef int readUInt16LE(self) except INT_ERROR:
+    cpdef int readUInt16LE(self) except 65536:
         """read two bytes of data as unsigned little-endian integer
 
         Returns:
@@ -148,7 +142,7 @@ cdef class ByteReader:
         cdef char * pos = self.check_available(2)
         return read_u16le(pos)
 
-    cpdef long long readInt32LE(self) except LONG_LONG_ERROR:
+    cpdef long long readInt32LE(self) except 2147483648:
         """read four bytes of data as signed little-endian integer
 
         Returns:
@@ -158,7 +152,7 @@ cdef class ByteReader:
         cdef char * pos = self.check_available(4)
         return read_i32le(pos)
 
-    cpdef long long readUInt32LE(self) except LONG_LONG_ERROR:
+    cpdef long long readUInt32LE(self) except 4294967296:
         """read four bytes of data as unsigned little-endian integer
 
         Returns:
@@ -280,22 +274,22 @@ cdef class ByteWriter:
     cpdef write(self, data):
         write(self.stream, data, len(data))
 
-    cpdef writeInt8LE(self, int value):
+    cpdef writeInt8LE(self, int8_t value):
         write_i8le(self.stream, value)
 
-    cpdef writeUInt8LE(self, int value):
+    cpdef writeUInt8LE(self, uint8_t value):
         write_u8le(self.stream, value)
 
-    cpdef writeInt16LE(self, int value):
+    cpdef writeInt16LE(self, int16_t value):
         write_i16le(self.stream, value)
 
-    cpdef writeUInt16LE(self, int value):
+    cpdef writeUInt16LE(self, uint16_t value):
         write_u16le(self.stream, value)
 
-    cpdef writeInt32LE(self, int value):
+    cpdef writeInt32LE(self, int32_t value):
         write_i32le(self.stream, value)
 
-    cpdef writeUInt32LE(self, int value):
+    cpdef writeUInt32LE(self, uint32_t value):
         write_u32le(self.stream, value)
 
     cpdef writeFloat32LE(self, float value):

@@ -1,7 +1,6 @@
 from libc.math cimport NAN
 
-DEF INT_ERROR = -0xFFFFFFFF >> 1
-DEF LONG_LONG_ERROR = -0xFFFFFFFFFFFFFFFF >> 1
+from libc.stdint cimport int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t
 
 cdef extern from "<sstream>" namespace "std":
     cdef cppclass stringstream:
@@ -17,14 +16,14 @@ cdef class ByteReader:
     cdef char * check_available(self, int size) except NULL
     cpdef read(self, int bytecount = ?)
 
-    cpdef int readInt8LE(self) except INT_ERROR
-    cpdef int readUInt8LE(self) except INT_ERROR
+    cpdef int readInt8LE(self) except 128
+    cpdef int readUInt8LE(self) except 256
 
-    cpdef int readInt16LE(self) except INT_ERROR
-    cpdef int readUInt16LE(self) except INT_ERROR
+    cpdef int readInt16LE(self) except 32768
+    cpdef int readUInt16LE(self) except 65536
 
-    cpdef long long readInt32LE(self) except LONG_LONG_ERROR
-    cpdef long long readUInt32LE(self) except LONG_LONG_ERROR
+    cpdef long long readInt32LE(self) except 2147483648
+    cpdef long long readUInt32LE(self) except 4294967296
 
     cpdef float readFloat32LE(self) except? NAN
 
@@ -45,14 +44,14 @@ cdef class ByteWriter:
     cdef void writeSize(self, char * data, int size)
     cpdef write(self, data)
 
-    cpdef writeInt8LE(self, int value)
-    cpdef writeUInt8LE(self, int value)
+    cpdef writeInt8LE(self, int8_t value)
+    cpdef writeUInt8LE(self, uint8_t value)
 
-    cpdef writeInt16LE(self, int value)
-    cpdef writeUInt16LE(self, int value)
+    cpdef writeInt16LE(self, int16_t value)
+    cpdef writeUInt16LE(self, uint16_t value)
 
-    cpdef writeInt32LE(self, int value)
-    cpdef writeUInt32LE(self, int value)
+    cpdef writeInt32LE(self, int32_t value)
+    cpdef writeUInt32LE(self, uint32_t value)
 
     cpdef writeFloat32LE(self, float value)
 
