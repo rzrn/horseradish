@@ -1313,12 +1313,12 @@ class ServerConnection(BaseConnection):
             chat_message.chat_type = CHAT_TEAM
             # 34 is guaranteed to be out of range!
             chat_message.player_id = 35
-            prefix = self.protocol.server_prefix + ' '
+            prefix = self.protocol.server_prefix
 
         lines = textwrap.wrap(value, MAX_CHAT_SIZE - len(prefix) - 1)
 
         for line in lines:
-            chat_message.value = '{}{}'.format(prefix, line)
+            chat_message.value = prefix + line
             self.send_contained(chat_message)
 
     def send_chat_warning(self, message):
