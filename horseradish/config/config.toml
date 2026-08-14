@@ -251,6 +251,9 @@ rotate_daily = true
 
 profile = false
 
+# write client string when player joins the game
+log_client_on_join = false
+
 
 # the web server which provides a json api and webpage to view a summary of the
 # game (including map, players, and server information)

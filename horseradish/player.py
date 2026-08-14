@@ -6,6 +6,7 @@ import asyncio
 
 from horseradish import commands
 from horseradish.release import format_release
+from horseradish.config import config
 from pyspades.constants import (ERROR_BANNED, DESTROY_BLOCK, SPADE_DESTROY,
                                 GRENADE_DESTROY, ERROR_KICKED)
 from pyspades.server import ServerConnection
@@ -22,6 +23,9 @@ CHAT_PER_SECOND = 0.5
 HookValue = Optional[bool]
 
 log = getLogger()
+
+logging_config = config.section("logging")
+log_client_on_join = logging_config.option("log_client_on_join", False).get()
 
 
 class FeatureConnection(ServerConnection):
@@ -79,9 +83,22 @@ class FeatureConnection(ServerConnection):
         self.printable_name = escape_control_codes(name)
         if len(self.printable_name) > 15:
             self.kick(silent=True)
-        log.info('{name} (IP {ip}, ID {pid}) entered the game!',
-                 name=self.printable_name,
-                 ip=self.address[0], pid=self.player_id)
+
+        if log_client_on_join:
+            log.info(
+                '{name} (IP {ip}, ID {pid}) joined with {cli_string}',
+                name=self.printable_name,
+                ip=self.address[0],
+                pid=self.player_id,
+                cli_string=self.client_string
+            )
+        else:
+            log.info(
+                '{name} (IP {ip}, ID {pid}) entered the game!',
+                name=self.printable_name,
+                ip=self.address[0], pid=self.player_id
+            )
+
         if self.user_types is None:
             if self.protocol.everyone_is_admin:
                 self.on_user_login('admin', False)
