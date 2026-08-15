@@ -54,18 +54,22 @@ class FeatureConnection(ServerConnection):
 
     def on_connect(self) -> None:
         protocol = self.protocol
-        client_ip = self.address[0]
+        address, enet_port = self.address
 
-        if client_ip in self.protocol.bans:
-            name, reason, timestamp = self.protocol.bans[client_ip]
+        if address in self.protocol.bans:
+            name, reason, timestamp = self.protocol.bans[address]
 
             if timestamp is not None and time.time() >= timestamp:
-                protocol.remove_ban(client_ip)
+                protocol.remove_ban(address)
                 protocol.save_bans()
             else:
-                log.info('banned user {name} ({client_ip}) attempted to join',
-                         name=name,
-                         client_ip=client_ip)
+                log.info(
+                    'Banned user {name} ({address}:{enet_port}) attempted to join',
+                    name      = name,
+                    address   = address,
+                    enet_port = enet_port
+                )
+
                 self.disconnect(ERROR_BANNED, reason)
                 return
 
@@ -75,16 +79,28 @@ class FeatureConnection(ServerConnection):
         if self.protocol.motd is not None:
             self.send_lines(self.protocol.motd, 'motd')
 
-    def on_login(self, name: str) -> None:
+    def on_login(self, name : str) -> None:
         self.printable_name = escape_control_codes(name)
         if len(self.printable_name) > 15:
             self.kick(silent=True)
-        log.info('{name} (IP {ip}, ID {pid}) entered the game!',
-                 name=self.printable_name,
-                 ip=self.address[0], pid=self.player_id)
+
+        log.info('{name} (#{player_id}, {address}:{enet_port}) entered the game',
+            name      = self.printable_name,
+            address   = self.address[0],
+            enet_port = self.address[1],
+            player_id = self.player_id
+        )
+
         if self.user_types is None:
             if self.protocol.everyone_is_admin:
                 self.on_user_login('admin', False)
+
+    def on_client_info(self):
+        log.info("{address}:{enet_port} reported {client_string}",
+            address       = self.address[0],
+            enet_port     = self.address[1],
+            client_string = self.client_string
+        )
 
     def get_spawn_location(self) -> Tuple[int, int, int]:
         get_location = self.protocol.map_info.get_spawn_location
@@ -95,11 +111,25 @@ class FeatureConnection(ServerConnection):
         return ServerConnection.get_spawn_location(self)
 
     def on_disconnect(self) -> None:
+        address, enet_port = self.address
+
         if self.name is not None:
-            log.info('{name} disconnected!', name=self.printable_name)
-            self.protocol.player_memory.append((self.name, self.address[0]))
+            log.info(
+                '{name} (#{player_id}, {address}:{enet_port}) disconnected',
+                name      = self.printable_name,
+                address   = address,
+                enet_port = enet_port,
+                player_id = self.player_id
+            )
+
+            self.protocol.player_memory.append((self.name, address))
         else:
-            log.info('{ip} disconnected', ip=self.address[0])
+            log.info(
+                '{address}:{enet_port} disconnected',
+                address   = address,
+                enet_port = enet_port
+            )
+
         ServerConnection.on_disconnect(self)
 
     def on_command(self, command: str, parameters: List[str]) -> None:
