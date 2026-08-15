@@ -176,9 +176,11 @@ class ServerConnection(BaseConnection):
     @register_packet_handler(loaders.ProtocolExtensionInfo)
     def on_ext_info_received(self, contained: loaders.ProtocolExtensionInfo) -> None:
         self.proto_extensions = dict(contained.extensions)
-        log.debug("received extinfo {extinfo} from {player}",
-                  extinfo=self.proto_extensions,
-                  player=self)
+        log.debug(
+            "Received extinfo {extinfo} from {player}",
+            extinfo = self.proto_extensions,
+            player  = self
+        )
 
     @register_packet_handler(loaders.ExistingPlayer)
     @register_packet_handler(loaders.ShortPlayerData)
@@ -757,7 +759,7 @@ class ServerConnection(BaseConnection):
         # send extension info to clients that support this packet.
         # skip openspades <= 0.1.3 https://github.com/piqueserver/piqueserver/issues/504
         if contained.client == 'o' and contained.version <= (0, 1, 3):
-            log.debug("not sending version request to OpenSpades <= 0.1.3")
+            log.debug("Not sending version request to OpenSpades <= 0.1.3")
         else:
             ext_info = loaders.ProtocolExtensionInfo()
             ext_info.extensions = self.protocol.available_proto_extensions
@@ -1274,7 +1276,7 @@ class ServerConnection(BaseConnection):
             return
 
         if not self.map_data.data_left():
-            log.debug("done sending map data to {player}", player=self)
+            log.debug("Done sending map data to {player}", player = self)
             self.map_data = None
             for data in self.saved_loaders:
                 packet = enet.Packet(bytes(data), enet.PACKET_FLAG_RELIABLE)
