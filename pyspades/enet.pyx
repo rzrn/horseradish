@@ -582,8 +582,13 @@ cdef class Peer:
         Forcefully disconnects a peer.
         """
 
+        cdef ENetPeer * peer = self._enet_peer
+
         if self.check_valid():
-            enet_peer_reset(self._enet_peer)
+            enet_peer_reset(peer)
+
+            Py_XDECREF(peer.data)
+            peer.data = NULL
 
     def ping(self):
         """
@@ -595,17 +600,24 @@ cdef class Peer:
         if self.check_valid():
             enet_peer_ping(self._enet_peer)
 
-    def disconnect(self, data=0):
+    def disconnect(self, data = 0):
         """
         disconnect ()
 
         Request a disconnection from a peer.
         """
 
-        if self.check_valid():
-            enet_peer_disconnect(self._enet_peer, data)
+        cdef ENetPeer * peer = self._enet_peer
 
-    def disconnect_later(self, data=0):
+        if self.check_valid():
+            enet_peer_disconnect(peer, data)
+
+            # `enet_peer_disconnect` sometimes directly calls `enet_peer_reset`
+            if peer.state == ENET_PEER_STATE_DISCONNECTED:
+                Py_XDECREF(peer.data)
+                peer.data = NULL
+
+    def disconnect_later(self, data = 0):
         """
         disconnect_later ()
 
@@ -613,18 +625,29 @@ cdef class Peer:
         packets are sent.
         """
 
-        if self.check_valid():
-            enet_peer_disconnect_later(self._enet_peer, data)
+        cdef ENetPeer * peer = self._enet_peer
 
-    def disconnect_now(self, data=0):
+        if self.check_valid():
+            enet_peer_disconnect_later(peer, data)
+
+            if peer.state == ENET_PEER_STATE_DISCONNECTED:
+                Py_XDECREF(peer.data)
+                peer.data = NULL
+
+    def disconnect_now(self, data = 0):
         """
         disconnect_now ()
 
         Force an immediate disconnection from a peer.
         """
 
+        cdef ENetPeer * peer = self._enet_peer
+
         if self.check_valid():
-            enet_peer_disconnect_now(self._enet_peer, data)
+            enet_peer_disconnect_now(peer, data)
+
+            Py_XDECREF(peer.data)
+            peer.data = NULL
 
 
     def check_valid(self):
