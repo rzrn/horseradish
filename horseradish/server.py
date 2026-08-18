@@ -770,27 +770,6 @@ class FeatureProtocol(ServerProtocol):
 
         return 0
 
-    def data_received(self, peer: Peer, packet: Packet) -> None:
-        ip = peer.address.host
-        current_time = time.monotonic()
-        try:
-            ServerProtocol.data_received(self, peer, packet)
-        except (NoDataLeft, ValueError):
-            import traceback
-            traceback.print_exc()
-            log.info(
-                'IP {ip} was hardbanned for invalid data or possibly DDoS.',
-                ip=ip
-            )
-            self.hard_bans.add(ip)
-            return
-        dt = time.monotonic() - current_time
-        if dt > 1.0:
-            log.warning(
-                'Processing {data!r} from {ip} took {time}',
-                data = packet.data, ip = ip, time = dt
-            )
-
     async def send_tip_loop(self, delay):
         while True:
             await asyncio.sleep(delay)

@@ -15,10 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from time import monotonic
 import asyncio
-from pyspades.bytes import ByteWriter
 
+from pyspades.bytes import ByteWriter
 import pyspades.enet as enet
+
+from pyspades.logger import getLogger
+
+log = getLogger()
 
 
 class BaseConnection:
@@ -145,7 +150,20 @@ class BaseProtocol:
                     self.remove_peer(peer)
                     peer.data = None
                 elif event_type == enet.EVENT_TYPE_RECEIVE:
+                    t1 = monotonic()
                     connection.loader_received(event.packet)
+                    t2 = monotonic()
+
+                    dt = t2 - t1
+                    if dt > 0.250:
+                        data = event.packet.data
+                        log.warning(
+                            'Processing {size} bytes from {addr} took {time:.2f} ms: {data}',
+                            size = len(data),
+                            addr = peer.address.host,
+                            time = 1000 * dt,
+                            data = data[:128].hex(' ')
+                        )
         except:
             # make sure the LoopingCall doesn't catch this and stops
             import traceback
