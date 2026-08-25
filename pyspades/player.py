@@ -161,12 +161,12 @@ class ServerConnection(BaseConnection):
         try:
             contained, handler = get_packet_handler(self, loader)
         except KeyError:
-            log.warning(
+            log.debug(
                 "{player!r} sent an invalid packet ID: {packet_id}",
                 player = self, packet_id = loader.data[0]
             )
         except NoDataLeft:
-            log.warning(
+            log.debug(
                 "{player!r} sent a packet that is too short ({size} bytes): {data}",
                 player = self, data = loader.data[:128].hex(' '), size = len(loader.data)
             )
