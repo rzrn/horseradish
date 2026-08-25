@@ -1,3 +1,4 @@
+import logging
 import random
 import sys
 
@@ -75,3 +76,27 @@ def toggle_master(connection):
         int(protocol.master)])
     if connection in connection.protocol.players.values():
         return "You " + message
+
+
+@command('loglevel', admin_only = True)
+def c_loglevel(connection, argval = None):
+    """
+    Get or set the current logging level for the root logger
+    /loglevel [DEBUG|INFO|WARNING|ERROR|CRITICAL]
+    """
+
+    rootLogger = logging.getLogger()
+    oldLevelName = logging.getLevelName(rootLogger.level)
+
+    if argval is None:
+        return "{}".format(oldLevelName)
+
+    loglevel = logging.getLevelName(argval)
+
+    if isinstance(loglevel, int):
+        rootLogger.setLevel(loglevel)
+
+        newLevelName = logging.getLevelName(rootLogger.level)
+        return "{} -> {}".format(oldLevelName, newLevelName)
+    else:
+        return "Unknown logging level: {}".format(argval)
