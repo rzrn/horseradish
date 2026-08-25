@@ -51,6 +51,35 @@ def check_nan(*values) -> bool:
     return False
 
 
+def is_tool_valid(tool):
+    if tool == SPADE_TOOL:
+        return True
+
+    if tool == BLOCK_TOOL:
+        return True
+
+    if tool == WEAPON_TOOL:
+        return True
+
+    if tool == GRENADE_TOOL:
+        return True
+
+    return False
+
+
+def is_weapon_valid(weapon):
+    if weapon == RIFLE_WEAPON:
+        return True
+
+    if weapon == SMG_WEAPON:
+        return True
+
+    if weapon == SHOTGUN_WEAPON:
+        return True
+
+    return False
+
+
 def parse_command(value: str) -> Tuple[str, Sequence[str]]:
     try:
         splitted = shlex.split(value)
@@ -197,10 +226,16 @@ class ServerConnection(BaseConnection):
             )
             return
 
+        if is_weapon_valid(contained.weapon) is False:
+            return
+
         old_team = self.team
-        team = self.protocol.teams[contained.team]
-        log.debug("{user} wants to join {team}",
-                  user=self, team=team, teamid=contained.team)
+        if team := self.protocol.teams.get(contained.team):
+            log.debug(
+                "{user} wants to join {team}", user = self, team = team
+            )
+        else:
+            return
 
         ret = self.on_team_join(team)
         if ret is False:
@@ -486,8 +521,13 @@ class ServerConnection(BaseConnection):
     def on_tool_change_recieved(self, contained: loaders.SetTool) -> None:
         if not self.hp:
             return
-        if self.on_tool_set_attempt(contained.value) == False:
+
+        if is_tool_valid(contained.value) is False:
             return
+
+        if self.on_tool_set_attempt(contained.value) is False:
+            return
+
         old_tool = self.tool
         self.tool = contained.value
         if old_tool == WEAPON_TOOL:
@@ -715,8 +755,13 @@ class ServerConnection(BaseConnection):
     def on_weapon_change_recieved(self, contained):
         if not self.name:
             return
-        if self.on_weapon_set(contained.weapon) == False:
+
+        if is_weapon_valid(contained.weapon) is False:
             return
+
+        if self.on_weapon_set(contained.weapon) is False:
+            return
+
         self.weapon = contained.weapon
         self.set_weapon(self.weapon)
 
@@ -724,11 +769,18 @@ class ServerConnection(BaseConnection):
     def on_team_change_recieved(self, contained):
         if not self.name:
             return
-        team = self.protocol.teams[contained.team]
-        ret = self.on_team_join(team)
-        if ret is False:
+
+        if team := self.protocol.teams.get(contained.team):
+            pass
+        else:
             return
-        team = ret or team
+
+        retval = self.on_team_join(team)
+
+        if retval is False:
+            return
+
+        team = retval or team
         self.set_team(team)
 
     @register_packet_handler(loaders.HandShakeReturn)
