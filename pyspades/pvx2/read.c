@@ -37,11 +37,34 @@ static int read_vxl_span_hdr(struct VXLState *state, const unsigned char **buf)
 	return 0;
 }
 
+/* TODO: probably just consistently use a uint64_t instead of uint8_t for
+ * solid buf
+  */
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ && VXL_Z == 64
+/* left shift by >= bitwidth is UB */
+#define lshift64(x, y) ((y) >= 64 ? 0 : ((unsigned long long)(x) << (y)))
+
+static void make_solids(unsigned char *buf, int xy, int z, int len)
+{
+	unsigned long long *buf64 = (unsigned long long *)buf;
+
+	buf64[xy] |= lshift64(lshift64(1, len) - 1, z);
+}
+#else
 static void make_solid(unsigned char *buf, int xy, int z)
 {
 	int off = xy * VXL_Z + z;
 	buf[off / 8] |= 1 << (off & 7);
 }
+
+static void make_solids(unsigned char *buf, int xy, int z, int len)
+{
+	int dest = z + len;
+
+	for (; z < dest; z++)
+		make_solid(buf, xy, z);
+}
+#endif
 
 static void copy_color(
 	unsigned char *buf, int xy, int z, const unsigned char *color
@@ -55,11 +78,6 @@ static void copy_colors(
 ) {
 	memcpy(buf + (xy * VXL_Z + zstart) * 3, colors, count * 3);
 }
-
-#define set_solid(color) do { \
-	make_solid(map.solidbuf, xy, z); \
-	copy_color(map.colorbuf, xy, z, color); \
-} while (0)
 
 #define rep04(x, y, z) x, y, z, x, y, z, x, y, z
 #define rep16(x, y, z) rep04(x, y, z), rep04(x, y, z), rep04(x, y, z), rep04(x, y, z)
@@ -77,15 +95,15 @@ static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 	int bottom_len = state->bottom_len;
 	int last_span  = state->last_span;
 
+	make_solids(map.solidbuf, xy, z, top_end + 1 - z);
 	for (; z <= top_end; z++) {
-		set_solid(*buf);
+		copy_color(map.colorbuf, xy, z, *buf);
 		*buf += 4;
 	}
 
 	if (last_span) {
-		copy_colors(map.colorbuf, xy, z, dirt_color, 64 - z);
-		for (; z < 64; z++)
-			make_solid(map.solidbuf, xy, z);
+		make_solids(map.solidbuf, xy, z, VXL_Z - z);
+		copy_colors(map.colorbuf, xy, z, dirt_color, VXL_Z - z);
 
 		return 1;
 	}
@@ -96,12 +114,13 @@ static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 	check(next_air_start < VXL_Z);
 	check(z <= bottom_start);
 
+	make_solids(map.solidbuf, xy, z, next_air_start - z);
 	copy_colors(map.colorbuf, xy, z, dirt_color, bottom_start - z);
-	for (; z < bottom_start; z++)
-		make_solid(map.solidbuf, xy, z);
+
+	z = bottom_start;
 
 	for (; z < next_air_start; z++) {
-		set_solid(*buf);
+		copy_color(map.colorbuf, xy, z, *buf);
 		*buf += 4;
 	}
 
