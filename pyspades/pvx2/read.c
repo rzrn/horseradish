@@ -101,7 +101,7 @@ static void copy_colors(
 	memcpy(buf + (xy * VXL_Z + zstart) * 3, colors, count * 3);
 }
 
-#define rep04(x, y, z) x, y, z, x, y, z, x, y, z
+#define rep04(x, y, z) x, y, z,   x, y, z,   x, y, z,   x, y, z
 #define rep16(x, y, z) rep04(x, y, z), rep04(x, y, z), rep04(x, y, z), rep04(x, y, z)
 #define rep64(x, y, z) rep16(x, y, z), rep16(x, y, z), rep16(x, y, z), rep16(x, y, z)
 static const unsigned char dirt_color[64 * 3] = {rep64(40, 64, 103)};
