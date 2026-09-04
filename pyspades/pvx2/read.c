@@ -39,16 +39,38 @@ static int read_vxl_span_hdr(struct VXLState *state, const unsigned char **buf)
 
 /* TODO: probably just consistently use a uint64_t instead of uint8_t for
  * solid buf
-  */
+ */
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ && VXL_Z == 64
 /* left shift by >= bitwidth is UB */
 #define lshift64(x, y) ((y) >= 64 ? 0 : ((unsigned long long)(x) << (y)))
+
+/* Lookup table is a little faster than the comparison for defined left shift */
+#define B(x) ((1LLU << (x)) - 1)
+static const unsigned long long bittbl[65] = {
+	B( 0), B( 1), B( 2), B( 3),
+	B( 4), B( 5), B( 6), B( 7),
+	B( 8), B( 9), B(10), B(11),
+	B(12), B(13), B(14), B(15),
+	B(16), B(17), B(18), B(19),
+	B(20), B(21), B(22), B(23),
+	B(24), B(25), B(26), B(27),
+	B(28), B(29), B(30), B(31),
+	B(32), B(33), B(34), B(35),
+	B(36), B(37), B(38), B(39),
+	B(40), B(41), B(42), B(43),
+	B(44), B(45), B(46), B(47),
+	B(48), B(49), B(50), B(51),
+	B(52), B(53), B(54), B(55),
+	B(56), B(57), B(58), B(59),
+	B(60), B(61), B(62), B(63),
+	-1
+};
 
 static void make_solids(unsigned char *buf, int xy, int z, int len)
 {
 	unsigned long long *buf64 = (unsigned long long *)buf;
 
-	buf64[xy] |= lshift64(lshift64(1, len) - 1, z);
+	buf64[xy] |= lshift64(bittbl[len], z);
 }
 #else
 static void make_solid(unsigned char *buf, int xy, int z)
