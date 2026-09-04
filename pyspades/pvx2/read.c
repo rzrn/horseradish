@@ -82,10 +82,10 @@ static void copy_colors(
 	memcpy(buf + (xy * VXL_Z + zstart) * 3, colors, count * 3);
 }
 
-#define rep04(x, y, z) x, y, z,   x, y, z,   x, y, z,   x, y, z
-#define rep16(x, y, z) rep04(x, y, z), rep04(x, y, z), rep04(x, y, z), rep04(x, y, z)
-#define rep64(x, y, z) rep16(x, y, z), rep16(x, y, z), rep16(x, y, z), rep16(x, y, z)
-static const unsigned char dirt_color[64 * 3] = {rep64(40, 64, 103)};
+#define r04(x, y, z)     x, y, z,      x, y, z,      x, y, z,      x, y, z
+#define r16(x, y, z) r04(x, y, z), r04(x, y, z), r04(x, y, z), r04(x, y, z)
+#define r64(x, y, z) r16(x, y, z), r16(x, y, z), r16(x, y, z), r16(x, y, z)
+static const unsigned char dirt_color[64 * 3] = {r64(40, 64, 103)};
 
 static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 {
