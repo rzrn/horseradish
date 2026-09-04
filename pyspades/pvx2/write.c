@@ -1,0 +1,131 @@
+#include "read.h"
+#include <stddef.h>
+#include <string.h>
+
+#define tzcnt(x) __builtin_ctzll(x)
+
+typedef unsigned long long u64;
+
+static void uncopy_color(
+	unsigned char *color, int xy, int z, const unsigned char *buf
+) {
+	memcpy(color, buf + (xy * VXL_Z + z) * 3, 3);
+}
+
+static unsigned char *vxcol(unsigned char *out, const struct VXLMapBuf *map, int xy)
+{
+	u64 *buf64 = (u64 *)map->solidbuf;
+
+	unsigned char *colorbuf = map->colorbuf;
+
+	u64 colc = buf64[xy];
+	u64 coll = -1;
+	u64 colr = -1;
+	u64 colu = -1;
+	u64 cold = -1;
+
+	if (xy % VXL_X > 0)
+		coll = buf64[xy-1];
+	if (xy % VXL_X < VXL_X - 1)
+		colr = buf64[xy+1];
+	if (xy >= VXL_X)
+		colu = buf64[xy-VXL_X];
+	if (xy < (VXL_X * VXL_Y) - VXL_X)
+		cold = buf64[xy+VXL_X];
+
+	u64 sidefilled = coll & colr & colu & cold;
+	u64 vertfilled = ((colc >> 1) | (1LLU << 63)) & (colc << 1);
+
+	u64 solid   = colc;
+	u64 colored = solid & ~(sidefilled & vertfilled);
+	u64 filled  = solid & ~colored;
+
+#define shift(x) do { \
+	solid >>= x; colored >>= x; filled >>= x; \
+} while (0)
+
+	if (solid == 0) {
+		/* tzcnt (actually bsf in disguise) doesn't play well
+		 * with all-zeroes; don't bother with the loop.
+		 */
+
+		out[0] = 0;
+		out[1] = 64;
+		out[2] = 63;
+		out[3] = 0;
+
+		return out + 4;
+	}
+
+	int next_air_start = 0;
+	while (1) {
+		int air_start = next_air_start;
+		int span_len = 1;
+		int cnt;
+
+		/* TODO: and what if the solid is 0 here */
+		cnt = tzcnt(solid);
+		shift(cnt);
+		int top_start = air_start + cnt;
+
+		cnt = tzcnt(~colored);
+		shift(cnt);
+		int top_end = top_start + cnt - 1;
+		span_len += cnt;
+
+		cnt = tzcnt(~filled);
+		shift(cnt);
+		int bottom_start = top_end + cnt + 1;
+
+		if (solid == 0) {
+			out[0] = 0;
+			out[1] = top_start;
+			out[2] = top_end;
+			out[3] = air_start;
+			out += 4;
+
+			int z;
+			for (z = top_start; z <= top_end; z++) {
+				uncopy_color(out, xy, z, colorbuf);
+				out += 4;
+			}
+
+			break;
+		}
+
+		cnt = tzcnt(~colored);
+		shift(cnt);
+		next_air_start = bottom_start + cnt;
+		span_len += cnt;
+
+		out[0] = span_len;
+		out[1] = top_start;
+		out[2] = top_end;
+		out[3] = air_start;
+		out += 4;
+
+		int z;
+		for (z = top_start; z <= top_end; z++) {
+			uncopy_color(out, xy, z, colorbuf);
+			out += 4;
+		}
+
+		for (z = bottom_start; z < next_air_start; z++) {
+			uncopy_color(out, xy, z, colorbuf);
+			out += 4;
+		}
+	}
+
+	return out;
+}
+
+size_t vxl_write(unsigned char *buf, const struct VXLMapBuf *map, int xy, int cols)
+{
+	unsigned char *start = buf;
+	int xy_end = xy + cols;
+
+	for (; xy < xy_end; xy++)
+		buf = vxcol(buf, map, xy);
+
+	return buf - start;
+}
