@@ -84,6 +84,7 @@ static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 	int bottom_start   = next_air_start - bottom_len;
 
 	check(next_air_start < VXL_Z);
+	check(z <= bottom_start);
 
 	for (; likely(z < bottom_start); z++)
 		set_solid(dirt_color);
