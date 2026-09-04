@@ -44,26 +44,23 @@ static unsigned char *vxcol(unsigned char *out, const struct VXLMapBuf *map, int
 	solid >>= x; colored >>= x; filled >>= x; \
 } while (0)
 
-	if (solid == 0) {
-		/* tzcnt (actually bsf in disguise) doesn't play well
-		 * with all-zeroes; don't bother with the loop.
-		 */
-
-		out[0] = 0;
-		out[1] = 64;
-		out[2] = 63;
-		out[3] = 0;
-
-		return out + 4;
-	}
-
 	int next_air_start = 0;
 	while (1) {
 		int air_start = next_air_start;
 		int span_len = 1;
 		int cnt;
 
-		/* TODO: and what if the solid is 0 here */
+		if (solid == 0) {
+			/* tzcnt doesn't play well with all zeroes */
+			out[0] = 0;
+			out[1] = 64;
+			out[2] = 63;
+			out[3] = air_start;
+
+			out += 4;
+			break;
+		}
+
 		cnt = tzcnt(solid);
 		shift(cnt);
 		int top_start = air_start + cnt;
@@ -77,7 +74,7 @@ static unsigned char *vxcol(unsigned char *out, const struct VXLMapBuf *map, int
 		shift(cnt);
 		int bottom_start = top_end + cnt + 1;
 
-		if (solid == 0) {
+		if (bottom_start == VXL_Z) {
 			out[0] = 0;
 			out[1] = top_start;
 			out[2] = top_end;
