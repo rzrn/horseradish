@@ -11,8 +11,9 @@ static void get_color(
 	memcpy(color, buf + (xy * VXL_Z + z) * 3, 3);
 }
 
-static unsigned char *write_vxl_column(unsigned char *dst, const struct VXLMapBuf *map, int xy)
-{
+static unsigned char *write_vxl_column(
+	unsigned char *dst, const struct VXLMapBuf *map, int xy
+) {
 	u64 *buf64 = (u64 *)map->solidbuf;
 
 	unsigned char *colorbuf = map->colorbuf;
