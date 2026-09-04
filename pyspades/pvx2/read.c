@@ -1,9 +1,7 @@
 #include "read.h"
 #include <string.h>
 
-#define likely(x)   __builtin_expect(!!(x), 1)
-#define unlikely(x) __builtin_expect(!!(x), 0)
-#define check(condition) do {if (unlikely(!(condition))) return -1;} while (0)
+#define check(condition) do {if (!(condition)) return -1;} while (0)
 
 static int read_vxl_span_hdr(struct VXLState *state, const unsigned char **buf)
 {
@@ -20,10 +18,7 @@ static int read_vxl_span_hdr(struct VXLState *state, const unsigned char **buf)
 
 	check(top_start <= top_end + 1);
 
-	/* I have no idea why last_span is (measurably) faster with
-	 * unlikely, but it is. Even on hallway!
-	 */
-	if (unlikely(last_span))
+	if (last_span)
 		span_len = top_len; /* length of next span hdr excluded */
 	else {
 		int bottom_len = (span_len - 1) - top_len;
@@ -72,12 +67,12 @@ static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 	int bottom_len = state->bottom_len;
 	int last_span  = state->last_span;
 
-	for (; likely(z <= top_end); z++) {
+	for (; z <= top_end; z++) {
 		set_solid(*buf);
 		*buf += 4;
 	}
 
-	if (unlikely(last_span))
+	if (last_span)
 		return 1;
 
 	int next_air_start = (*buf + bottom_len * 4)[3];
@@ -86,10 +81,10 @@ static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 	check(next_air_start < VXL_Z);
 	check(z <= bottom_start);
 
-	for (; likely(z < bottom_start); z++)
+	for (; z < bottom_start; z++)
 		set_solid(dirt_color);
 
-	for (; likely(z < next_air_start); z++) {
+	for (; z < next_air_start; z++) {
 		set_solid(*buf);
 		*buf += 4;
 	}
@@ -121,7 +116,7 @@ int vxl_read(const struct VXLMapBuf *map, const void *src, size_t nbytes)
 			check(REMAINING >= state.span_nbytes);
 			status = read_vxl_span_body(&state, &csrc);
 
-			if (unlikely(status == 1))
+			if (status == 1)
 				break;
 
 			check(status == 0);
@@ -153,7 +148,7 @@ int vxl_stream_write(struct VXLStream *stream, const void *src, size_t nbytes)
 	int to_cpy = stream->state.span_nbytes - stream->span_buf_nbytes;
 	const unsigned char *inptr = stream->span_buf;
 
-	if (unlikely(REMAINING < to_cpy)) {
+	if (REMAINING < to_cpy) {
 		memcpy(ptr, csrc, REMAINING);
 		stream->span_buf_nbytes += REMAINING;
 		return 0;
@@ -162,7 +157,7 @@ int vxl_stream_write(struct VXLStream *stream, const void *src, size_t nbytes)
 	memcpy(ptr, csrc, to_cpy);
 	csrc += to_cpy;
 
-	if (unlikely(stream->part == 0)) {
+	if (stream->part == 0) {
 		check(read_vxl_span_hdr(&stream->state, &inptr) == 0);
 		goto post_hdr;
 	}
@@ -170,8 +165,8 @@ int vxl_stream_write(struct VXLStream *stream, const void *src, size_t nbytes)
 	status = read_vxl_span_body(&stream->state, &inptr);
 	goto post_body;
 
-	for (; likely(stream->state.xy < (VXL_X * VXL_Y)); stream->state.xy++) {
-		if (unlikely(REMAINING < 4)) {
+	for (; stream->state.xy < (VXL_X * VXL_Y); stream->state.xy++) {
+		if (REMAINING < 4) {
 			stream->part = 0;
 			stream->state.span_nbytes = 4;
 
@@ -184,7 +179,7 @@ int vxl_stream_write(struct VXLStream *stream, const void *src, size_t nbytes)
 		post_hdr:
 
 		while (1) {
-			if (unlikely(REMAINING < stream->state.span_nbytes)) {
+			if (REMAINING < stream->state.span_nbytes) {
 				stream->part = 1;
 
 				stream->span_buf_nbytes = REMAINING;
@@ -195,7 +190,7 @@ int vxl_stream_write(struct VXLStream *stream, const void *src, size_t nbytes)
 			status = read_vxl_span_body(&stream->state, &csrc);
 			post_body:
 
-			if (unlikely(status == 1))
+			if (status == 1)
 				break;
 
 			check(status == 0);
