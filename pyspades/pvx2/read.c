@@ -46,7 +46,7 @@ static void make_solid(unsigned char *buf, int xy, int z)
 static void copy_color(
 	unsigned char *buf, int xy, int z, const unsigned char *color
 ) {
-	memcpy(buf + xy * VXL_Z + z, color, 3);
+	memcpy(buf + (xy * VXL_Z + z) * 3, color, 3);
 }
 
 #define set_solid(color) do { \
