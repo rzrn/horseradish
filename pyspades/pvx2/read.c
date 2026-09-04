@@ -37,10 +37,6 @@ static int read_vxl_span_hdr(struct VXLState *state, const unsigned char **buf)
 	return 0;
 }
 
-/* TODO: probably just consistently use a uint64_t instead of uint8_t for
- * solid buf
- */
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ && VXL_Z == 64
 /* left shift by >= bitwidth is UB */
 #define lshift64(x, y) ((y) >= 64 ? 0 : ((unsigned long long)(x) << (y)))
 
@@ -72,21 +68,6 @@ static void make_solids(unsigned char *buf, int xy, int z, int len)
 
 	buf64[xy] |= lshift64(bittbl[len], z);
 }
-#else
-static void make_solid(unsigned char *buf, int xy, int z)
-{
-	int off = xy * VXL_Z + z;
-	buf[off / 8] |= 1 << (off & 7);
-}
-
-static void make_solids(unsigned char *buf, int xy, int z, int len)
-{
-	int dest = z + len;
-
-	for (; z < dest; z++)
-		make_solid(buf, xy, z);
-}
-#endif
 
 static void copy_color(
 	unsigned char *buf, int xy, int z, const unsigned char *color
