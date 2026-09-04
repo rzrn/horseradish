@@ -49,15 +49,39 @@ static void copy_color(
 	memcpy(buf + (xy * VXL_Z + z) * 3, color, 3);
 }
 
+static void copy_colors(
+	unsigned char *buf, int xy, int zstart,
+	const unsigned char *colors, int count
+) {
+	memcpy(buf + (xy * VXL_Z + zstart) * 3, colors, count * 3);
+}
+
 #define set_solid(color) do { \
 	make_solid(map.solidbuf, xy, z); \
 	copy_color(map.colorbuf, xy, z, color); \
 } while (0)
 
+static const unsigned char dirt_color[64][3] = {
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103},
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103},
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103},
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103},
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103},
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103},
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103},
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103},
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103},
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103},
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103},
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103},
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103},
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103},
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103},
+	{40, 64, 103}, {40, 64, 103}, {40, 64, 103}, {40, 64, 103}
+};
+
 static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 {
-	static const unsigned char dirt_color[3] = {40, 64, 103};
-
 	struct VXLMapBuf map = state->map;
 
 	int xy         = state->xy;
@@ -67,27 +91,33 @@ static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 	int bottom_len = state->bottom_len;
 	int last_span  = state->last_span;
 
+	int next_air_start = 64;
+	int bottom_start   = 64;
+
 	for (; z <= top_end; z++) {
+		set_solid(*buf);
+		*buf += 4;
+	}
+
+	if (!last_span) {
+		next_air_start = (*buf + bottom_len * 4)[3];
+		bottom_start = next_air_start - bottom_len;
+
+		check(next_air_start < VXL_Z);
+		check(z <= bottom_start);
+	}
+
+	copy_colors(map.colorbuf, xy, z, dirt_color, bottom_start - z);
+	for (; z < bottom_start; z++)
+		make_solid(map.solidbuf, xy, z);
+
+	for (; z < next_air_start; z++) {
 		set_solid(*buf);
 		*buf += 4;
 	}
 
 	if (last_span)
 		return 1;
-
-	int next_air_start = (*buf + bottom_len * 4)[3];
-	int bottom_start   = next_air_start - bottom_len;
-
-	check(next_air_start < VXL_Z);
-	check(z <= bottom_start);
-
-	for (; z < bottom_start; z++)
-		set_solid(dirt_color);
-
-	for (; z < next_air_start; z++) {
-		set_solid(*buf);
-		*buf += 4;
-	}
 
 	return read_vxl_span_hdr(state, buf);
 }
