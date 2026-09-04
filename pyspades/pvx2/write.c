@@ -6,13 +6,13 @@
 
 typedef unsigned long long u64;
 
-static void uncopy_color(
+static void get_color(
 	unsigned char *color, int xy, int z, const unsigned char *buf
 ) {
 	memcpy(color, buf + (xy * VXL_Z + z) * 3, 3);
 }
 
-static unsigned char *vxcol(unsigned char *out, const struct VXLMapBuf *map, int xy)
+static unsigned char *write_vxl_column(unsigned char *dst, const struct VXLMapBuf *map, int xy)
 {
 	u64 *buf64 = (u64 *)map->solidbuf;
 
@@ -49,15 +49,16 @@ static unsigned char *vxcol(unsigned char *out, const struct VXLMapBuf *map, int
 		int air_start = next_air_start;
 		int span_len = 1;
 		int cnt;
+		int z;
 
 		if (solid == 0) {
 			/* tzcnt doesn't play well with all zeroes */
-			out[0] = 0;
-			out[1] = 64;
-			out[2] = 63;
-			out[3] = air_start;
+			dst[0] = 0;
+			dst[1] = 64;
+			dst[2] = 63;
+			dst[3] = air_start;
+			dst += 4;
 
-			out += 4;
 			break;
 		}
 
@@ -75,16 +76,15 @@ static unsigned char *vxcol(unsigned char *out, const struct VXLMapBuf *map, int
 		int bottom_start = top_end + cnt + 1;
 
 		if (bottom_start == VXL_Z) {
-			out[0] = 0;
-			out[1] = top_start;
-			out[2] = top_end;
-			out[3] = air_start;
-			out += 4;
+			dst[0] = 0;
+			dst[1] = top_start;
+			dst[2] = top_end;
+			dst[3] = air_start;
+			dst += 4;
 
-			int z;
 			for (z = top_start; z <= top_end; z++) {
-				uncopy_color(out, xy, z, colorbuf);
-				out += 4;
+				get_color(dst, xy, z, colorbuf);
+				dst += 4;
 			}
 
 			break;
@@ -95,34 +95,34 @@ static unsigned char *vxcol(unsigned char *out, const struct VXLMapBuf *map, int
 		next_air_start = bottom_start + cnt;
 		span_len += cnt;
 
-		out[0] = span_len;
-		out[1] = top_start;
-		out[2] = top_end;
-		out[3] = air_start;
-		out += 4;
+		dst[0] = span_len;
+		dst[1] = top_start;
+		dst[2] = top_end;
+		dst[3] = air_start;
+		dst += 4;
 
-		int z;
 		for (z = top_start; z <= top_end; z++) {
-			uncopy_color(out, xy, z, colorbuf);
-			out += 4;
+			get_color(dst, xy, z, colorbuf);
+			dst += 4;
 		}
 
 		for (z = bottom_start; z < next_air_start; z++) {
-			uncopy_color(out, xy, z, colorbuf);
-			out += 4;
+			get_color(dst, xy, z, colorbuf);
+			dst += 4;
 		}
 	}
 
-	return out;
+	return dst;
 }
 
-size_t vxl_write(unsigned char *buf, const struct VXLMapBuf *map, int xy, int cols)
+size_t vxl_write(void *dst, const struct VXLMapBuf *map, int xy, int cols)
 {
-	unsigned char *start = buf;
+	unsigned char *cdst = dst;
+	unsigned char *start = cdst;
 	int xy_end = xy + cols;
 
 	for (; xy < xy_end; xy++)
-		buf = vxcol(buf, map, xy);
+		cdst = write_vxl_column(cdst, map, xy);
 
-	return buf - start;
+	return cdst - start;
 }
