@@ -126,7 +126,7 @@ int vxl_read(const struct VXLMapBuf *map, const void *src, size_t nbytes)
 	return 1;
 }
 
-void vxl_stream_open(struct VXLStream *stream, const struct VXLMapBuf *map)
+void vxl_stream_read_open(struct VXLStream *stream, const struct VXLMapBuf *map)
 {
 	memset(map->solidbuf, 0, VXL_SOLIDBUF_SIZ);
 	stream->state.map = *map;
@@ -137,7 +137,7 @@ void vxl_stream_open(struct VXLStream *stream, const struct VXLMapBuf *map)
 	stream->span_buf_nbytes   = 0;
 }
 
-int vxl_stream_write(struct VXLStream *stream, const void *src, size_t nbytes)
+int vxl_stream_read(struct VXLStream *stream, const void *src, size_t nbytes)
 {
 	const unsigned char *csrc = src;
 	const unsigned char *end = csrc + nbytes;

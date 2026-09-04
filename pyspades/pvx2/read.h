@@ -47,7 +47,7 @@ struct VXLStream {
 
 int vxl_read(const struct VXLMapBuf *map, const void *src, size_t nbytes);
 
-void vxl_stream_open(struct VXLStream *stream, const struct VXLMapBuf *map);
-int vxl_stream_write(struct VXLStream *stream, const void *src, size_t nbytes);
+void vxl_stream_read_open(struct VXLStream *stream, const struct VXLMapBuf *map);
+int vxl_stream_read(struct VXLStream *stream, const void *src, size_t nbytes);
 
 #endif
