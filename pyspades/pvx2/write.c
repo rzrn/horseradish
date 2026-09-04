@@ -6,7 +6,7 @@
 typedef unsigned long long u64;
 
 static void write_color(
-	unsigned char *color, int xy, int z, const unsigned char *buf
+	unsigned char *color, const unsigned char *buf, int xy, int z
 ) {
 	memcpy(color, buf + (xy * VXL_Z + z) * 3, 3);
 	color[3] = 0;
@@ -84,7 +84,7 @@ static unsigned char *write_vxl_column(
 			dst += 4;
 
 			for (z = top_start; z <= top_end; z++) {
-				write_color(dst, xy, z, colorbuf);
+				write_color(dst, colorbuf, xy, z);
 				dst += 4;
 			}
 
@@ -103,12 +103,12 @@ static unsigned char *write_vxl_column(
 		dst += 4;
 
 		for (z = top_start; z <= top_end; z++) {
-			write_color(dst, xy, z, colorbuf);
+			write_color(dst, colorbuf, xy, z);
 			dst += 4;
 		}
 
 		for (z = bottom_start; z < next_air_start; z++) {
-			write_color(dst, xy, z, colorbuf);
+			write_color(dst, colorbuf, xy, z);
 			dst += 4;
 		}
 	}
