@@ -2,6 +2,7 @@
 #include <string.h>
 
 #define tzcnt(x) __builtin_ctzll(x)
+#define affirm(x) __attribute__((assume(x)))
 
 typedef unsigned long long u64;
 
@@ -121,6 +122,10 @@ size_t vxl_write(void *dst, const struct VXLMapBuf *map, int xy, int cols)
 	unsigned char *cdst = dst;
 	unsigned char *start = cdst;
 	int xy_end = xy + cols;
+
+	affirm(xy >= 0);
+	affirm(cols >= 0);
+	affirm(xy + cols <= VXL_X * VXL_Y);
 
 	for (; xy < xy_end; xy++)
 		cdst = write_vxl_column(cdst, map, xy);
