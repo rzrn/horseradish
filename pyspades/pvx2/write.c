@@ -2,7 +2,10 @@
 #include <string.h>
 
 #define tzcnt(x) __builtin_ctzll(x)
-#define affirm(x) __attribute__((assume(x)))
+
+#define affirm(x)   __attribute__((assume(x)))
+#define likely(x)   __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
 
 typedef unsigned long long u64;
 
@@ -53,7 +56,7 @@ static unsigned char *write_vxl_column(
 		int cnt;
 		int z;
 
-		if (solid == 0) {
+		if (unlikely(solid == 0)) {
 			/* tzcnt doesn't play well with all zeroes */
 			dst[0] = 0;
 			dst[1] = 64;
@@ -77,7 +80,7 @@ static unsigned char *write_vxl_column(
 		shift(cnt);
 		int bottom_start = top_end + cnt + 1;
 
-		if (bottom_start == VXL_Z) {
+		if (likely(bottom_start == VXL_Z)) {
 			dst[0] = 0;
 			dst[1] = top_start;
 			dst[2] = top_end;
