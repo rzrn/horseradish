@@ -12,7 +12,7 @@ typedef unsigned long long u64;
 static void write_color(
 	unsigned char *color, const unsigned char *buf, int xy, int z
 ) {
-	memcpy(color, buf + (xy * VXL_Z + z) * 3, 3);
+	memcpy(color, buf + (xy * MAP_Z + z) * 3, 3);
 	color[3] = 0;
 }
 
@@ -24,14 +24,14 @@ static u64 get_surrounded(const u64 *solidbuf, int xy)
 	u64 colu = -1;
 	u64 cold = -1;
 
-	if (xy % VXL_X > 0)
+	if (xy % MAP_X > 0)
 		coll = solidbuf[xy-1];
-	if (xy % VXL_X < VXL_X - 1)
+	if (xy % MAP_X < MAP_X - 1)
 		colr = solidbuf[xy+1];
-	if (xy >= VXL_X)
-		colu = solidbuf[xy-VXL_X];
-	if (xy < (VXL_X * VXL_Y) - VXL_X)
-		cold = solidbuf[xy+VXL_X];
+	if (xy >= MAP_X)
+		colu = solidbuf[xy-MAP_X];
+	if (xy < (MAP_X * MAP_Y) - MAP_X)
+		cold = solidbuf[xy+MAP_X];
 
 	u64 sidefilled = coll & colr & colu & cold;
 	u64 vertfilled = ((colc >> 1) | (1LLU << 63)) & (colc << 1);
@@ -40,7 +40,7 @@ static u64 get_surrounded(const u64 *solidbuf, int xy)
 }
 
 static unsigned char *write_vxl_column(
-	unsigned char *dst, const struct VXLMapBuf *map, int xy
+	unsigned char *dst, const struct MapBuf *map, int xy
 ) {
 	unsigned char *colorbuf = map->colorbuf;
 	const u64 *solidbuf64 = (u64 *)map->solidbuf;
@@ -87,12 +87,12 @@ static unsigned char *write_vxl_column(
 			top_end = top_start + cnt - 1;
 			span_len += cnt;
 		} else
-			top_end = VXL_Z - 1;
+			top_end = MAP_Z - 1;
 
 		shift((cnt = bsf(~filled)));
 		int bottom_start = top_end + cnt + 1;
 
-		if (likely(bottom_start == VXL_Z)) {
+		if (likely(bottom_start == MAP_Z)) {
 			dst[0] = 0;
 			dst[1] = top_start;
 			dst[2] = top_end;
@@ -131,7 +131,7 @@ static unsigned char *write_vxl_column(
 	return dst;
 }
 
-size_t vxl_write(void *dst, const struct VXLMapBuf *map, int xy, int cols)
+size_t vxl_write(void *dst, const struct MapBuf *map, int xy, int cols)
 {
 	unsigned char *cdst = dst;
 	unsigned char *start = cdst;
@@ -139,7 +139,7 @@ size_t vxl_write(void *dst, const struct VXLMapBuf *map, int xy, int cols)
 
 	affirm(xy >= 0);
 	affirm(cols >= 0);
-	affirm(xy + cols <= VXL_X * VXL_Y);
+	affirm(xy + cols <= MAP_X * MAP_Y);
 
 	for (; xy < xy_end; xy++)
 		cdst = write_vxl_column(cdst, map, xy);

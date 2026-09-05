@@ -13,8 +13,8 @@ static int read_vxl_span_hdr(struct VXLState *state, const unsigned char **buf)
 	int last_span = span_len == 0;
 
 	/* TODO: test with nonsolid waters */
-	check(top_end < VXL_Z);
-	check(span_len <= (VXL_Z + 1));
+	check(top_end < MAP_Z);
+	check(span_len <= (MAP_Z + 1));
 
 	check(top_start <= top_end + 1);
 
@@ -72,14 +72,14 @@ static void make_solids(unsigned char *buf, int xy, int z, int len)
 static void copy_color(
 	unsigned char *buf, int xy, int z, const unsigned char *color
 ) {
-	memcpy(buf + (xy * VXL_Z + z) * 3, color, 3);
+	memcpy(buf + (xy * MAP_Z + z) * 3, color, 3);
 }
 
 static void copy_colors(
 	unsigned char *buf, int xy, int zstart,
 	const unsigned char *colors, int count
 ) {
-	memcpy(buf + (xy * VXL_Z + zstart) * 3, colors, count * 3);
+	memcpy(buf + (xy * MAP_Z + zstart) * 3, colors, count * 3);
 }
 
 #define r04(x, y, z)     x, y, z,      x, y, z,      x, y, z,      x, y, z
@@ -89,7 +89,7 @@ static const unsigned char dirt_color[64 * 3] = {r64(40, 64, 103)};
 
 static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 {
-	struct VXLMapBuf map = state->map;
+	struct MapBuf map = state->map;
 
 	int xy         = state->xy;
 
@@ -105,8 +105,8 @@ static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 	}
 
 	if (last_span) {
-		make_solids(map.solidbuf, xy, z, VXL_Z - z);
-		copy_colors(map.colorbuf, xy, z, dirt_color, VXL_Z - z);
+		make_solids(map.solidbuf, xy, z, MAP_Z - z);
+		copy_colors(map.colorbuf, xy, z, dirt_color, MAP_Z - z);
 
 		return 1;
 	}
@@ -114,7 +114,7 @@ static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 	int next_air_start = (*buf + bottom_len * 4)[3];
 	int bottom_start = next_air_start - bottom_len;
 
-	check(next_air_start < VXL_Z);
+	check(next_air_start < MAP_Z);
 	check(z <= bottom_start);
 
 	make_solids(map.solidbuf, xy, z, next_air_start - z);
@@ -131,7 +131,7 @@ static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 }
 
 #define REMAINING (end - csrc)
-int vxl_read(const struct VXLMapBuf *map, const void *src, size_t nbytes)
+int vxl_read(const struct MapBuf *map, const void *src, size_t nbytes)
 {
 	const unsigned char *csrc = src;
 	const unsigned char *end = csrc + nbytes;
@@ -139,10 +139,10 @@ int vxl_read(const struct VXLMapBuf *map, const void *src, size_t nbytes)
 	struct VXLState state;
 	int xy;
 
-	memset(map->solidbuf, 0, VXL_SOLIDBUF_SIZ);
+	memset(map->solidbuf, 0, MAP_SOLIDBUF_SIZ);
 	state.map = *map;
 
-	for (xy = 0; xy < (VXL_X * VXL_Y); xy++) {
+	for (xy = 0; xy < (MAP_X * MAP_Y); xy++) {
 		state.xy = xy;
 
 		check(REMAINING >= 4);
@@ -164,9 +164,9 @@ int vxl_read(const struct VXLMapBuf *map, const void *src, size_t nbytes)
 	return 1;
 }
 
-void vxl_stream_read_open(struct VXLStream *stream, const struct VXLMapBuf *map)
+void vxl_stream_read_open(struct VXLStream *stream, const struct MapBuf *map)
 {
-	memset(map->solidbuf, 0, VXL_SOLIDBUF_SIZ);
+	memset(map->solidbuf, 0, MAP_SOLIDBUF_SIZ);
 	stream->state.map = *map;
 
 	stream->state.xy          = 0;
@@ -203,7 +203,7 @@ int vxl_stream_read(struct VXLStream *stream, const void *src, size_t nbytes)
 	status = read_vxl_span_body(&stream->state, &inptr);
 	goto post_body;
 
-	for (; stream->state.xy < (VXL_X * VXL_Y); stream->state.xy++) {
+	for (; stream->state.xy < (MAP_X * MAP_Y); stream->state.xy++) {
 		if (REMAINING < 4) {
 			stream->part = 0;
 			stream->state.span_nbytes = 4;

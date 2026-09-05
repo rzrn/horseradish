@@ -1,14 +1,14 @@
 #ifndef IzlnvsfFxjMISdrcNNnmUgIctrFClNxl
 #define IzlnvsfFxjMISdrcNNnmUgIctrFClNxl
 
-#define VXL_X 512
-#define VXL_Y 512
-#define VXL_Z  64
+#define MAP_X 512
+#define MAP_Y 512
+#define MAP_Z  64
 
-#define VXL_SOLIDBUF_SIZ ((VXL_X * VXL_Y * VXL_Z + 7) / 8)
-#define VXL_COLORBUF_SIZ  (VXL_X * VXL_Y * VXL_Z * 3)
+#define MAP_SOLIDBUF_SIZ ((MAP_X * MAP_Y * MAP_Z + 7) / 8)
+#define MAP_COLORBUF_SIZ  (MAP_X * MAP_Y * MAP_Z * 3)
 
-struct VXLMapBuf {
+struct MapBuf {
 	unsigned char *solidbuf;
 	unsigned char *colorbuf;
 };
