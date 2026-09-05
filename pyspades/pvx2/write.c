@@ -1,7 +1,7 @@
 #include "write.h"
 #include <string.h>
 
-#define tzcnt(x) __builtin_ctzll(x)
+#define bsf(x) __builtin_ctzll(x)
 
 #define affirm(x)   __attribute__((assume(x)))
 #define likely(x)   __builtin_expect(!!(x), 1)
@@ -46,18 +46,20 @@ static unsigned char *write_vxl_column(
 	u64 filled  = solid & ~colored;
 
 #define shift(x) do { \
-	solid >>= x; colored >>= x; filled >>= x; \
+	int sh = x; \
+	solid >>= sh; colored >>= sh; filled >>= sh; \
 } while (0)
 
 	int next_air_start = 0;
 	while (1) {
-		int air_start = next_air_start;
-		int span_len = 1;
 		int cnt;
 		int z;
 
+		int span_len = 1;
+		int air_start = next_air_start;
+
 		if (unlikely(solid == 0)) {
-			/* tzcnt doesn't play well with all zeroes */
+			/* bsf doesn't play well with all zeroes */
 			dst[0] = 0;
 			dst[1] = 64;
 			dst[2] = 63;
@@ -67,17 +69,21 @@ static unsigned char *write_vxl_column(
 			break;
 		}
 
-		cnt = tzcnt(solid);
-		shift(cnt);
+		shift((cnt = bsf(solid)));
 		int top_start = air_start + cnt;
+		int top_end;
 
-		cnt = tzcnt(~colored);
-		shift(cnt);
-		int top_end = top_start + cnt - 1;
-		span_len += cnt;
+		/* Nonsolid water can cause all voxels in a
+		 * column to be colored, which bsf still hates.
+		 */
+		if (colored != (u64)-1) {
+			shift((cnt = bsf(~colored)));
+			top_end = top_start + cnt - 1;
+			span_len += cnt;
+		} else
+			top_end = VXL_Z - 1;
 
-		cnt = tzcnt(~filled);
-		shift(cnt);
+		shift((cnt = bsf(~filled)));
 		int bottom_start = top_end + cnt + 1;
 
 		if (likely(bottom_start == VXL_Z)) {
@@ -95,8 +101,7 @@ static unsigned char *write_vxl_column(
 			break;
 		}
 
-		cnt = tzcnt(~colored);
-		shift(cnt);
+		shift((cnt = bsf(~colored)));
 		next_air_start = bottom_start + cnt;
 		span_len += cnt;
 
