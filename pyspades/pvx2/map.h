@@ -24,8 +24,8 @@ MapApi long map_to_xy(int x, int y);
 
 MapApi MapCol map_get_col_xy(Map map, long      xy);
 MapApi MapCol map_get_col   (Map map, int x, int y);
-MapApi void map_set_col_xy  (Map map, long      xy, MapCol val);
-MapApi void map_set_col     (Map map, int x, int y, MapCol val);
+MapApi void   map_set_col_xy(Map map, long      xy, MapCol val);
+MapApi void   map_set_col   (Map map, int x, int y, MapCol val);
 
 MapApi unsigned char *map_get_color_xy(Map map, long      xy, int z);
 MapApi unsigned char *map_get_color   (Map map, int x, int y, int z);
