@@ -16,34 +16,40 @@ static void write_color(
 	color[3] = 0;
 }
 
-static unsigned char *write_vxl_column(
-	unsigned char *dst, const struct VXLMapBuf *map, int xy
-) {
-	u64 *buf64 = (u64 *)map->solidbuf;
-
-	unsigned char *colorbuf = map->colorbuf;
-
-	u64 colc = buf64[xy];
+static u64 get_surrounded(const u64 *solidbuf, int xy)
+{
+	u64 colc = solidbuf[xy];
 	u64 coll = -1;
 	u64 colr = -1;
 	u64 colu = -1;
 	u64 cold = -1;
 
 	if (xy % VXL_X > 0)
-		coll = buf64[xy-1];
+		coll = solidbuf[xy-1];
 	if (xy % VXL_X < VXL_X - 1)
-		colr = buf64[xy+1];
+		colr = solidbuf[xy+1];
 	if (xy >= VXL_X)
-		colu = buf64[xy-VXL_X];
+		colu = solidbuf[xy-VXL_X];
 	if (xy < (VXL_X * VXL_Y) - VXL_X)
-		cold = buf64[xy+VXL_X];
+		cold = solidbuf[xy+VXL_X];
 
 	u64 sidefilled = coll & colr & colu & cold;
 	u64 vertfilled = ((colc >> 1) | (1LLU << 63)) & (colc << 1);
 
-	u64 solid   = colc;
-	u64 colored = solid & ~(sidefilled & vertfilled);
-	u64 filled  = solid & ~colored;
+	return sidefilled & vertfilled;
+}
+
+static unsigned char *write_vxl_column(
+	unsigned char *dst, const struct VXLMapBuf *map, int xy
+) {
+	unsigned char *colorbuf = map->colorbuf;
+	const u64 *solidbuf64 = (u64 *)map->solidbuf;
+
+	u64 surrounded = get_surrounded(solidbuf64, xy);
+
+	u64 solid   = solidbuf64[xy];
+	u64 colored = solid & ~surrounded;
+	u64 filled  = solid &  surrounded;
 
 #define shift(x) do { \
 	int sh = x; \
