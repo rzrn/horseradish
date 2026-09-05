@@ -1,7 +1,7 @@
 #ifndef PoVCuqlRmLMoGZfyVxstQEhNCNHwDLvT
 #define PoVCuqlRmLMoGZfyVxstQEhNCNHwDLvT
 
-#include "vxl.h"
+#include "map.h"
 #include <stddef.h>
 
 /* Non-streaming-exclusive VXL decode state */
