@@ -37,51 +37,6 @@ static int read_vxl_span_hdr(struct VXLState *state, const unsigned char **buf)
 	return 0;
 }
 
-/* left shift by >= bitwidth is UB */
-#define lshift64(x, y) ((y) >= 64 ? 0 : ((unsigned long long)(x) << (y)))
-
-/* Lookup table is a little faster than the comparison for defined left shift */
-#define B(x) ((1LLU << (x)) - 1)
-static const unsigned long long bittbl[65] = {
-	B( 0), B( 1), B( 2), B( 3),
-	B( 4), B( 5), B( 6), B( 7),
-	B( 8), B( 9), B(10), B(11),
-	B(12), B(13), B(14), B(15),
-	B(16), B(17), B(18), B(19),
-	B(20), B(21), B(22), B(23),
-	B(24), B(25), B(26), B(27),
-	B(28), B(29), B(30), B(31),
-	B(32), B(33), B(34), B(35),
-	B(36), B(37), B(38), B(39),
-	B(40), B(41), B(42), B(43),
-	B(44), B(45), B(46), B(47),
-	B(48), B(49), B(50), B(51),
-	B(52), B(53), B(54), B(55),
-	B(56), B(57), B(58), B(59),
-	B(60), B(61), B(62), B(63),
-	-1
-};
-
-static void make_solids(unsigned char *buf, int xy, int z, int len)
-{
-	unsigned long long *buf64 = (unsigned long long *)buf;
-
-	buf64[xy] |= lshift64(bittbl[len], z);
-}
-
-static void copy_color(
-	unsigned char *buf, int xy, int z, const unsigned char *color
-) {
-	memcpy(buf + (xy * MAP_Z + z) * 3, color, 3);
-}
-
-static void copy_colors(
-	unsigned char *buf, int xy, int zstart,
-	const unsigned char *colors, int count
-) {
-	memcpy(buf + (xy * MAP_Z + zstart) * 3, colors, count * 3);
-}
-
 #define r04(x, y, z)     x, y, z,      x, y, z,      x, y, z,      x, y, z
 #define r16(x, y, z) r04(x, y, z), r04(x, y, z), r04(x, y, z), r04(x, y, z)
 #define r64(x, y, z) r16(x, y, z), r16(x, y, z), r16(x, y, z), r16(x, y, z)
@@ -89,8 +44,7 @@ static const unsigned char dirt_color[64 * 3] = {r64(40, 64, 103)};
 
 static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 {
-	struct MapBuf map = state->map;
-
+	Map map        = &state->map;
 	int xy         = state->xy;
 
 	int z          = state->top_start;
@@ -98,15 +52,15 @@ static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 	int bottom_len = state->bottom_len;
 	int last_span  = state->last_span;
 
-	make_solids(map.solidbuf, xy, z, top_end + 1 - z);
+	map_create_range_xy(map, xy, z, top_end + 1 - z);
 	for (; z <= top_end; z++) {
-		copy_color(map.colorbuf, xy, z, *buf);
+		map_set_color_xy(map, xy, z, *buf, 1);
 		*buf += 4;
 	}
 
 	if (last_span) {
-		make_solids(map.solidbuf, xy, z, MAP_Z - z);
-		copy_colors(map.colorbuf, xy, z, dirt_color, MAP_Z - z);
+		map_create_range_xy(map, xy, z, MAP_Z - z);
+		map_set_color_xy(map, xy, z, dirt_color, MAP_Z - z);
 
 		return 1;
 	}
@@ -117,13 +71,13 @@ static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 	check(next_air_start < MAP_Z);
 	check(z <= bottom_start);
 
-	make_solids(map.solidbuf, xy, z, next_air_start - z);
-	copy_colors(map.colorbuf, xy, z, dirt_color, bottom_start - z);
+	map_create_range_xy(map, xy, z, next_air_start - z);
+	map_set_color_xy(map, xy, z, dirt_color, bottom_start - z);
 
 	z = bottom_start;
 
 	for (; z < next_air_start; z++) {
-		copy_color(map.colorbuf, xy, z, *buf);
+		map_set_color_xy(map, xy, z, *buf, 1);
 		*buf += 4;
 	}
 
@@ -131,7 +85,7 @@ static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 }
 
 #define REMAINING (end - csrc)
-int vxl_read(const struct MapBuf *map, const void *src, size_t nbytes)
+int vxl_read(Map map, const void *src, size_t nbytes)
 {
 	const unsigned char *csrc = src;
 	const unsigned char *end = csrc + nbytes;
@@ -139,7 +93,7 @@ int vxl_read(const struct MapBuf *map, const void *src, size_t nbytes)
 	struct VXLState state;
 	int xy;
 
-	memset(map->solidbuf, 0, MAP_SOLIDBUF_SIZ);
+	map_clear(map);
 	state.map = *map;
 
 	for (xy = 0; xy < (MAP_X * MAP_Y); xy++) {
@@ -164,10 +118,10 @@ int vxl_read(const struct MapBuf *map, const void *src, size_t nbytes)
 	return 1;
 }
 
-void vxl_stream_read_open(struct VXLStream *stream, const struct MapBuf *map)
+void vxl_stream_read_open(struct VXLStream *stream, Map map)
 {
-	memset(map->solidbuf, 0, MAP_SOLIDBUF_SIZ);
-	stream->state.map = *map;
+	map_clear(map);
+	stream->state.map         = *map;
 
 	stream->state.xy          = 0;
 	stream->state.span_nbytes = 4;

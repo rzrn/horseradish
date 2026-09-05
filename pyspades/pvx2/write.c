@@ -7,54 +7,47 @@
 #define likely(x)   __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
 
-typedef unsigned long long u64;
-
-static void write_color(
-	unsigned char *color, const unsigned char *buf, int xy, int z
-) {
-	memcpy(color, buf + (xy * MAP_Z + z) * 3, 3);
-	color[3] = 0;
+static void write_color(unsigned char *dst, Map map, int xy, int z)
+{
+	memcpy(dst, map_get_color_xy(map, xy, z), 3);
+	dst[3] = 0;
 }
 
-static u64 get_surrounded(const u64 *solidbuf, int xy)
+static MapCol get_surrounded(Map map, int xy)
 {
-	u64 colc = solidbuf[xy];
-	u64 coll = -1;
-	u64 colr = -1;
-	u64 colu = -1;
-	u64 cold = -1;
+	MapCol colc = map_get_col_xy(map, xy);
+	MapCol coll = -1;
+	MapCol colr = -1;
+	MapCol colu = -1;
+	MapCol cold = -1;
 
 	if (xy % MAP_X > 0)
-		coll = solidbuf[xy-1];
+		coll = map_get_col_xy(map, xy - 1);
 	if (xy % MAP_X < MAP_X - 1)
-		colr = solidbuf[xy+1];
+		colr = map_get_col_xy(map, xy + 1);
 	if (xy >= MAP_X)
-		colu = solidbuf[xy-MAP_X];
+		colu = map_get_col_xy(map, xy - MAP_X);
 	if (xy < (MAP_X * MAP_Y) - MAP_X)
-		cold = solidbuf[xy+MAP_X];
+		cold = map_get_col_xy(map, xy + MAP_X);
 
-	u64 sidefilled = coll & colr & colu & cold;
-	u64 vertfilled = ((colc >> 1) | (1LLU << 63)) & (colc << 1);
+	MapCol sidefilled = coll & colr & colu & cold;
+	MapCol vertfilled = ((colc >> 1) | (1LLU << 63)) & (colc << 1);
 
 	return sidefilled & vertfilled;
 }
-
-static unsigned char *write_vxl_column(
-	unsigned char *dst, const struct MapBuf *map, int xy
-) {
-	unsigned char *colorbuf = map->colorbuf;
-	const u64 *solidbuf64 = (u64 *)map->solidbuf;
-
-	u64 surrounded = get_surrounded(solidbuf64, xy);
-
-	u64 solid   = solidbuf64[xy];
-	u64 colored = solid & ~surrounded;
-	u64 filled  = solid &  surrounded;
 
 #define shift(x) do { \
 	int sh = x; \
 	solid >>= sh; colored >>= sh; filled >>= sh; \
 } while (0)
+
+static unsigned char *write_vxl_column(unsigned char *dst, Map map, int xy)
+{
+	MapCol surrounded = get_surrounded(map, xy);
+
+	MapCol solid   = map_get_col_xy(map, xy);
+	MapCol colored = solid & ~surrounded;
+	MapCol filled  = solid &  surrounded;
 
 	int next_air_start = 0;
 	while (1) {
@@ -82,7 +75,7 @@ static unsigned char *write_vxl_column(
 		/* Nonsolid water can cause all voxels in a
 		 * column to be colored, which bsf still hates.
 		 */
-		if (colored != (u64)-1) {
+		if (colored != (MapCol)-1) {
 			shift((cnt = bsf(~colored)));
 			top_end = top_start + cnt - 1;
 			span_len += cnt;
@@ -100,7 +93,7 @@ static unsigned char *write_vxl_column(
 			dst += 4;
 
 			for (z = top_start; z <= top_end; z++) {
-				write_color(dst, colorbuf, xy, z);
+				write_color(dst, map, xy, z);
 				dst += 4;
 			}
 
@@ -118,12 +111,12 @@ static unsigned char *write_vxl_column(
 		dst += 4;
 
 		for (z = top_start; z <= top_end; z++) {
-			write_color(dst, colorbuf, xy, z);
+			write_color(dst, map, xy, z);
 			dst += 4;
 		}
 
 		for (z = bottom_start; z < next_air_start; z++) {
-			write_color(dst, colorbuf, xy, z);
+			write_color(dst, map, xy, z);
 			dst += 4;
 		}
 	}
@@ -131,7 +124,7 @@ static unsigned char *write_vxl_column(
 	return dst;
 }
 
-size_t vxl_write(void *dst, const struct MapBuf *map, int xy, int cols)
+size_t vxl_write(void *dst, Map map, int xy, int cols)
 {
 	unsigned char *cdst = dst;
 	unsigned char *start = cdst;

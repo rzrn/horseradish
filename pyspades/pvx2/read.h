@@ -6,7 +6,6 @@
 
 /* Non-streaming-exclusive VXL decode state */
 struct VXLState {
-	/* Requires 32-bit int */
 	int xy;
 
 	int top_start;
@@ -34,9 +33,9 @@ struct VXLStream {
 	unsigned char span_buf[(MAP_Z + 1) * 4];
 };
 
-int vxl_read(const struct MapBuf *map, const void *src, size_t nbytes);
+int vxl_read(Map map, const void *src, size_t nbytes);
 
-void vxl_stream_read_open(struct VXLStream *stream, const struct MapBuf *map);
+void vxl_stream_read_open(struct VXLStream *stream, Map map);
 int vxl_stream_read(struct VXLStream *stream, const void *src, size_t nbytes);
 
 #endif
