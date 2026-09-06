@@ -96,7 +96,7 @@ int vxl_read(Map map, const void *src, size_t nbytes)
 	map_clear(map);
 	state.map = *map;
 
-	for (xy = 0; xy < (MAP_X * MAP_Y); xy++) {
+	for (xy = 0; xy < MAP_XY; xy++) {
 		state.xy = xy;
 
 		check(REMAINING >= 4);
@@ -157,7 +157,7 @@ int vxl_stream_read(struct VXLStream *stream, const void *src, size_t nbytes)
 	status = read_vxl_span_body(&stream->state, &inptr);
 	goto post_body;
 
-	for (; stream->state.xy < (MAP_X * MAP_Y); stream->state.xy++) {
+	for (; stream->state.xy < MAP_XY; stream->state.xy++) {
 		if (REMAINING < 4) {
 			stream->part = 0;
 			stream->state.span_nbytes = 4;

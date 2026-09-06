@@ -4,10 +4,10 @@
 
 #define affirm(x) __attribute__((assume(x)))
 
-#define affirm_xy()    affirm(xy >= 0 && xy < (MAP_X * MAP_Y))
+#define affirm_xy()    affirm(xy >= 0 && xy < MAP_XY)
 #define affirm_x_y()   affirm(x >= 0 && x < MAP_X && y >= 0 && y < MAP_Y)
 #define affirm_z()     affirm(z >= 0 && z < MAP_Z)
-#define affirm_z_len() affirm(z >= 0 && len >= 0 && z + len <= 64)
+#define affirm_z_len() affirm(z >= 0 && len >= 0 && z + len <= MAP_Z)
 
 #define affirm_xy_z()      do {affirm_xy();  affirm_z();} while (0)
 #define affirm_x_y_z()     do {affirm_x_y(); affirm_z();} while (0)

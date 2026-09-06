@@ -5,8 +5,11 @@
 #define MAP_Y 512
 #define MAP_Z  64
 
-#define MAP_SOLIDBUF_SIZ ((MAP_X * MAP_Y * MAP_Z + 7) / 8)
-#define MAP_COLORBUF_SIZ  (MAP_X * MAP_Y * MAP_Z * 3)
+#define MAP_XY  (MAP_X * MAP_Y)
+#define MAP_XYZ (MAP_X * MAP_Y * MAP_Z)
+
+#define MAP_SOLIDBUF_SIZ ((MAP_XYZ + 7) / 8)
+#define MAP_COLORBUF_SIZ  (MAP_XYZ * 3)
 
 typedef unsigned long long MapCol;
 

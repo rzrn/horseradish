@@ -27,7 +27,7 @@ static MapCol get_surrounded(Map map, int xy)
 		colr = map_get_col_xy(map, xy + 1);
 	if (xy >= MAP_X)
 		colu = map_get_col_xy(map, xy - MAP_X);
-	if (xy < (MAP_X * MAP_Y) - MAP_X)
+	if (xy < MAP_XY - MAP_X)
 		cold = map_get_col_xy(map, xy + MAP_X);
 
 	MapCol sidefilled = coll & colr & colu & cold;
@@ -132,7 +132,7 @@ size_t vxl_write(void *dst, Map map, int xy, int cols)
 
 	affirm(xy >= 0);
 	affirm(cols >= 0);
-	affirm(xy + cols <= MAP_X * MAP_Y);
+	affirm(xy + cols <= MAP_XY);
 
 	for (; xy < xy_end; xy++)
 		cdst = write_vxl_column(cdst, map, xy);
