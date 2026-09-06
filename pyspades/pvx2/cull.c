@@ -10,40 +10,17 @@
 #define likely(x)   __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
 
-int map_cull_alloc(struct CullBuf *cull)
+int map_cull_alloc(CullState *cull)
 {
-	void *buf = calloc(
-		1,
-		MAP_XY * sizeof(MapCol) +
-		MAP_XY * sizeof(MapCol) +
-		MAP_XY * sizeof(int) +
-		MAP_XY * sizeof(int) +
-		MAP_XY * sizeof(int) +
-		MAP_XY / 8
-	);
-
+	CullState buf = calloc(1, sizeof(**cull));
 	if (buf == NULL)
 		return -1;
 
-	void *traversed =   (void *)buf;
-	void *grounded  = (MapCol *)traversed + MAP_XY;
-	void *now_found = (MapCol *)grounded  + MAP_XY;
-	void *all_found =    (int *)now_found + MAP_XY;
-	void *to_visit  =    (int *)all_found + MAP_XY;
-	void *visiting  =    (int *)to_visit  + MAP_XY;
-
-	cull->fdptr     = 0;
-	cull->traversed = traversed;
-	cull->grounded  = grounded;
-	cull->now_found = now_found;
-	cull->all_found = all_found;
-	cull->to_visit  = to_visit;
-	cull->visiting  = visiting;
-
+	*cull = buf;
 	return 0;
 }
 
-void map_cull_end(struct CullBuf *cull)
+void map_cull_end(CullState cull)
 {
 	int     fdptr     = cull->fdptr;
 	int    *all_found = cull->all_found;
@@ -57,7 +34,7 @@ void map_cull_end(struct CullBuf *cull)
 	cull->fdptr = 0;
 }
 
-static void unwind_floating(Map map, struct CullBuf *cull, int nfdptr)
+static void unwind_floating(Map map, CullState cull, int nfdptr)
 {
 	int    *now_found = cull->now_found;
 	MapCol *traversed = cull->traversed;
@@ -72,7 +49,7 @@ static void unwind_floating(Map map, struct CullBuf *cull, int nfdptr)
 	}
 }
 
-static void unwind_grounded(struct CullBuf *cull, int nfdptr)
+static void unwind_grounded(CullState cull, int nfdptr)
 {
 	int    *now_found = cull->now_found;
 	MapCol *traversed = cull->traversed;
@@ -108,9 +85,8 @@ static MapCol isolate_col(MapCol col, int z)
 	return ((1LLU << len) - 1) << top;
 }
 
-static MapCol isolate_neighbors(MapCol traversed, MapCol test)
+static MapCol isolate_neighbors(MapCol adjacent, MapCol test)
 {
-	MapCol adjacent = traversed & test;
 	MapCol checked  = 0;
 
 	while (1) {
@@ -127,7 +103,7 @@ static MapCol isolate_neighbors(MapCol traversed, MapCol test)
 }
 
 static int visitf(
-	struct CullBuf *cull,
+	CullState cull,
 	Map map,
 	MapCol col,
 	int xy,
@@ -158,7 +134,7 @@ static int visitf(
 	if (col & grnd)
 		return 1;
 
-	MapCol newtv = travr | isolate_neighbors(col, solid);
+	MapCol newtv = travr | isolate_neighbors(new_adjacent, solid);
 	traversed[xy] = newtv;
 
 	if (travr == 0) {
@@ -191,7 +167,7 @@ static int visitf(
 	)) goto unwind; \
 } while (0)
 
-void map_cull_xy(Map map, struct CullBuf *cull, int xy, int z)
+void map_cull_xy(Map map, CullState cull, int xy, int z)
 {
 	int fdptr  = cull->fdptr;
 	int nfdptr = 0;
@@ -207,7 +183,7 @@ void map_cull_xy(Map map, struct CullBuf *cull, int xy, int z)
 	cull->all_found[ fdptr++] = xy;
 
 	/* TODO: can water fall on buggyspades? */
-	if (col & (3LLU << (MAP_Z - 2)))
+	if (col & (1LLU << (MAP_Z - 2)))
 		goto unwind;
 
 	while (1) {
@@ -237,7 +213,7 @@ void map_cull_xy(Map map, struct CullBuf *cull, int xy, int z)
 	return unwind_grounded(cull, nfdptr);
 }
 
-void map_cull(Map map, struct CullBuf *cull, int x, int y, int z)
+void map_cull(Map map, CullState cull, int x, int y, int z)
 {
 	map_cull_xy(map, cull, map_to_xy(x, y), z);
 }

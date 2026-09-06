@@ -6,18 +6,20 @@
 struct CullBuf {
 	int fdptr;
 
-	MapCol *traversed;
-	MapCol *grounded;
+	MapCol traversed[MAP_XY];
+	MapCol grounded[MAP_XY];
 
-	int *now_found;
-	int *all_found;
-	int *to_visit;
-	unsigned char *visiting;
+	int now_found[MAP_XY];
+	int all_found[MAP_XY];
+	int to_visit[MAP_XY];
+	unsigned char visiting[MAP_XY];
 };
 
-int map_cull_alloc(struct CullBuf *cull);
-void map_cull_end(struct CullBuf *cull);
-void map_cull_xy(Map map, struct CullBuf *cull, int xy, int z);
-void map_cull(Map map, struct CullBuf *cull, int x, int y, int z);
+typedef struct CullBuf *CullState;
+
+int  map_cull_alloc(CullState *cull);
+void map_cull_end(CullState cull);
+void map_cull_xy(Map map, CullState cull, int xy,       int z);
+void map_cull   (Map map, CullState cull, int x, int y, int z);
 
 #endif
