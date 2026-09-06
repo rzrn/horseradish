@@ -4,6 +4,8 @@
 #define lzcnt(x) __builtin_clzg(x, MAP_Z)
 #define tzcnt(x) __builtin_ctzg(x, MAP_Z)
 
+#define ror(x, y) (((x) >> (y)) | ((x) << (MAP_Z - (y))))
+
 #define affirm(x)   __attribute__((assume(x)))
 #define likely(x)   __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
@@ -92,17 +94,18 @@ static MapCol isolate_col(MapCol col, int z)
 {
 	affirm(z >= 0 && z < MAP_Z);
 
-	long bits_le_z = lzcnt(~(col << ((MAP_Z - 1) - z)));
-	long bits_ge_z = tzcnt(~(col >> z));
+	if (col == (MapCol)-1)
+		return MAP_Z;
 
-	long bits_lt_z = bits_le_z - 1;
+	col = ror(~col, z);
 
-	long top = z - bits_lt_z;
-	long len = bits_lt_z + bits_ge_z;
+	int bits_lt_z = lzcnt(col);
+	int bits_ge_z = tzcnt(col);
 
-	affirm(len >= 0 && len <= MAP_Z);
-	affirm(top >= 0 && top <  MAP_Z);
-	return bittbl[len] << top;
+	int top = z - bits_lt_z;
+	int len = bits_lt_z + bits_ge_z;
+
+	return ((1LLU << len) - 1) << top;
 }
 
 static MapCol isolate_neighbors(MapCol traversed, MapCol test)
@@ -116,9 +119,8 @@ static MapCol isolate_neighbors(MapCol traversed, MapCol test)
 		if (next_col == 64)
 			break;
 
-		MapCol col = isolate_col(test, next_col);
-		checked   |=  col;
-		adjacent  &= ~col;
+		checked  |= isolate_col(test, next_col);
+		adjacent &= ~checked;
 	}
 
 	return checked;
