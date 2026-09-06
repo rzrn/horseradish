@@ -160,7 +160,7 @@ static int visitf(
 	)) goto unwind; \
 } while (0)
 
-void map_cull_xy(Map map, CullState cull, int xy, int z)
+void map_cull_xy(Map map, CullState cull, long xy, int z)
 {
 	int grnd_ptr = cull->grnd_ptr;
 	int trvr_ptr = 0;
@@ -174,7 +174,8 @@ void map_cull_xy(Map map, CullState cull, int xy, int z)
 
 	cull->traversed[xy] = col;
 	cull->traversed_xy[trvr_ptr++] = xy;
-	cull->grounded_xy[grnd_ptr++]  = xy;
+	if (cull->grounded[xy] == 0)
+		cull->grounded_xy[grnd_ptr++]  = xy;
 
 	/* TODO: can water fall on buggyspades? */
 	if (col & (3LLU << (MAP_Z - 2)))
