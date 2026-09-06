@@ -1,14 +1,13 @@
 #include "cull.h"
 #include <stdlib.h>
 
+#define bsr(x)   __builtin_clzll(x)
+#define bsf(x)   __builtin_ctzll(x)
+
 #define lzcnt(x) __builtin_clzg(x, MAP_Z)
 #define tzcnt(x) __builtin_ctzg(x, MAP_Z)
 
 #define ror(x, y) (((x) >> (y)) | ((x) << (MAP_Z - (y))))
-
-#define affirm(x)   __attribute__((assume(x)))
-#define likely(x)   __builtin_expect(!!(x), 1)
-#define unlikely(x) __builtin_expect(!!(x), 0)
 
 int map_cull_alloc(CullState *cull)
 {
@@ -25,8 +24,6 @@ void map_cull_end(CullState cull)
 	int     fdptr     = cull->fdptr;
 	int    *all_found = cull->all_found;
 	MapCol *grounded  = cull->grounded;
-
-	affirm(fdptr >= 0 && fdptr < MAP_XY);
 
 	while (fdptr-- > 0)
 		grounded[all_found[fdptr]] = 0;
@@ -69,15 +66,13 @@ static void unwind_grounded(CullState cull, int nfdptr)
 
 static MapCol isolate_col(MapCol col, int z)
 {
-	affirm(z >= 0 && z < MAP_Z);
-
 	if (col == (MapCol)-1)
 		return MAP_Z;
 
 	col = ror(~col, z);
 
-	int bits_lt_z = lzcnt(col);
-	int bits_ge_z = tzcnt(col);
+	int bits_lt_z = bsr(col);
+	int bits_ge_z = bsf(col);
 
 	int top = z - bits_lt_z;
 	int len = bits_lt_z + bits_ge_z;
@@ -92,7 +87,7 @@ static MapCol isolate_neighbors(MapCol adjacent, MapCol test)
 	while (1) {
 		int next_col = tzcnt(adjacent);
 
-		if (next_col == 64)
+		if (next_col == MAP_Z)
 			break;
 
 		checked  |= isolate_col(test, next_col);
@@ -121,21 +116,19 @@ static int visitf(
 
 	MapCol travr = traversed[xy];
 	MapCol grnd  = grounded[xy];
-
 	MapCol solid = map_get_col_xy(map, xy);
-	MapCol untrv = solid & ~travr;
 
-	/* TODO: ambiguous col term */
-	MapCol new_adjacent = col & untrv;
+	MapCol untravr = solid & ~travr;
+	MapCol untravr_adjacent = untravr & col;
 
-	if (!new_adjacent)
+	if (!untravr_adjacent)
 		return 0;
 
 	if (col & grnd)
 		return 1;
 
-	MapCol newtv = travr | isolate_neighbors(new_adjacent, solid);
-	traversed[xy] = newtv;
+	MapCol new_travr = travr | isolate_neighbors(untravr_adjacent, solid);
+	traversed[xy] = new_travr;
 
 	if (travr == 0) {
 		now_found[(*nfdptr)++] = xy;
@@ -143,7 +136,7 @@ static int visitf(
 			all_found[(*fdptr)++] = xy;
 	}
 
-	if (newtv & (1LLU << (MAP_Z - 2)))
+	if (new_travr & (1LLU << (MAP_Z - 2)))
 		return 1;
 
 	if (visiting[xy/8] & (1 << (xy & 7)))
@@ -183,7 +176,7 @@ void map_cull_xy(Map map, CullState cull, int xy, int z)
 	cull->all_found[ fdptr++] = xy;
 
 	/* TODO: can water fall on buggyspades? */
-	if (col & (1LLU << (MAP_Z - 2)))
+	if (col & (3LLU << (MAP_Z - 2)))
 		goto unwind;
 
 	while (1) {
