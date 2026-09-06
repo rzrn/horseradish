@@ -21,23 +21,23 @@ int map_cull_alloc(CullState *cull)
 
 void map_cull_end(CullState cull)
 {
-	int     fdptr     = cull->fdptr;
-	int    *all_found = cull->all_found;
-	MapCol *grounded  = cull->grounded;
+	int     grnd_ptr    = cull->grnd_ptr;
+	int    *grounded_xy = cull->grounded_xy;
+	MapCol *grounded    = cull->grounded;
 
-	while (fdptr-- > 0)
-		grounded[all_found[fdptr]] = 0;
+	while (grnd_ptr-- > 0)
+		grounded[grounded_xy[grnd_ptr]] = 0;
 
-	cull->fdptr = 0;
+	cull->grnd_ptr = 0;
 }
 
-static void unwind_floating(Map map, CullState cull, int nfdptr)
+static void unwind_floating(Map map, CullState cull, int trvr_ptr)
 {
-	int    *now_found = cull->now_found;
-	MapCol *traversed = cull->traversed;
+	int    *traversed_xy = cull->traversed_xy;
+	MapCol *traversed    = cull->traversed;
 
-	while (nfdptr-- != 0) {
-		int xy = now_found[nfdptr];
+	while (trvr_ptr-- != 0) {
+		int xy = traversed_xy[trvr_ptr];
 
 		MapCol col = map_get_col_xy(map, xy);
 		map_set_col_xy(map, xy, col & ~traversed[xy]);
@@ -46,16 +46,16 @@ static void unwind_floating(Map map, CullState cull, int nfdptr)
 	}
 }
 
-static void unwind_grounded(CullState cull, int nfdptr)
+static void unwind_grounded(CullState cull, int trvr_ptr)
 {
-	int    *now_found = cull->now_found;
-	MapCol *traversed = cull->traversed;
-	MapCol *grounded  = cull->grounded;
+	int    *traversed_xy = cull->traversed_xy;
+	MapCol *traversed    = cull->traversed;
+	MapCol *grounded     = cull->grounded;
 
 	unsigned char *visiting = cull->visiting;
 
-	while (nfdptr-- != 0) {
-		int xy = now_found[nfdptr];
+	while (trvr_ptr-- != 0) {
+		int xy = traversed_xy[trvr_ptr];
 
 		visiting[xy/8] = 0;
 
@@ -102,15 +102,15 @@ static int visitf(
 	Map map,
 	MapCol col,
 	int xy,
-	int *tvptr,
-	int *fdptr,
-	int *nfdptr
+	int *tovi_ptr,
+	int *trvr_ptr,
+	int *grnd_ptr
 ) {
-	int    *now_found = cull->now_found;
-	int    *all_found = cull->all_found;
-	int    *to_visit  = cull->to_visit;
-	MapCol *traversed = cull->traversed;
-	MapCol *grounded  = cull->grounded;
+	int    *traversed_xy = cull->traversed_xy;
+	int    *grounded_xy  = cull->grounded_xy;
+	int    *to_visit_xy  = cull->to_visit_xy;
+	MapCol *traversed    = cull->traversed;
+	MapCol *grounded     = cull->grounded;
 
 	unsigned char *visiting = cull->visiting;
 
@@ -131,9 +131,9 @@ static int visitf(
 	traversed[xy] = new_travr;
 
 	if (travr == 0) {
-		now_found[(*nfdptr)++] = xy;
+		traversed_xy[(*trvr_ptr)++] = xy;
 		if (grnd == 0)
-			all_found[(*fdptr)++] = xy;
+			grounded_xy[(*grnd_ptr)++] = xy;
 	}
 
 	if (new_travr & (1LLU << (MAP_Z - 2)))
@@ -143,7 +143,7 @@ static int visitf(
 		return 0;
 
 	visiting[xy/8] |= 1 << (xy & 7);
-	to_visit[(*tvptr)++] = xy;
+	to_visit_xy[(*tovi_ptr)++] = xy;
 
 	return 0;
 }
@@ -154,26 +154,27 @@ static int visitf(
 		map, \
 		col, \
 		test_xy, \
-		&tvptr, \
-		&fdptr, \
-		&nfdptr \
+		&tovi_ptr, \
+		&trvr_ptr, \
+		&grnd_ptr \
 	)) goto unwind; \
 } while (0)
 
 void map_cull_xy(Map map, CullState cull, int xy, int z)
 {
-	int fdptr  = cull->fdptr;
-	int nfdptr = 0;
-	int tvptr  = 0;
+	int grnd_ptr = cull->grnd_ptr;
+	int trvr_ptr = 0;
+	int tovi_ptr = 0;
 
 	MapCol col = map_get_col_xy(map, xy);
 	if (!(col & (1LLU << z)))
 		return;
 
 	col = isolate_col(col, z);
+
 	cull->traversed[xy] = col;
-	cull->now_found[nfdptr++] = xy;
-	cull->all_found[ fdptr++] = xy;
+	cull->traversed_xy[trvr_ptr++] = xy;
+	cull->grounded_xy[grnd_ptr++]  = xy;
 
 	/* TODO: can water fall on buggyspades? */
 	if (col & (3LLU << (MAP_Z - 2)))
@@ -189,21 +190,21 @@ void map_cull_xy(Map map, CullState cull, int xy, int z)
 		if (xy < MAP_XY - MAP_X)
 			visit(xy + MAP_X);
 
-		if (tvptr == 0)
+		if (tovi_ptr == 0)
 			break;
 
-		xy  = cull->to_visit[--tvptr];
+		xy  = cull->to_visit_xy[--tovi_ptr];
 		col = cull->traversed[xy];
 
 		cull->visiting[xy/8] &= ~(1 << (xy & 7));
 	}
 
-	cull->fdptr = fdptr;
-	return unwind_floating(map, cull, nfdptr);
+	cull->grnd_ptr = grnd_ptr;
+	return unwind_floating(map, cull, trvr_ptr);
 
 	unwind:
-	cull->fdptr = fdptr;
-	return unwind_grounded(cull, nfdptr);
+	cull->grnd_ptr = grnd_ptr;
+	return unwind_grounded(cull, trvr_ptr);
 }
 
 void map_cull(Map map, CullState cull, int x, int y, int z)

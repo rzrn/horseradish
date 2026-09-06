@@ -4,14 +4,14 @@
 #include "map.h"
 
 struct CullBuf {
-	int fdptr;
+	int grnd_ptr;
 
 	MapCol traversed[MAP_XY];
 	MapCol grounded[MAP_XY];
 
-	int now_found[MAP_XY];
-	int all_found[MAP_XY];
-	int to_visit[MAP_XY];
+	int traversed_xy[MAP_XY];
+	int grounded_xy[MAP_XY];
+	int to_visit_xy[MAP_XY];
 	unsigned char visiting[MAP_XY];
 };
 
