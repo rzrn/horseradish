@@ -9,6 +9,8 @@
 
 #define ror(x, y) (((x) >> (y)) | ((x) << (MAP_Z - (y))))
 
+#define affirm(x) __attribute__((assume(x)))
+
 int map_cull_alloc(CullState *cull)
 {
 	CullState buf = calloc(1, sizeof(**cull));
@@ -30,6 +32,7 @@ void map_cull_end(CullState cull)
 	int    *grounded_xy = cull->grounded_xy;
 	MapCol *grounded    = cull->grounded;
 
+	affirm(grnd_ptr   > 0);
 	while (grnd_ptr-- > 0)
 		grounded[grounded_xy[grnd_ptr]] = 0;
 
@@ -41,7 +44,8 @@ static void unwind_floating(Map map, CullState cull, int trvr_ptr)
 	int    *traversed_xy = cull->traversed_xy;
 	MapCol *traversed    = cull->traversed;
 
-	while (trvr_ptr-- != 0) {
+	affirm(trvr_ptr   > 0);
+	while (trvr_ptr-- > 0) {
 		int xy = traversed_xy[trvr_ptr];
 
 		MapCol col = map_get_col_xy(map, xy);
@@ -59,7 +63,8 @@ static void unwind_grounded(CullState cull, int trvr_ptr)
 
 	unsigned char *visiting = cull->visiting;
 
-	while (trvr_ptr-- != 0) {
+	affirm(trvr_ptr   > 0);
+	while (trvr_ptr-- > 0) {
 		int xy = traversed_xy[trvr_ptr];
 
 		visiting[xy/8] = 0;
