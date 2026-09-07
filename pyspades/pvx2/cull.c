@@ -32,7 +32,7 @@ void map_cull_end(CullState cull)
 	int    *grounded_xy = cull->grounded_xy;
 	MapCol *grounded    = cull->grounded;
 
-	affirm(grnd_ptr   > 0);
+	affirm(grnd_ptr  >= 0);
 	while (grnd_ptr-- > 0)
 		grounded[grounded_xy[grnd_ptr]] = 0;
 
