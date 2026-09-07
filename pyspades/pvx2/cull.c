@@ -87,7 +87,7 @@ static MapCol isolate_col(MapCol col, int z)
 
 static MapCol isolate_neighbors(MapCol adjacent, MapCol test)
 {
-	MapCol checked  = 0;
+	MapCol checked = 0;
 
 	while (1) {
 		int next_col = tzcnt(adjacent);
