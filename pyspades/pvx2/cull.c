@@ -19,6 +19,11 @@ int map_cull_alloc(CullState *cull)
 	return 0;
 }
 
+void map_cull_free(CullState *cull)
+{
+	free(*cull);
+}
+
 void map_cull_end(CullState cull)
 {
 	int     grnd_ptr    = cull->grnd_ptr;
@@ -170,7 +175,7 @@ static int visitf(
 	cull->traversed[xy] = col; \
 	cull->traversed_xy[trvr_ptr++] = xy; \
 	if (cull->grounded[xy] == 0) \
-		cull->grounded_xy[grnd_ptr++]  = xy; \
+		cull->grounded_xy[grnd_ptr++] = xy; \
 \
 	/* TODO: can water fall on buggyspades? */ \
 	if (col & (3LLU << (MAP_Z - 2))) \
