@@ -1,7 +1,7 @@
 #include "write.h"
 #include <string.h>
 
-#define bsf(x) __builtin_ctzll(x)
+#define tzcnt(x) __builtin_ctzg(x, MAP_Z)
 
 #define affirm(x)   __attribute__((assume(x)))
 #define likely(x)   __builtin_expect(!!(x), 1)
@@ -36,11 +36,6 @@ static MapCol get_surrounded(Map map, int xy)
 	return sidefilled & vertfilled;
 }
 
-#define shift(x) do { \
-	int sh = x; \
-	solid >>= sh; colored >>= sh; filled >>= sh; \
-} while (0)
-
 static unsigned char *write_vxl_column(unsigned char *dst, Map map, int xy)
 {
 	MapCol surrounded = get_surrounded(map, xy);
@@ -51,39 +46,17 @@ static unsigned char *write_vxl_column(unsigned char *dst, Map map, int xy)
 
 	int next_air_start = 0;
 	while (1) {
-		int cnt;
 		int z;
 
-		int span_len = 1;
 		int air_start = next_air_start;
+		int top_start = tzcnt(colored);
 
-		if (unlikely(solid == 0)) {
-			/* bsf doesn't play well with all zeroes */
-			dst[0] = 0;
-			dst[1] = 64;
-			dst[2] = 63;
-			dst[3] = air_start;
-			dst += 4;
+		colored |= bittbl[top_start];
+		int filled_start = tzcnt(~colored);
+		int top_end = filled_start - 1;
 
-			break;
-		}
-
-		shift((cnt = bsf(solid)));
-		int top_start = air_start + cnt;
-		int top_end;
-
-		/* Nonsolid water can cause all voxels in a
-		 * column to be colored, which bsf still hates.
-		 */
-		if (colored != (MapCol)-1) {
-			shift((cnt = bsf(~colored)));
-			top_end = top_start + cnt - 1;
-			span_len += cnt;
-		} else
-			top_end = MAP_Z - 1;
-
-		shift((cnt = bsf(~filled)));
-		int bottom_start = top_end + cnt + 1;
+		filled  |= bittbl[filled_start];
+		int bottom_start = tzcnt(~filled);
 
 		if (likely(bottom_start == MAP_Z)) {
 			dst[0] = 0;
@@ -100,11 +73,16 @@ static unsigned char *write_vxl_column(unsigned char *dst, Map map, int xy)
 			break;
 		}
 
-		shift((cnt = bsf(~colored)));
-		next_air_start = bottom_start + cnt;
-		span_len += cnt;
+		colored |= bittbl[bottom_start];
+		next_air_start = tzcnt(~colored);
 
-		dst[0] = span_len;
+		int top_len    = filled_start   - top_start;
+		int bottom_len = next_air_start - bottom_start;
+
+		MapCol mask = bittbl[next_air_start];
+		colored &= ~mask;
+
+		dst[0] = 1 + top_len + bottom_len;
 		dst[1] = top_start;
 		dst[2] = top_end;
 		dst[3] = air_start;
