@@ -77,7 +77,7 @@ static void unwind_grounded(CullState cull, int trvr_ptr)
 static MapCol isolate_col(MapCol col, int z)
 {
 	if (col == (MapCol)-1)
-		return MAP_Z;
+		return -1;
 
 	col = ror(~col, z);
 
