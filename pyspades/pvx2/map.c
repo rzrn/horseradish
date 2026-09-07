@@ -1,5 +1,6 @@
 #ifdef IzlnvsfFxjMISdrcNNnmUgIctrFClNxl
 #include "map.h"
+#include <stdlib.h>
 #include <string.h>
 
 #define affirm(x) __attribute__((assume(x)))
@@ -40,6 +41,26 @@ static const unsigned long long bittbl[65] = {
 	-1
 };
 #undef B
+
+/*
+ * Allocation
+ */
+MapApi int map_alloc(Map *map)
+{
+	struct MapBuf *buf = calloc(1, sizeof(struct MapBuf));
+	if (buf == NULL)
+		return -1;
+
+	buf->colorbuf = buf->colorbuf_mem;
+
+	*map = buf;
+	return 0;
+}
+
+MapApi void map_free(Map *map)
+{
+	free(*map);
+}
 
 /*
  * Base data access
@@ -116,7 +137,7 @@ MapApi void map_set_color(
  */
 MapApi void map_clear(Map map)
 {
-	memset(map->solidbuf, 0, MAP_SOLIDBUF_SIZ);
+	memset(map->solidbuf, 0, sizeof(MapCol) * MAP_XY);
 }
 
 /*

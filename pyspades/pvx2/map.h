@@ -8,19 +8,22 @@
 #define MAP_XY  (MAP_X * MAP_Y)
 #define MAP_XYZ (MAP_X * MAP_Y * MAP_Z)
 
-#define MAP_SOLIDBUF_SIZ ((MAP_XYZ + 7) / 8)
-#define MAP_COLORBUF_SIZ  (MAP_XYZ * 3)
-
 typedef unsigned long long MapCol;
 
 struct MapBuf {
-	MapCol        *solidbuf;
+	/* Compiler abuse? */
 	unsigned char *colorbuf;
+	MapCol         solidbuf[MAP_XY];
+	unsigned char  colorbuf_mem[MAP_XYZ * 3];
 };
 
-typedef const struct MapBuf *Map;
+typedef struct MapBuf *Map;
 
 #define MapApi static inline
+
+/* Allocation */
+MapApi int  map_alloc(Map *map);
+MapApi void map_free (Map *map);
 
 /* Base data access */
 MapApi long map_to_xy(int x, int y);

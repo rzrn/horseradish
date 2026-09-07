@@ -44,7 +44,7 @@ static const unsigned char dirt_color[64 * 3] = {r64(40, 64, 103)};
 
 static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 {
-	Map map        = &state->map;
+	Map map        = state->map;
 	int xy         = state->xy;
 
 	int z          = state->top_start;
@@ -94,7 +94,7 @@ int vxl_read(Map map, const void *src, size_t nbytes)
 	int xy;
 
 	map_clear(map);
-	state.map = *map;
+	state.map = map;
 
 	for (xy = 0; xy < MAP_XY; xy++) {
 		state.xy = xy;
@@ -121,7 +121,7 @@ int vxl_read(Map map, const void *src, size_t nbytes)
 void vxl_stream_read_open(struct VXLStream *stream, Map map)
 {
 	map_clear(map);
-	stream->state.map         = *map;
+	stream->state.map         = map;
 
 	stream->state.xy          = 0;
 	stream->state.span_nbytes = 4;

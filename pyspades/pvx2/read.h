@@ -13,7 +13,7 @@ struct VXLState {
 	int bottom_len;
 	int last_span;
 
-	struct MapBuf map;
+	Map map;
 
 	/* This'll include the next span hdr in the length
 	 * if not the last span.
