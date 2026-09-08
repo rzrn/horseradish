@@ -12,7 +12,6 @@ static int read_vxl_span_hdr(struct VXLState *state, const unsigned char **buf)
 	int top_len = (top_end - top_start) + 1;
 	int last_span = span_len == 0;
 
-	/* TODO: test with nonsolid waters */
 	check(top_end < MAP_Z);
 	check(span_len <= (MAP_Z + 1));
 
@@ -68,7 +67,7 @@ static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 	int next_air_start = (*buf + bottom_len * 4)[3];
 	int bottom_start = next_air_start - bottom_len;
 
-	check(next_air_start < MAP_Z);
+	check(next_air_start <= MAP_Z);
 	check(z <= bottom_start);
 
 	map_create_range_xy(map, xy, z, next_air_start - z);
