@@ -49,7 +49,7 @@ static unsigned char *write_vxl_column(unsigned char *dst, Map map, int xy)
 		int z;
 
 		int air_start = next_air_start;
-		int top_start = tzcnt(colored);
+		int top_start = tzcnt(solid);
 
 		colored |= bittbl[top_start];
 		int filled_start = tzcnt(~colored);
@@ -79,8 +79,7 @@ static unsigned char *write_vxl_column(unsigned char *dst, Map map, int xy)
 		int top_len    = filled_start   - top_start;
 		int bottom_len = next_air_start - bottom_start;
 
-		MapCol mask = bittbl[next_air_start];
-		colored &= ~mask;
+		solid &= ~bittbl[next_air_start];
 
 		dst[0] = 1 + top_len + bottom_len;
 		dst[1] = top_start;
