@@ -19,7 +19,7 @@ struct MapBuf {
 
 typedef struct MapBuf *Map;
 
-#define MapApi static inline
+#define MapApi static inline __attribute__((always_inline))
 
 /* Allocation */
 MapApi int  map_alloc(Map *map);
