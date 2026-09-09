@@ -7,7 +7,7 @@
 #define likely(x)   __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
 
-__attribute__((always_inline))
+__attribute__((always_inline)) inline
 static void write_colors(unsigned char **dst, Map map, int xy, int z, int endz)
 {
 	for (; z <= endz; z++) {
