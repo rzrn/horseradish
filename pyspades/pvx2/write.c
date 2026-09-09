@@ -7,10 +7,15 @@
 #define likely(x)   __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
 
-static void write_color(unsigned char *dst, Map map, int xy, int z)
+__attribute__((always_inline))
+static void write_colors(unsigned char **dst, Map map, int xy, int z, int endz)
 {
-	memcpy(dst, map_get_color_xy(map, xy, z), 3);
-	dst[3] = 0;
+	for (; z <= endz; z++) {
+		memcpy(*dst, map_get_color_xy(map, xy, z), 3);
+		(*dst)[3] = 0;
+
+		*dst += 4;
+	}
 }
 
 static MapCol get_surrounded(Map map, int xy)
@@ -46,8 +51,6 @@ static unsigned char *write_vxl_column(unsigned char *dst, Map map, int xy)
 
 	int next_air_start = 0;
 	while (1) {
-		int z;
-
 		int air_start = next_air_start;
 		int top_start = tzcnt(solid);
 
@@ -65,11 +68,7 @@ static unsigned char *write_vxl_column(unsigned char *dst, Map map, int xy)
 			dst[3] = air_start;
 			dst += 4;
 
-			for (z = top_start; z <= top_end; z++) {
-				write_color(dst, map, xy, z);
-				dst += 4;
-			}
-
+			write_colors(&dst, map, xy, top_start, top_end);
 			break;
 		}
 
@@ -78,6 +77,7 @@ static unsigned char *write_vxl_column(unsigned char *dst, Map map, int xy)
 
 		int top_len    = filled_start   - top_start;
 		int bottom_len = next_air_start - bottom_start;
+		int bottom_end = next_air_start - 1;
 
 		solid &= ~bittbl[next_air_start];
 
@@ -87,15 +87,8 @@ static unsigned char *write_vxl_column(unsigned char *dst, Map map, int xy)
 		dst[3] = air_start;
 		dst += 4;
 
-		for (z = top_start; z <= top_end; z++) {
-			write_color(dst, map, xy, z);
-			dst += 4;
-		}
-
-		for (z = bottom_start; z < next_air_start; z++) {
-			write_color(dst, map, xy, z);
-			dst += 4;
-		}
+		write_colors(&dst, map, xy, top_start,    top_end);
+		write_colors(&dst, map, xy, bottom_start, bottom_end);
 	}
 
 	return dst;
