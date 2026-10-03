@@ -160,7 +160,7 @@ class ServerConnection(BaseConnection):
 
             return
 
-        max_players = min(32, self.protocol.max_players)
+        max_players = min(255, self.protocol.max_players)
 
         if len(self.protocol.connections) > max_players:
             self.disconnect(ERROR_FULL)
