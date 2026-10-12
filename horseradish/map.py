@@ -108,6 +108,8 @@ class Map:
             info                = self
         )
 
+        source = ""
+
         try:
             with open(path, 'r') as fin:
                 source = fin.read()
