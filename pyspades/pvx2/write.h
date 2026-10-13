@@ -1,5 +1,5 @@
-#ifndef StkPKCqVBialPfjNpNVnGSaDLxRJjscJ
-#define StkPKCqVBialPfjNpNVnGSaDLxRJjscJ
+#ifndef PVX2_WRITE_H
+#define PVX2_WRITE_H
 
 #include "map.h"
 #include <stddef.h>

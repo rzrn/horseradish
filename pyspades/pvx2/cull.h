@@ -1,5 +1,5 @@
-#ifndef SFkYRQFpdRlBXBysSUPMtnQDGlMXXKia
-#define SFkYRQFpdRlBXBysSUPMtnQDGlMXXKia
+#ifndef PVX2_CULL_H
+#define PVX2_CULL_H
 
 #include "map.h"
 

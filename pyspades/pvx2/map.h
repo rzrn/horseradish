@@ -1,5 +1,5 @@
-#ifndef IzlnvsfFxjMISdrcNNnmUgIctrFClNxl
-#define IzlnvsfFxjMISdrcNNnmUgIctrFClNxl
+#ifndef PVX2_MAP_H
+#define PVX2_MAP_H
 
 #define MAP_X 512
 #define MAP_Y 512
