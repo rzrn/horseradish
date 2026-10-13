@@ -12,9 +12,8 @@ typedef unsigned long long MapCol;
 
 struct MapBuf {
 	/* Compiler abuse? */
-	unsigned char *colorbuf;
-	MapCol         solidbuf[MAP_XY];
-	unsigned char  colorbuf_mem[MAP_XYZ * 3];
+	unsigned char * colorbuf;
+	MapCol          solidbuf[MAP_XY];
 };
 
 #define MapApi static inline __attribute__((always_inline))
@@ -39,6 +38,7 @@ MapApi void map_set_color(
 
 /* Whole-map solidity manipulation */
 MapApi void map_clear(struct MapBuf *);
+MapApi void map_copy (struct MapBuf *, const struct MapBuf *);
 
 /* Column solidity manipulation */
 MapApi void map_create_range_xy (struct MapBuf *, long      xy, int z, long len);

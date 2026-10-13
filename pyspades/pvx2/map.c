@@ -120,6 +120,14 @@ MapApi void map_clear(struct MapBuf * map)
 	memset(map->solidbuf, 0, sizeof(MapCol) * MAP_XY);
 }
 
+MapApi void map_copy(struct MapBuf * dst, const struct MapBuf * src)
+{
+	memcpy(dst->solidbuf, src->solidbuf, sizeof(dst->solidbuf));
+
+	if (dst->colorbuf != NULL && src->colorbuf != NULL)
+		memcpy(dst->colorbuf, src->colorbuf, 3 * MAP_XYZ);
+}
+
 /*
  * Column solidity manipulation
  */
