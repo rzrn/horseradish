@@ -1,12 +1,6 @@
 #include "cull.h"
 #include <stdlib.h>
 
-#define bsr(x)   __builtin_clzll(x)
-#define bsf(x)   __builtin_ctzll(x)
-
-#define lzcnt(x) __builtin_clzg(x, MAP_Z)
-#define tzcnt(x) __builtin_ctzg(x, MAP_Z)
-
 #define ror(x, y) (((x) >> (y)) | ((x) << (MAP_Z - (y))))
 
 #define affirm(x) __attribute__((assume(x)))
@@ -38,7 +32,7 @@ static int unwind_floating(struct MapBuf * map, struct CullBuf * cull, int trvr_
         MapCol col = map_get_col_xy(map, xy);
         map_set_col_xy(map, xy, col & ~traversed[xy]);
 
-        removed += __builtin_popcountll(col & traversed[xy]);
+        removed += map_popcnt(col & traversed[xy]);
 
         traversed[xy] = 0;
     }
@@ -74,8 +68,8 @@ static MapCol isolate_col(MapCol col, int z)
 
     col = ror(~col, z);
 
-    int bits_lt_z = bsr(col);
-    int bits_ge_z = bsf(col);
+    int bits_lt_z = map_clz(col);
+    int bits_ge_z = map_ctz(col, 0);
 
     int top = z - bits_lt_z;
     int len = bits_lt_z + bits_ge_z;
@@ -88,7 +82,7 @@ static MapCol isolate_neighbors(MapCol adjacent, MapCol test)
     MapCol checked = 0;
 
     while (1) {
-        int next_col = tzcnt(adjacent);
+        int next_col = map_ctz(adjacent, MAP_Z);
 
         if (next_col == MAP_Z)
             break;

@@ -86,6 +86,51 @@ MapApi int map_get_top     (struct MapBuf *, int x, int y);
 #define col_shl(x, y) ((x) << ((y) & (MAP_Z - 1)))
 #define col_shr(x, y) ((x) >> ((y) & (MAP_Z - 1)))
 
+#ifndef __has_builtin
+    #define map_has_builtin(x) 0
+#else
+    #define map_has_builtin(x) __has_builtin(x)
+#endif
+
+#if map_has_builtin(__builtin_popcountll)
+    #define map_popcnt(x) __builtin_popcountll(x)
+#else
+    MapApi int map_popcnt(unsigned long long x) {
+        int k; for (k = 0; x > 0; k++)
+            x &= x - 1;
+
+        return k;
+    }
+#endif
+
+#if map_has_builtin(__builtin_ctzg)
+    #define map_ctz(x, y) __builtin_ctzg(x, y)
+#else
+    MapApi int map_ctz(unsigned long long x, int y) {
+        // TODO: replace this with a better fallback
+
+        if (x == 0) return y;
+
+        int k; for (k = 0; (x & 1) == 0; k++)
+            x >>= 1;
+
+        return k;
+    }
+#endif
+
+#if map_has_builtin(__builtin_clzll)
+    #define map_clz(x) __builtin_clzll(x)
+#else
+    MapApi int map_clz(unsigned long long x) {
+        unsigned long long y = 1ULL << (8 * sizeof(unsigned long long) - 1);
+
+        int k; for (k = 0; (x & y) == 0; k++)
+            y >>= 1;
+
+        return k;
+    }
+#endif
+
 /* Lookup table is a little faster than handling << 64 specially. */
 #define B(x) ((1LLU << (x)) - 1)
 static const unsigned long long bittbl[65] = {
@@ -280,7 +325,7 @@ MapApi int map_is_solid(struct MapBuf * map, int x, int y, int z)
 MapApi int map_count_solids_xy(struct MapBuf * map, long xy, int z)
 {
     affirm_xy_z();
-    return __builtin_ctzg(~map_get_col_xy(map, xy) >> z, MAP_Z);
+    return map_ctz(~map_get_col_xy(map, xy) >> z, MAP_Z);
 }
 
 MapApi int map_count_solids(struct MapBuf * map, int x, int y, int z)
@@ -292,7 +337,7 @@ MapApi int map_count_solids(struct MapBuf * map, int x, int y, int z)
 MapApi int map_count_nonsolids_xy(struct MapBuf * map, long xy, int z)
 {
     affirm_xy_z();
-    return __builtin_ctzg(map_get_col_xy(map, xy) >> z, MAP_Z - z);
+    return map_ctz(map_get_col_xy(map, xy) >> z, MAP_Z - z);
 }
 
 MapApi int map_count_nonsolids(struct MapBuf * map, int x, int y, int z)
@@ -316,7 +361,7 @@ MapApi int map_get_floor(struct MapBuf * map, int x, int y, int z)
 MapApi int map_get_top_xy(struct MapBuf * map, long xy)
 {
     affirm_xy();
-    return __builtin_ctzg(map_get_col_xy(map, xy), MAP_Z);
+    return map_ctz(map_get_col_xy(map, xy), MAP_Z);
 }
 
 MapApi int map_get_top(struct MapBuf * map, int x, int y)

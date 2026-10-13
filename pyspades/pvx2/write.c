@@ -1,11 +1,15 @@
 #include "write.h"
 #include <string.h>
 
-#define tzcnt(x) __builtin_ctzg(x, MAP_Z)
+#define affirm(x) __attribute__((assume(x)))
 
-#define affirm(x)   __attribute__((assume(x)))
-#define likely(x)   __builtin_expect(!!(x), 1)
-#define unlikely(x) __builtin_expect(!!(x), 0)
+#if map_has_builtin(__builtin_expect)
+    #define likely(x)   __builtin_expect(!!(x), 1)
+    #define unlikely(x) __builtin_expect(!!(x), 0)
+#else
+    #define likely(x)   0
+    #define unlikely(x) 0
+#endif
 
 __attribute__((always_inline)) inline
 static void write_colors(unsigned char **dst, struct MapBuf * map, int xy, int z, int endz)
@@ -52,14 +56,14 @@ static unsigned char *write_vxl_column(unsigned char *dst, struct MapBuf * map, 
     int next_air_start = 0;
     while (1) {
         int air_start = next_air_start;
-        int top_start = tzcnt(solid);
+        int top_start = map_ctz(solid, MAP_Z);
 
         colored |= bittbl[top_start];
-        int filled_start = tzcnt(~colored);
+        int filled_start = map_ctz(~colored, MAP_Z);
         int top_end = filled_start - 1;
 
         filled  |= bittbl[filled_start];
-        int bottom_start = tzcnt(~filled);
+        int bottom_start = map_ctz(~filled, MAP_Z);
 
         if (likely(bottom_start == MAP_Z)) {
             dst[0] = 0;
@@ -73,7 +77,7 @@ static unsigned char *write_vxl_column(unsigned char *dst, struct MapBuf * map, 
         }
 
         colored |= bittbl[bottom_start];
-        next_air_start = tzcnt(~colored);
+        next_air_start = map_ctz(~colored, MAP_Z);
 
         int top_len    = filled_start   - top_start;
         int bottom_len = next_air_start - bottom_start;
