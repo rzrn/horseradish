@@ -38,7 +38,7 @@ static const unsigned long long bittbl[65] = {
 	B(52), B(53), B(54), B(55),
 	B(56), B(57), B(58), B(59),
 	B(60), B(61), B(62), B(63),
-	-1
+	~0LLU
 };
 #undef B
 
