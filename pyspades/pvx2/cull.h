@@ -17,9 +17,6 @@ struct CullBuf {
 
 typedef struct CullBuf *CullState;
 
-int  map_cull_alloc(CullState *cull);
-void map_cull_free (CullState *cull);
-
 void map_cull_end(CullState cull);
 
 void map_cull_xy(Map map, CullState cull, long xy,      int z);

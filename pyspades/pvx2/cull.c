@@ -11,21 +11,6 @@
 
 #define affirm(x) __attribute__((assume(x)))
 
-int map_cull_alloc(CullState *cull)
-{
-	CullState buf = calloc(1, sizeof(**cull));
-	if (buf == NULL)
-		return -1;
-
-	*cull = buf;
-	return 0;
-}
-
-void map_cull_free(CullState *cull)
-{
-	free(*cull);
-}
-
 void map_cull_end(CullState cull)
 {
 	int     grnd_ptr    = cull->grnd_ptr;

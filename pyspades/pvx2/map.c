@@ -43,26 +43,6 @@ static const unsigned long long bittbl[65] = {
 #undef B
 
 /*
- * Allocation
- */
-MapApi int map_alloc(Map *map)
-{
-	struct MapBuf *buf = calloc(1, sizeof(struct MapBuf));
-	if (buf == NULL)
-		return -1;
-
-	buf->colorbuf = buf->colorbuf_mem;
-
-	*map = buf;
-	return 0;
-}
-
-MapApi void map_free(Map *map)
-{
-	free(*map);
-}
-
-/*
  * Base data access
  */
 MapApi long map_to_xy(int x, int y)

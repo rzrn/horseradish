@@ -21,10 +21,6 @@ typedef struct MapBuf *Map;
 
 #define MapApi static inline __attribute__((always_inline))
 
-/* Allocation */
-MapApi int  map_alloc(Map *map);
-MapApi void map_free (Map *map);
-
 /* Base data access */
 MapApi long map_to_xy(int x, int y);
 
