@@ -8,7 +8,7 @@
 #define unlikely(x) __builtin_expect(!!(x), 0)
 
 __attribute__((always_inline)) inline
-static void write_colors(unsigned char **dst, Map map, int xy, int z, int endz)
+static void write_colors(unsigned char **dst, struct MapBuf * map, int xy, int z, int endz)
 {
 	for (; z <= endz; z++) {
 		memcpy(*dst, map_get_color_xy(map, xy, z), 3);
@@ -18,7 +18,7 @@ static void write_colors(unsigned char **dst, Map map, int xy, int z, int endz)
 	}
 }
 
-static MapCol get_surrounded(Map map, int xy)
+static MapCol get_surrounded(struct MapBuf * map, int xy)
 {
 	MapCol colc = map_get_col_xy(map, xy);
 	MapCol coll = -1;
@@ -41,7 +41,7 @@ static MapCol get_surrounded(Map map, int xy)
 	return sidefilled & vertfilled;
 }
 
-static unsigned char *write_vxl_column(unsigned char *dst, Map map, int xy)
+static unsigned char *write_vxl_column(unsigned char *dst, struct MapBuf * map, int xy)
 {
 	MapCol surrounded = get_surrounded(map, xy);
 
@@ -94,7 +94,7 @@ static unsigned char *write_vxl_column(unsigned char *dst, Map map, int xy)
 	return dst;
 }
 
-size_t vxl_write(void *dst, Map map, int xy, int cols)
+size_t vxl_write(void *dst, struct MapBuf * map, int xy, int cols)
 {
 	unsigned char *cdst = dst;
 	unsigned char *start = cdst;

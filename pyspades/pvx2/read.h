@@ -13,7 +13,7 @@ struct VXLState {
 	int bottom_len;
 	int last_span;
 
-	Map map;
+	struct MapBuf * map;
 
 	/* This'll include the next span hdr in the length
 	 * if not the last span.
@@ -33,9 +33,9 @@ struct VXLStream {
 	unsigned char span_buf[(MAP_Z + 1) * 4];
 };
 
-int vxl_read(Map map, const void *src, size_t nbytes);
+int vxl_read(struct MapBuf *, const void *src, size_t nbytes);
 
-void vxl_stream_read_open(struct VXLStream *stream, Map map);
+void vxl_stream_read_open(struct VXLStream *stream, struct MapBuf *);
 int vxl_stream_read(struct VXLStream *stream, const void *src, size_t nbytes);
 
 #endif

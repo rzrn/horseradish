@@ -11,7 +11,7 @@
 
 #define affirm(x) __attribute__((assume(x)))
 
-void map_cull_end(CullState cull)
+void map_cull_end(struct CullBuf * cull)
 {
 	int     grnd_ptr    = cull->grnd_ptr;
 	int    *grounded_xy = cull->grounded_xy;
@@ -24,7 +24,7 @@ void map_cull_end(CullState cull)
 	cull->grnd_ptr = 0;
 }
 
-static void unwind_floating(Map map, CullState cull, int trvr_ptr)
+static void unwind_floating(struct MapBuf * map, struct CullBuf * cull, int trvr_ptr)
 {
 	int    *traversed_xy = cull->traversed_xy;
 	MapCol *traversed    = cull->traversed;
@@ -40,7 +40,7 @@ static void unwind_floating(Map map, CullState cull, int trvr_ptr)
 	}
 }
 
-static void unwind_grounded(CullState cull, int trvr_ptr)
+static void unwind_grounded(struct CullBuf * cull, int trvr_ptr)
 {
 	int    *traversed_xy = cull->traversed_xy;
 	MapCol *traversed    = cull->traversed;
@@ -93,8 +93,8 @@ static MapCol isolate_neighbors(MapCol adjacent, MapCol test)
 }
 
 static int visitf(
-	CullState cull,
-	Map map,
+	struct CullBuf * cull,
+	struct MapBuf * map,
 	MapCol col,
 	int xy,
 	int *tovi_ptr,
@@ -172,7 +172,7 @@ static int visitf(
 		goto unwind; \
 } while (0)
 
-void map_cull_xy(Map map, CullState cull, long xy, int z)
+void map_cull_xy(struct MapBuf * map, struct CullBuf * cull, long xy, int z)
 {
 	int grnd_ptr = cull->grnd_ptr;
 	int trvr_ptr = 0;
@@ -208,7 +208,7 @@ void map_cull_xy(Map map, CullState cull, long xy, int z)
 	return unwind_grounded(cull, trvr_ptr);
 }
 
-void map_cull(Map map, CullState cull, int x, int y, int z)
+void map_cull(struct MapBuf * map, struct CullBuf * cull, int x, int y, int z)
 {
 	map_cull_xy(map, cull, map_to_xy(x, y), z);
 }

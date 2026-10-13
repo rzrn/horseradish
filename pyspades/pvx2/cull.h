@@ -15,11 +15,9 @@ struct CullBuf {
 	unsigned char visiting[MAP_XY];
 };
 
-typedef struct CullBuf *CullState;
+void map_cull_end(struct CullBuf *);
 
-void map_cull_end(CullState cull);
-
-void map_cull_xy(Map map, CullState cull, long xy,      int z);
-void map_cull   (Map map, CullState cull, int x, int y, int z);
+void map_cull_xy(struct MapBuf *, struct CullBuf *, long xy,      int z);
+void map_cull   (struct MapBuf *, struct CullBuf *, int x, int y, int z);
 
 #endif
