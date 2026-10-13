@@ -3,15 +3,14 @@
 
 #define ror(x, y) (((x) >> (y)) | ((x) << (MAP_Z - (y))))
 
-#define affirm(x) __attribute__((assume(x)))
-
 void map_cull_end(struct CullBuf * cull)
 {
     int     grnd_ptr    = cull->grnd_ptr;
     int    *grounded_xy = cull->grounded_xy;
     MapCol *grounded    = cull->grounded;
 
-    affirm(grnd_ptr  >= 0);
+    map_affirm(grnd_ptr >= 0);
+
     while (grnd_ptr-- > 0)
         grounded[grounded_xy[grnd_ptr]] = 0;
 
@@ -25,7 +24,8 @@ static int unwind_floating(struct MapBuf * map, struct CullBuf * cull, int trvr_
     int    *traversed_xy = cull->traversed_xy;
     MapCol *traversed    = cull->traversed;
 
-    affirm(trvr_ptr   > 0);
+    map_affirm(trvr_ptr > 0);
+
     while (trvr_ptr-- > 0) {
         int xy = traversed_xy[trvr_ptr];
 
@@ -48,7 +48,8 @@ static int unwind_grounded(struct CullBuf * cull, int trvr_ptr)
 
     unsigned char *visiting = cull->visiting;
 
-    affirm(trvr_ptr   > 0);
+    map_affirm(trvr_ptr > 0);
+
     while (trvr_ptr-- > 0) {
         int xy = traversed_xy[trvr_ptr];
 

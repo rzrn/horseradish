@@ -1,8 +1,6 @@
 #include "write.h"
 #include <string.h>
 
-#define affirm(x) __attribute__((assume(x)))
-
 #if map_has_builtin(__builtin_expect)
     #define likely(x)   __builtin_expect(!!(x), 1)
     #define unlikely(x) __builtin_expect(!!(x), 0)
@@ -11,8 +9,7 @@
     #define unlikely(x) 0
 #endif
 
-__attribute__((always_inline)) inline
-static void write_colors(unsigned char **dst, struct MapBuf * map, int xy, int z, int endz)
+MapApi void write_colors(unsigned char **dst, struct MapBuf * map, int xy, int z, int endz)
 {
     for (; z <= endz; z++) {
         memcpy(*dst, map_get_color_xy(map, xy, z), 3);
@@ -104,9 +101,9 @@ size_t vxl_write(void *dst, struct MapBuf * map, int xy, int cols)
     unsigned char *start = cdst;
     int xy_end = xy + cols;
 
-    affirm(xy >= 0);
-    affirm(cols >= 0);
-    affirm(xy + cols <= MAP_XY);
+    map_affirm(xy >= 0);
+    map_affirm(cols >= 0);
+    map_affirm(xy + cols <= MAP_XY);
 
     for (; xy < xy_end; xy++)
         cdst = write_vxl_column(cdst, map, xy);
