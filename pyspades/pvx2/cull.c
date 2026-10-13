@@ -24,8 +24,10 @@ void map_cull_end(struct CullBuf * cull)
 	cull->grnd_ptr = 0;
 }
 
-static void unwind_floating(struct MapBuf * map, struct CullBuf * cull, int trvr_ptr)
+static int unwind_floating(struct MapBuf * map, struct CullBuf * cull, int trvr_ptr)
 {
+	int removed = 0;
+
 	int    *traversed_xy = cull->traversed_xy;
 	MapCol *traversed    = cull->traversed;
 
@@ -36,11 +38,15 @@ static void unwind_floating(struct MapBuf * map, struct CullBuf * cull, int trvr
 		MapCol col = map_get_col_xy(map, xy);
 		map_set_col_xy(map, xy, col & ~traversed[xy]);
 
+		removed += __builtin_popcountll(col & traversed[xy]);
+
 		traversed[xy] = 0;
 	}
+
+	return removed;
 }
 
-static void unwind_grounded(struct CullBuf * cull, int trvr_ptr)
+static int unwind_grounded(struct CullBuf * cull, int trvr_ptr)
 {
 	int    *traversed_xy = cull->traversed_xy;
 	MapCol *traversed    = cull->traversed;
@@ -57,6 +63,8 @@ static void unwind_grounded(struct CullBuf * cull, int trvr_ptr)
 		grounded[xy] |= traversed[xy];
 		traversed[xy] = 0;
 	}
+
+	return 0;
 }
 
 static MapCol isolate_col(MapCol col, int z)
@@ -158,7 +166,7 @@ static int visitf(
 #define visit_initial_col() do { \
 	col = map_get_col_xy(map, xy); \
 	if (!(col & (1LLU << z))) \
-		return; \
+		return 0; \
 \
 	col = isolate_col(col, z); \
 \
@@ -172,7 +180,7 @@ static int visitf(
 		goto unwind; \
 } while (0)
 
-void map_cull_xy(struct MapBuf * map, struct CullBuf * cull, long xy, int z)
+int map_cull_xy(struct MapBuf * map, struct CullBuf * cull, long xy, int z)
 {
 	int grnd_ptr = cull->grnd_ptr;
 	int trvr_ptr = 0;
@@ -208,7 +216,7 @@ void map_cull_xy(struct MapBuf * map, struct CullBuf * cull, long xy, int z)
 	return unwind_grounded(cull, trvr_ptr);
 }
 
-void map_cull(struct MapBuf * map, struct CullBuf * cull, int x, int y, int z)
+int map_cull(struct MapBuf * map, struct CullBuf * cull, int x, int y, int z)
 {
-	map_cull_xy(map, cull, map_to_xy(x, y), z);
+	return map_cull_xy(map, cull, map_to_xy(x, y), z);
 }

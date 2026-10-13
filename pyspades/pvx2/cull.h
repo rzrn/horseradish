@@ -17,7 +17,7 @@ struct CullBuf {
 
 void map_cull_end(struct CullBuf *);
 
-void map_cull_xy(struct MapBuf *, struct CullBuf *, long xy,      int z);
-void map_cull   (struct MapBuf *, struct CullBuf *, int x, int y, int z);
+int map_cull_xy(struct MapBuf *, struct CullBuf *, long xy,      int z);
+int map_cull   (struct MapBuf *, struct CullBuf *, int x, int y, int z);
 
 #endif
