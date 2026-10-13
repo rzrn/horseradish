@@ -6,31 +6,31 @@
 
 /* Non-streaming-exclusive VXL decode state */
 struct VXLState {
-	int xy;
+    int xy;
 
-	int top_start;
-	int top_end;
-	int bottom_len;
-	int last_span;
+    int top_start;
+    int top_end;
+    int bottom_len;
+    int last_span;
 
-	struct MapBuf * map;
+    struct MapBuf * map;
 
-	/* This'll include the next span hdr in the length
-	 * if not the last span.
-	 */
-	int span_nbytes;
+    /* This'll include the next span hdr in the length
+     * if not the last span.
+     */
+    int span_nbytes;
 };
 
 struct VXLStream {
-	struct VXLState state;
+    struct VXLState state;
 
-	int part;
+    int part;
 
-	/* This'll include the next span hdr at the end
-	 * of it if not the last span, hence the + 1.
-	 */
-	int span_buf_nbytes;
-	unsigned char span_buf[(MAP_Z + 1) * 4];
+    /* This'll include the next span hdr at the end
+     * of it if not the last span, hence the + 1.
+     */
+    int span_buf_nbytes;
+    unsigned char span_buf[(MAP_Z + 1) * 4];
 };
 
 int vxl_read(struct MapBuf *, const void *src, size_t nbytes);
