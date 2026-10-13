@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from pyspades.vxl cimport VXLData, MapData
+from pyspades.vxl cimport VXLData, MapBuf
 from pyspades.common cimport Vertex3
 
 cdef extern from "common_c.h":
@@ -31,12 +31,12 @@ cdef extern from "world_c.cpp":
         float shooter_x, float shooter_y, float shooter_z,
         float orientation_x, float orientation_y, float orientation_z,
         float victim_x, float victim_y, float victim_z, float aim_tolerance, float dist_tolerance)
-    int c_can_see "can_see" (MapData * map, float x0, float y0, float z0,
+    int c_can_see "can_see" (MapBuf *, float x0, float y0, float z0,
         float x1, float y1, float z1)
-    int c_cast_ray "cast_ray" (MapData * map, float x0, float y0, float z0,
+    int c_cast_ray "cast_ray" (MapBuf *, float x0, float y0, float z0,
         float x1, float y1, float z1, float length, long* x, long* y, long* z)
     size_t cube_line_c "cube_line"(int, int, int, int, int, int, LongVector *)
-    void set_globals(MapData * map, float total_time, float dt)
+    void set_globals(MapBuf *, float total_time, float dt)
     struct PlayerType:
         Vector p, e, v, s, h, f
         int mf, mb, ml, mr
@@ -59,11 +59,11 @@ cdef extern from "world_c.cpp":
 
 cdef inline bint can_see(VXLData map, float x1, float y1, float z1,
     float x2, float y2, float z2):
-    return c_can_see(map.map, x1, y1, z1, x2, y2, z2)
+    return c_can_see(map.mapbuf, x1, y1, z1, x2, y2, z2)
 
 cdef inline bint cast_ray(VXLData map, float x1, float y1, float z1,
     float x2, float y2, float z2, float length, long* x, long* y, long* z):
-    return c_cast_ray(map.map, x1, y1, z1, x2, y2, z2, length, x, y, z)
+    return c_cast_ray(map.mapbuf, x1, y1, z1, x2, y2, z2, length, x, y, z)
 
 cdef class Object:
     cdef public:

@@ -2,9 +2,6 @@
 The map generator is responsible for generating the map bytes that get sent
 to the client on connect
 """
-import zlib
-
-COMPRESSION_LEVEL = 5
 
 
 class ProgressiveMapGenerator:
@@ -30,8 +27,7 @@ class ProgressiveMapGenerator:
         # parent=True enables saving all data sent instead of just
         # deleting it afterwards.
         self.parent = parent
-        self.generator = map_.get_generator()
-        self.compressor = zlib.compressobj(COMPRESSION_LEVEL)
+        self.mapenc = map_.get_encoder()
 
     def get_size(self):
         """get the map size, for display of the loading bar on the client"""
@@ -43,17 +39,18 @@ class ProgressiveMapGenerator:
     def read(self, size):
         """read size bytes from the map generator"""
         data = self.data
-        generator = self.generator
-        if len(data) < size and generator is not None:
+        mapenc = self.mapenc
+
+        if len(data) < size and mapenc is not None:
             while True:
-                map_data = generator.get_data(size)
-                if generator.done:
-                    self.generator = None
-                    data += self.compressor.flush()
+                if mapenc.is_eof():
+                    self.mapenc = None
                     break
-                data += self.compressor.compress(map_data)
+
+                data += self.mapenc.encode()
                 if len(data) >= size:
                     break
+
         if self.parent:
             # save the data in case we are a parent
             self.all_data += data
@@ -72,7 +69,7 @@ class ProgressiveMapGenerator:
 
     def data_left(self):
         """return True if any data is left"""
-        return bool(self.data) or self.generator is not None
+        return bool(self.data) or self.mapenc is not None
 
 
 class MapGeneratorChild:

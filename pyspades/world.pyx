@@ -344,7 +344,7 @@ cdef class World(object):
         if self.map is None:
             return
         self.time += dt
-        set_globals(self.map.map, self.time, dt)
+        set_globals(self.map.mapbuf, self.time, dt)
         cdef Object instance
         for instance in self.objects[:]:
             instance.update(dt)

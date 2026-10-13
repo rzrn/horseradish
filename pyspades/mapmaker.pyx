@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from .vxl cimport VXLData, MapData
+from .vxl cimport VXLData, MapBuf
 
 cdef extern from "classicgen_c.cpp":
-    void genland(unsigned long seed, MapData * mapdata)
+    void genland(unsigned long seed, MapBuf *) nogil
 
 import array
 import random
@@ -27,10 +27,14 @@ import sys
 from collections import deque
 cimport cython
 
-def generate_classic(seed):
-    cdef VXLData mapdata = VXLData()
-    genland(seed, mapdata.map)
-    return mapdata
+def generate_classic(o):
+    cdef VXLData data = VXLData()
+    cdef unsigned long seed = o
+
+    with nogil:
+        genland(seed, data.mapbuf)
+
+    return data
 
 class Biome(object):
     def __init__(self, gradient, height, variation, noise):

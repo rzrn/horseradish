@@ -25,7 +25,6 @@ http://moonedit.com/tom/vox1_en.htm#genland
 */
 
 #include "constants_c.h"
-#include "vxl_c.h"
 
 #define OCTMAX 10 //how many sub functions(10)
 #define EPS 0.1f  //color smoothing (0.1)
@@ -167,9 +166,10 @@ inline int get_height_pos(int x, int y)
 
 inline int get_height(int x, int y, int def)
 {
-    if (!is_valid_position(x, y, 0))
+    if (0 <= x && x < 512 && 0 <= y && y < 512)
+        return buf[get_height_pos(x, y)].a;
+    else
         return def;
-    return buf[get_height_pos(x, y)].a;
 }
 
 inline int get_lowest_height(int x, int y)
@@ -185,7 +185,7 @@ inline int get_lowest_height(int x, int y)
     // clang-format on
 }
 
-void genland(unsigned int seed, MapData *map)
+void genland(unsigned int seed, MapBuf * map)
 {
     double dx, dy, d, g, g2, river, amplut[OCTMAX], samp[3], csamp[3];
     double nx, ny, nz, gr, gg, gb;
@@ -291,13 +291,15 @@ void genland(unsigned int seed, MapData *map)
             height = buf[k].a;
             for (z = 63; z > height; z--)
             {
-                map->geometry[get_pos(x, y, z)] = true;
+                // TODO: use faster column creation functions
+                map_create(map, x, y, z);
             }
-            map->geometry[get_pos(x, y, z)] = true;
+            map_create(map, x, y, z);
             lowest_z = get_lowest_height(x, y) + 1;
             for (; z < lowest_z; z++)
             {
-                map->colors[get_pos(x, y, z)] = ((int *)&buf[k])[0];
+                unsigned char color[] = {buf[k].b, buf[k].g, buf[k].r};
+                map_set_color(map, x, y, z, color, 1);
             }
         }
     }

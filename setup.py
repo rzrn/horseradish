@@ -58,11 +58,11 @@ if sys.platform != 'darwin':
 extension_descriptors = [
     Descriptor('pyspades.world',
                sources=['pyspades/world.pyx'],
-               compile_flags=['-std=c++11']),
+               compile_flags=[]),
 
     Descriptor('pyspades.mapmaker',
                sources=['pyspades/mapmaker.pyx'],
-               compile_flags=['-std=c++11']),
+               compile_flags=[]),
 
     Descriptor('pyspades.bytes',
                sources=['pyspades/bytes.pyx']),
@@ -80,7 +80,11 @@ extension_descriptors = [
                sources=['pyspades/packet.pyx']),
 
     Descriptor('pyspades.vxl',
-               sources=['pyspades/vxl.pyx']),
+               language='c',
+               sources=['pyspades/vxl.pyx',
+                        'pyspades/pvx2/cull.c',
+                        'pyspades/pvx2/read.c',
+                        'pyspades/pvx2/write.c']),
 
     Descriptor('pyspades.enet',
                language='c',

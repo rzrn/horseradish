@@ -15,17 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-cdef extern from "Python.h":
-    object PyBytes_FromStringAndSize(char*,Py_ssize_t)
-    char* PyBytes_AsString(object)
-
-cdef inline object allocate_memory(int size, char ** i):
-    if size < 0:
-        size = 0
-    cdef object ob = PyBytes_FromStringAndSize(NULL, size)
-    i[0] = PyBytes_AsString(ob)
-    return ob
-
 cdef extern from "common_c.h":
     cdef cppclass Vector:
         float x, y, z

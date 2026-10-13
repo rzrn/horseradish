@@ -19,7 +19,6 @@
 */
 
 #include "constants_c.h"
-#include "vxl_c.h"
 
 // from vxl.h
 #define MAXZDIM 64 //Maximum .VXL dimensions in z direction (height)
@@ -47,7 +46,7 @@ enum damage_index
 // globals to make porting easier
 float ftotclk;
 float fsynctics;
-MapData *global_map;
+MapBuf * global_map;
 
 struct Orientation
 {
@@ -140,7 +139,7 @@ int clipbox(float x, float y, float z)
         sz = 62;
     else if (sz >= 64)
         return 1;
-    return get_solid((int)x, (int)y, sz, global_map);
+    return map_is_solid(global_map, (int)x, (int)y, sz);
 }
 
 //same as isvoxelsolid() but with wrapping
@@ -150,7 +149,8 @@ long isvoxelsolidwrap(long x, long y, long z)
         return 0;
     else if (z >= 64)
         return 1;
-    return get_solid((int)x & VXL_MAX_SIZEM, (int)y & VSIDM, z, global_map);
+
+    return map_is_solid(global_map, (int)x & VXL_MAX_SIZEM, (int)y & VSIDM, z);
 }
 
 //same as isvoxelsolid but water is empty
@@ -167,10 +167,10 @@ long clipworld(long x, long y, long z)
         return 1;
     else if (sz < 0)
         return 0;
-    return get_solid((int)x, (int)y, sz, global_map);
+    return map_is_solid(global_map, (int)x, (int)y, sz);
 }
 
-long can_see(MapData *map, float x0, float y0, float z0, float x1, float y1,
+long can_see(MapBuf * map, float x0, float y0, float z0, float x1, float y1,
              float z1)
 {
     Vector f, g;
@@ -272,7 +272,7 @@ long can_see(MapData *map, float x0, float y0, float z0, float x1, float y1,
     return 1;
 }
 
-long cast_ray(MapData *map, float x0, float y0, float z0, float x1, float y1,
+long cast_ray(MapBuf * map, float x0, float y0, float z0, float x1, float y1,
               float z1, float length, long *x, long *y, long *z)
 {
     x1 = x0 + x1 * length;
@@ -838,7 +838,7 @@ void destroy_grenade(GrenadeType *grenade)
     delete grenade;
 }
 
-void set_globals(MapData *map, float time, float dt)
+void set_globals(MapBuf * map, float time, float dt)
 {
     global_map = map;
     ftotclk = time;

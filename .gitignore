@@ -52,7 +52,7 @@ pyspades/contained.cpp
 pyspades/loaders.cpp
 pyspades/mapmaker.cpp
 pyspades/packet.cpp
-pyspades/vxl.cpp
+pyspades/vxl.c
 pyspades/world.cpp
 pyspades/enet.c
 
