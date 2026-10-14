@@ -92,12 +92,12 @@ static inline float fgrad(int h, float x, float y, float z)
 // portable rand functions
 
 static unsigned int seed = 0;
-inline void set_seed(unsigned int value)
+static inline void set_seed(unsigned int value)
 {
     seed = value;
 }
 
-inline unsigned int get_random()
+static inline unsigned int get_random()
 {
     seed = seed * 214013 + 2531011;
     return (seed >> 16) & 0x7FFF;
@@ -185,7 +185,7 @@ inline int get_lowest_height(int x, int y)
     // clang-format on
 }
 
-void genland(unsigned int seed, MapBuf * map)
+void genland(unsigned int seed, struct MapBuf * map)
 {
     double dx, dy, d, g, g2, river, amplut[OCTMAX], samp[3], csamp[3];
     double nx, ny, nz, gr, gg, gb;

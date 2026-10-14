@@ -66,8 +66,8 @@ extension_descriptors = [
                compile_flags=[]),
 
     Descriptor('pyspades.mapmaker',
-               sources=['pyspades/mapmaker.pyx'],
-               compile_flags=[]),
+               language='c',
+               sources=['pyspades/mapmaker.pyx']),
 
     Descriptor('pyspades.bytes',
                sources=['pyspades/bytes.pyx']),

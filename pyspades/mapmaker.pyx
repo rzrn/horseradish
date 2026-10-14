@@ -17,7 +17,7 @@
 
 from .vxl cimport VXLData, MapBuf
 
-cdef extern from "classicgen_c.cpp":
+cdef extern from "classicgen_c.c":
     void genland(unsigned long seed, MapBuf *) nogil
 
 import array

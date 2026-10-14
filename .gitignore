@@ -50,7 +50,7 @@ pyspades/bytes.cpp
 pyspades/common.cpp
 pyspades/contained.cpp
 pyspades/loaders.cpp
-pyspades/mapmaker.cpp
+pyspades/mapmaker.c
 pyspades/packet.cpp
 pyspades/vxl.c
 pyspades/world.cpp
