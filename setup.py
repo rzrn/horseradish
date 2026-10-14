@@ -19,6 +19,7 @@ use_static = (os.environ.get('STDCPP_STATIC') == '1')
 use_asan = (os.environ.get('USE_ASAN') == '1')
 use_ubsan = (os.environ.get('USE_UBSAN') == '1')
 use_linetrace = (os.environ.get('CYTHON_TRACE') == '1')
+use_march_native = (os.environ.get('USE_MARCH_NATIVE') == '1')
 
 compile_flags: List[str] = []
 link_flags: List[str] = []
@@ -41,6 +42,10 @@ if use_linetrace:
     macros['CYTHON_TRACE'] = '1'
     macros['CYTHON_USE_SYS_MONITORING'] = '0'
     Options.generate_cleanup_code = True
+
+if use_march_native:
+    link_flags += ['-O3', '-march=native']
+    compile_flags += ['-O3', '-march=native']
 
 enet_libraries = []
 
