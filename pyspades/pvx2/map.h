@@ -107,41 +107,72 @@ MapApi int map_get_top     (struct MapBuf *, int x, int y);
 #endif
 
 #if map_has_builtin(__builtin_popcountll)
-    #define map_popcnt(x) __builtin_popcountll(x)
+    #define map_col_popcnt(x) __builtin_popcountll(x)
 #else
-    MapApi int map_popcnt(unsigned long long x) {
-        int k; for (k = 0; x > 0; k++)
-            x &= x - 1;
+    #define M1  0x5555555555555555LLU
+    #define M2  0x3333333333333333LLU
+    #define M4  0x0F0F0F0F0F0F0F0FLLU
+    #define H01 0x0101010101010101LLU
 
-        return k;
+    // We assume that `x` fits into 64 bits
+    MapApi int map_col_popcnt(MapCol x) {
+        // https://en.wikipedia.org/wiki/Hamming_weight#Efficient_implementation
+        x -= (x >> 1) & M1;
+        x = (x & M2) + ((x >> 2) & M2);
+        x = (x + (x >> 4)) & M4;
+        return (x * H01) >> 56;
     }
+
+    #undef H01
+    #undef M4
+    #undef M2
+    #undef M1
 #endif
 
 #if map_has_builtin(__builtin_ctzg)
-    #define map_ctz(x, y) __builtin_ctzg(x, y)
-#else
-    MapApi int map_ctz(unsigned long long x, int y) {
-        // TODO: replace this with a better fallback
-
-        if (x == 0) return y;
-
-        int k; for (k = 0; (x & 1) == 0; k++)
-            x >>= 1;
-
-        return k;
+    #define map_col_ctz(x, y) __builtin_ctzg(x, y)
+#elif map_has_builtin(__builtin_ctzll)
+    MapApi int map_col_ctz(MapCol x, int y) {
+        return x == 0 ? y : __builtin_ctzll(x);
     }
+#else
+    #define D64 0x03F79D71B4CB0A89ULL
+
+    MapApi int map_col_ctz(MapCol x, int y) {
+        // https://en.wikipedia.org/wiki/Find_first_set#CTZ
+        // https://web.archive.org/web/20200109231233/https://www.chessprogramming.org/BitScan#With_separated_LS1B
+
+        static int ctz[64] = {
+            0, 47,  1, 56, 48, 27,  2, 60,
+           57, 49, 41, 37, 28, 16,  3, 61,
+           54, 58, 35, 52, 50, 42, 21, 44,
+           38, 32, 29, 23, 17, 11,  4, 62,
+           46, 55, 26, 59, 40, 36, 15, 53,
+           34, 51, 20, 43, 31, 22, 10, 45,
+           25, 39, 14, 33, 19, 30,  9, 24,
+           13, 18,  8, 12,  7,  6,  5, 63
+        };
+
+        return x == 0 ? y : ctz[((x ^ (x - 1)) * D64) >> 58];
+    }
+
+    #undef D64
 #endif
 
 #if map_has_builtin(__builtin_clzll)
-    #define map_clz(x) __builtin_clzll(x)
+    #define map_col_clz(x) __builtin_clzll(x)
 #else
-    MapApi int map_clz(unsigned long long x) {
-        unsigned long long y = 1ULL << (8 * sizeof(unsigned long long) - 1);
+    MapApi int map_col_clz(MapCol x) {
+        // https://en.wikipedia.org/wiki/Find_first_set#CLZ
 
-        int k; for (k = 0; (x & y) == 0; k++)
-            y >>= 1;
+        x |= x >> 1;
+        x |= x >> 2;
+        x |= x >> 4;
+        x |= x >> 8;
+        x |= x >> 16;
+        x |= x >> 32;
 
-        return k;
+        return 64 - map_col_ctz(~x, 64);
     }
 #endif
 
@@ -339,7 +370,7 @@ MapApi int map_is_solid(struct MapBuf * map, int x, int y, int z)
 MapApi int map_count_solids_xy(struct MapBuf * map, long xy, int z)
 {
     map_affirm_xy_z();
-    return map_ctz(~map_get_col_xy(map, xy) >> z, MAP_Z);
+    return map_col_ctz(~map_get_col_xy(map, xy) >> z, MAP_Z);
 }
 
 MapApi int map_count_solids(struct MapBuf * map, int x, int y, int z)
@@ -351,7 +382,7 @@ MapApi int map_count_solids(struct MapBuf * map, int x, int y, int z)
 MapApi int map_count_nonsolids_xy(struct MapBuf * map, long xy, int z)
 {
     map_affirm_xy_z();
-    return map_ctz(map_get_col_xy(map, xy) >> z, MAP_Z - z);
+    return map_col_ctz(map_get_col_xy(map, xy) >> z, MAP_Z - z);
 }
 
 MapApi int map_count_nonsolids(struct MapBuf * map, int x, int y, int z)
@@ -375,7 +406,7 @@ MapApi int map_get_floor(struct MapBuf * map, int x, int y, int z)
 MapApi int map_get_top_xy(struct MapBuf * map, long xy)
 {
     map_affirm_xy();
-    return map_ctz(map_get_col_xy(map, xy), MAP_Z);
+    return map_col_ctz(map_get_col_xy(map, xy), MAP_Z);
 }
 
 MapApi int map_get_top(struct MapBuf * map, int x, int y)

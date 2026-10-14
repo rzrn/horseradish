@@ -53,14 +53,14 @@ static unsigned char *write_vxl_column(unsigned char *dst, struct MapBuf * map, 
     int next_air_start = 0;
     while (1) {
         int air_start = next_air_start;
-        int top_start = map_ctz(solid, MAP_Z);
+        int top_start = map_col_ctz(solid, MAP_Z);
 
         colored |= bittbl[top_start];
-        int filled_start = map_ctz(~colored, MAP_Z);
+        int filled_start = map_col_ctz(~colored, MAP_Z);
         int top_end = filled_start - 1;
 
         filled  |= bittbl[filled_start];
-        int bottom_start = map_ctz(~filled, MAP_Z);
+        int bottom_start = map_col_ctz(~filled, MAP_Z);
 
         if (likely(bottom_start == MAP_Z)) {
             dst[0] = 0;
@@ -74,7 +74,7 @@ static unsigned char *write_vxl_column(unsigned char *dst, struct MapBuf * map, 
         }
 
         colored |= bittbl[bottom_start];
-        next_air_start = map_ctz(~colored, MAP_Z);
+        next_air_start = map_col_ctz(~colored, MAP_Z);
 
         int top_len    = filled_start   - top_start;
         int bottom_len = next_air_start - bottom_start;
