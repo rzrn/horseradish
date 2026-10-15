@@ -83,6 +83,9 @@ class Map:
         log.info('Map loaded successfully. (took {duration:.2f}s)',
                  duration=time.monotonic() - start_time)
 
+    def clear(self):
+        self.__dict__.clear()
+
     def load_information(self, rot_info: 'RotationInfo', load_dir: str) -> None:
         path = rot_info.get_meta_filename(load_dir)
 
