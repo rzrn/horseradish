@@ -62,7 +62,7 @@ cdef class VXLData:
 
     cdef load_bytes(self, bytes)
 
-    cpdef get_solid(self, int x, int y, int z)
+    cpdef bint get_solid(self, int x, int y, int z)
     cpdef get_color(self, int x, int y, int z)
     cpdef tuple get_random_point(self, int x1, int y1, int x2, int y2)
     cpdef int get_z(self, int x, int y, int start = ?)

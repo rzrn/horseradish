@@ -144,9 +144,9 @@ cdef class VXLData:
         map_set_color(self.mapbuf, x, y, z, colorbuf, 1)
 
     # TODO: consider making this function raise error on invalid position
-    cpdef get_solid(self, int x, int y, int z):
+    cpdef bint get_solid(self, int x, int y, int z):
         if not is_valid_position(x, y, z):
-            return None
+            return False
 
         return map_is_solid(self.mapbuf, x, y, z)
 
