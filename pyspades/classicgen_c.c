@@ -159,12 +159,12 @@ double noise3d(double fx, double fy, double fz, int mask)
 vcol buf[VSID * VSID];
 vcol amb[VSID * VSID]; // ambient
 
-inline int get_height_pos(int x, int y)
+static inline int get_height_pos(int x, int y)
 {
     return y * VSID + x;
 }
 
-inline int get_height(int x, int y, int def)
+static inline int get_height(int x, int y, int def)
 {
     if (0 <= x && x < 512 && 0 <= y && y < 512)
         return buf[get_height_pos(x, y)].a;
@@ -172,7 +172,7 @@ inline int get_height(int x, int y, int def)
         return def;
 }
 
-inline int get_lowest_height(int x, int y)
+static inline int get_lowest_height(int x, int y)
 {
     // clang-format off
     int z = get_height(x, y, 63);
