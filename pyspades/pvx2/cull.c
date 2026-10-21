@@ -17,8 +17,6 @@
 #include "cull.h"
 #include <stdlib.h>
 
-#define ror(x, y) (((x) >> (y)) | ((x) << (MAP_Z - (y))))
-
 void map_cull_end(struct CullBuf * cull) {
     int      grnd_ptr    = cull->grnd_ptr;
     int    * grounded_xy = cull->grounded_xy;
@@ -76,18 +74,19 @@ static int unwind_grounded(struct CullBuf * cull, int trvr_ptr) {
 }
 
 static MapCol isolate_col(MapCol col, int z) {
-    if (col == (MapCol)-1)
-        return -1;
+    map_affirm(z >= 0 && z < MAP_Z);
 
-    col = ror(~col, z);
+    long bits_le_z = map_col_clz(~(col << ((MAP_Z - 1) - z)), MAP_Z);
+    long bits_ge_z = map_col_ctz(~(col >> z), MAP_Z);
 
-    int bits_lt_z = map_col_clz(col, 0);
-    int bits_ge_z = map_col_ctz(col, 0);
+    long bits_lt_z = bits_le_z - 1;
 
-    int top = z - bits_lt_z;
-    int len = bits_lt_z + bits_ge_z;
+    long top = z - bits_lt_z;
+    long len = bits_lt_z + bits_ge_z;
 
-    return ((1LLU << len) - 1) << top;
+    map_affirm(len >= 0 && len <= MAP_Z);
+    map_affirm(top >= 0 && top <  MAP_Z);
+    return bittbl[len] << top;
 }
 
 static MapCol isolate_neighbors(MapCol adjacent, MapCol test) {
