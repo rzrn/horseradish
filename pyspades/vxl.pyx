@@ -38,17 +38,27 @@ cdef struct MapColXY:
 cdef inline int clamp(int x1, int x2, int x):
     return min(x2, max(x1, x))
 
-cdef enum:
-    MapCompressionLevel = 5
-    MapEncoderNcols = 8192
+cdef extern from *:
+    # TODO: is there any better way to use C macros? This looks horrible.
+
+    """
+    enum {
+        MapCompressionLevel = 5,
+        MapEncoderNcols     = 8192,
+        MapEncoderBuffSize  = vxl_write_max_size(MapEncoderNcols)
+    };
+    """
+
+    enum:
+        MapCompressionLevel
+        MapEncoderNcols
+        MapEncoderBuffSize
 
 cdef class MapEncoder:
     cdef MapBuf mapbuf
     cdef long xy
 
-    # `cols * 65 * 4` is a magic number taken from ‘lsd’
-    # and it’d be better to hold it somewhere in ‘libpvx2’.
-    cdef unsigned char buff[MapEncoderNcols * 65 * 4]
+    cdef unsigned char buff[MapEncoderBuffSize]
     cdef object stream
 
     cdef object vxl
