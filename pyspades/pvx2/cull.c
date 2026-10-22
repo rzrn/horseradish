@@ -81,7 +81,7 @@ static MapCol isolate_col(MapCol col, int z) {
 
     col = ror(~col, z);
 
-    int bits_lt_z = map_col_clz(col);
+    int bits_lt_z = map_col_clz(col, 0);
     int bits_ge_z = map_col_ctz(col, 0);
 
     int top = z - bits_lt_z;

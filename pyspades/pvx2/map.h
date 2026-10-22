@@ -175,10 +175,14 @@ MapApi int map_get_top     (struct MapBuf *, int x, int y);
     #undef D64
 #endif
 
-#if map_has_builtin(__builtin_clzll)
-    #define map_col_clz(x) __builtin_clzll(x)
+#if map_has_builtin(__builtin_clzg)
+    #define map_col_clz(x, y) __builtin_clzg(x, y)
+#elif map_has_builtin(__builtin_clzll)
+    MapApi int map_col_clz(MapCol x, int y) {
+        return x == 0 ? y : __builtin_clzll(x);
+    }
 #else
-    MapApi int map_col_clz(MapCol x) {
+    MapApi int map_col_clz(MapCol x, int y) {
         // https://en.wikipedia.org/wiki/Find_first_set#CLZ
 
         x |= x >> 1;
@@ -188,7 +192,7 @@ MapApi int map_get_top     (struct MapBuf *, int x, int y);
         x |= x >> 16;
         x |= x >> 32;
 
-        return 64 - map_col_ctz(~x, 64);
+        return x == 0 ? y : 64 - map_col_ctz(~x, 64);
     }
 #endif
 
