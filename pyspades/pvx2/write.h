@@ -19,6 +19,8 @@
 #include "map.h"
 #include <stddef.h>
 
+#define vxl_write_max_size(cols) ((cols) * (MAP_Z + 1) * 4)
+
 size_t vxl_write(void * dst, struct MapBuf *, int xy, int cols);
 
 #endif
