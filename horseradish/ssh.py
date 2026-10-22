@@ -1,4 +1,8 @@
-# Copyright (c) Mathias Kaerlev 2011-2012.
+# Copyright © 2011–2012 Mathias Kaerlev
+# Copyright © 2017 NotAFile
+# Copyright © 2018 Godwhoa
+# Copyright © 2019 Samuel Walladge
+# Copyright © 2026 rzrn
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

@@ -1,4 +1,11 @@
-# Copyright (c) Mathias Kaerlev 2011-2012.
+# Copyright © 2011–2012 Mathias Kaerlev
+# Copyright © 2011–2012 duckslingers
+# Copyright © 2012 infogulch
+# Copyright © 2017–2019 NotAFile
+# Copyright © 2017–2019 Godwhoa
+# Copyright © 2019 Samuel Walladge
+# Copyright © 2024 utf-4096
+# Copyright © 2025–2026 rzrn
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

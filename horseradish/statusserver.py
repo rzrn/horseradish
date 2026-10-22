@@ -1,4 +1,8 @@
-# Copyright (c) junk/someonesomewhere 2011.
+# Copyright © 2011 junk/someonesomewhere
+# Copyright © 2011–2012 Mathias Kaerlev
+# Copyright © 2015 Nate Shoffner
+# Copyright © 2018–2019 Godwhoa
+# Copyright © 2026 rzrn
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

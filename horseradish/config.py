@@ -1,4 +1,5 @@
-# Copyright (c) 2017 Piqueserver development team
+# Copyright © 2017–2019, 2023–2024 Piqueserver development team
+# Copyright © 2026 rzrn
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

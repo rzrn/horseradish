@@ -1,4 +1,6 @@
-# Copyright (c) Mathias Kaerlev 2012.
+# Copyright © 2012 Mathias Kaerlev
+# Copyright © 2017 NotAFile
+# Copyright © 2026 rzrn
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

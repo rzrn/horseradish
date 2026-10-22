@@ -1,4 +1,14 @@
-# Copyright (c) Mathias Kaerlev 2011-2012.
+# Copyright © 2011–2012 Mathias Kaerlev
+# Copyright © 2011–2012 duckslingers
+# Copyright © 2011–2012 James Hofmann
+# Copyright © 2012 Ben Aksoy
+# Copyright © 2017–2019 Samuel Walladge
+# Copyright © 2017–2019, 2021 NotAFile
+# Copyright © 2018–2019 Godwhoa
+# Copyright © 2019 Alberto Dubbini
+# Copyright © 2023–2024 DryByte
+# Copyright © 2024 utf-4096
+# Copyright © 2026 rzrn
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
