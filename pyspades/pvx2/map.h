@@ -52,14 +52,14 @@ MapApi MapCol map_get_col   (struct MapBuf *, int x, int y);
 MapApi void   map_set_col_xy(struct MapBuf *, long      xy, MapCol val);
 MapApi void   map_set_col   (struct MapBuf *, int x, int y, MapCol val);
 
-MapApi unsigned char *map_get_color_xy(struct MapBuf *, long      xy, int z);
-MapApi unsigned char *map_get_color   (struct MapBuf *, int x, int y, int z);
+MapApi unsigned char * map_get_color_xy(struct MapBuf *, long      xy, int z);
+MapApi unsigned char * map_get_color   (struct MapBuf *, int x, int y, int z);
 
 MapApi void map_set_color_xy(
-    struct MapBuf *, long      xy, int z, const void *colors, long len
+    struct MapBuf *, long      xy, int z, const void * colors, long len
 );
 MapApi void map_set_color(
-    struct MapBuf *, int x, int y, int z, const void *colors, long len
+    struct MapBuf *, int x, int y, int z, const void * colors, long len
 );
 
 /* Whole-map solidity manipulation */
@@ -218,50 +218,43 @@ static const unsigned long long bittbl[65] = {
 /*
  * Base data access
  */
-MapApi long map_to_xy(int x, int y)
-{
+MapApi long map_to_xy(int x, int y) {
     map_affirm_x_y();
     return y * MAP_X + x;
 }
 
-MapApi MapCol map_get_col_xy(struct MapBuf * map, long xy)
-{
+MapApi MapCol map_get_col_xy(struct MapBuf * map, long xy) {
     map_affirm_xy();
     return map->solidbuf[xy];
 }
 
-MapApi MapCol map_get_col(struct MapBuf * map, int x, int y)
-{
+MapApi MapCol map_get_col(struct MapBuf * map, int x, int y) {
     map_affirm_x_y();
     return map_get_col_xy(map, map_to_xy(x, y));
 }
 
-MapApi void map_set_col_xy(struct MapBuf * map, long xy, MapCol val)
-{
+MapApi void map_set_col_xy(struct MapBuf * map, long xy, MapCol val) {
     map_affirm_xy();
     map->solidbuf[xy] = val;
 }
 
-MapApi void map_set_col(struct MapBuf * map, int x, int y, MapCol val)
-{
+MapApi void map_set_col(struct MapBuf * map, int x, int y, MapCol val) {
     map_affirm_x_y();
     map_set_col_xy(map, map_to_xy(x, y), val);
 }
 
-MapApi unsigned char *map_get_color_xy(struct MapBuf * map, long xy, int z)
-{
+MapApi unsigned char * map_get_color_xy(struct MapBuf * map, long xy, int z) {
     map_affirm_xy_z();
     return map->colorbuf + (xy * MAP_Z + z) * 3;
 }
 
-MapApi unsigned char *map_get_color(struct MapBuf * map, int x, int y, int z)
-{
+MapApi unsigned char * map_get_color(struct MapBuf * map, int x, int y, int z) {
     map_affirm_x_y_z();
     return map_get_color_xy(map, map_to_xy(x, y), z);
 }
 
 MapApi void map_set_color_xy(
-    struct MapBuf * map, long xy, int z, const void *colors, long len
+    struct MapBuf * map, long xy, int z, const void * colors, long len
 ) {
     /* Affirming z seems to hurt more than it helps here. */
     map_affirm_xy();
@@ -274,7 +267,7 @@ MapApi void map_set_color_xy(
 }
 
 MapApi void map_set_color(
-    struct MapBuf * map, int x, int y, int z, const void *colors, long len
+    struct MapBuf * map, int x, int y, int z, const void * colors, long len
 ) {
     map_affirm_x_y();
     map_affirm(len >= 0 && len <= 64);
@@ -288,13 +281,11 @@ MapApi void map_set_color(
 /*
  * Whole-map solidity manipulation
  */
-MapApi void map_clear(struct MapBuf * map)
-{
+MapApi void map_clear(struct MapBuf * map) {
     memset(map->solidbuf, 0, sizeof(MapCol) * MAP_XY);
 }
 
-MapApi void map_copy(struct MapBuf * dst, const struct MapBuf * src)
-{
+MapApi void map_copy(struct MapBuf * dst, const struct MapBuf * src) {
     memcpy(dst->solidbuf, src->solidbuf, sizeof(dst->solidbuf));
 
     if (dst->colorbuf != NULL && src->colorbuf != NULL)
@@ -304,54 +295,46 @@ MapApi void map_copy(struct MapBuf * dst, const struct MapBuf * src)
 /*
  * Column solidity manipulation
  */
-MapApi void map_create_range_xy(struct MapBuf * map, long xy, int z, long len)
-{
+MapApi void map_create_range_xy(struct MapBuf * map, long xy, int z, long len) {
     map_affirm_xy_z_len();
     map_set_col_xy(map, xy,
         map_get_col_xy(map, xy) | col_shl(bittbl[len], z)
     );
 }
 
-MapApi void map_create_range(struct MapBuf * map, int x, int y, int z, long len)
-{
+MapApi void map_create_range(struct MapBuf * map, int x, int y, int z, long len) {
     map_affirm_x_y_z_len();
     map_create_range_xy(map, map_to_xy(x, y), z, len);
 }
 
-MapApi void map_create_xy(struct MapBuf * map, long xy, int z)
-{
+MapApi void map_create_xy(struct MapBuf * map, long xy, int z) {
     map_affirm_xy_z();
     map_create_range_xy(map, xy, z, 1);
 }
 
-MapApi void map_create(struct MapBuf * map, int x, int y, int z)
-{
+MapApi void map_create(struct MapBuf * map, int x, int y, int z) {
     map_affirm_x_y_z();
     map_create_range(map, x, y, z, 1);
 }
 
-MapApi void map_destroy_range_xy(struct MapBuf * map, long xy, int z, long len)
-{
+MapApi void map_destroy_range_xy(struct MapBuf * map, long xy, int z, long len) {
     map_affirm_xy_z_len();
     map_set_col_xy(map, xy,
         map_get_col_xy(map, xy) & ~col_shl(bittbl[len], z)
     );
 }
 
-MapApi void map_destroy_range(struct MapBuf * map, int x, int y, int z, long len)
-{
+MapApi void map_destroy_range(struct MapBuf * map, int x, int y, int z, long len) {
     map_affirm_x_y_z_len();
     map_destroy_range_xy(map, map_to_xy(x, y), z, len);
 }
 
-MapApi void map_destroy_xy(struct MapBuf * map, long xy, int z)
-{
+MapApi void map_destroy_xy(struct MapBuf * map, long xy, int z) {
     map_affirm_xy_z();
     map_destroy_range_xy(map, xy, z, 1);
 }
 
-MapApi void map_destroy(struct MapBuf * map, int x, int y, int z)
-{
+MapApi void map_destroy(struct MapBuf * map, int x, int y, int z) {
     map_affirm_x_y_z();
     map_destroy_range(map, x, y, z, 1);
 }
@@ -359,74 +342,62 @@ MapApi void map_destroy(struct MapBuf * map, int x, int y, int z)
 /*
  * Column solidity querying
  */
-MapApi MapCol map_is_solid_range_xy(struct MapBuf * map, long xy, int z, long len)
-{
+MapApi MapCol map_is_solid_range_xy(struct MapBuf * map, long xy, int z, long len) {
     map_affirm_xy_z_len();
     return col_shr(map_get_col_xy(map, xy), z) & bittbl[len];
 }
 
-MapApi MapCol map_is_solid_range(struct MapBuf * map, int x, int y, int z, long len)
-{
+MapApi MapCol map_is_solid_range(struct MapBuf * map, int x, int y, int z, long len) {
     map_affirm_x_y_z_len();
     return map_is_solid_range_xy(map, map_to_xy(x, y), z, len);
 }
 
-MapApi int map_is_solid_xy(struct MapBuf * map, long xy, int z)
-{
+MapApi int map_is_solid_xy(struct MapBuf * map, long xy, int z) {
     map_affirm_xy_z();
     return map_is_solid_range_xy(map, xy, z, 1);
 }
 
-MapApi int map_is_solid(struct MapBuf * map, int x, int y, int z)
-{
+MapApi int map_is_solid(struct MapBuf * map, int x, int y, int z) {
     map_affirm_x_y_z();
     return map_is_solid_range(map, x, y, z, 1);
 }
 
-MapApi int map_count_solids_xy(struct MapBuf * map, long xy, int z)
-{
+MapApi int map_count_solids_xy(struct MapBuf * map, long xy, int z) {
     map_affirm_xy_z();
     return map_col_ctz(~map_get_col_xy(map, xy) >> z, MAP_Z);
 }
 
-MapApi int map_count_solids(struct MapBuf * map, int x, int y, int z)
-{
+MapApi int map_count_solids(struct MapBuf * map, int x, int y, int z) {
     map_affirm_x_y_z();
     return map_count_solids_xy(map, map_to_xy(x, y), z);
 }
 
-MapApi int map_count_nonsolids_xy(struct MapBuf * map, long xy, int z)
-{
+MapApi int map_count_nonsolids_xy(struct MapBuf * map, long xy, int z) {
     map_affirm_xy_z();
     return map_col_ctz(map_get_col_xy(map, xy) >> z, MAP_Z - z);
 }
 
-MapApi int map_count_nonsolids(struct MapBuf * map, int x, int y, int z)
-{
+MapApi int map_count_nonsolids(struct MapBuf * map, int x, int y, int z) {
     map_affirm_x_y_z();
     return map_count_nonsolids_xy(map, map_to_xy(x, y), z);
 }
 
-MapApi int map_get_floor_xy(struct MapBuf * map, long xy, int z)
-{
+MapApi int map_get_floor_xy(struct MapBuf * map, long xy, int z) {
     map_affirm_xy_z();
     return z + map_count_nonsolids_xy(map, xy, z);
 }
 
-MapApi int map_get_floor(struct MapBuf * map, int x, int y, int z)
-{
+MapApi int map_get_floor(struct MapBuf * map, int x, int y, int z) {
     map_affirm_x_y_z();
     return map_get_floor_xy(map, map_to_xy(x, y), z);
 }
 
-MapApi int map_get_top_xy(struct MapBuf * map, long xy)
-{
+MapApi int map_get_top_xy(struct MapBuf * map, long xy) {
     map_affirm_xy();
     return map_col_ctz(map_get_col_xy(map, xy), MAP_Z);
 }
 
-MapApi int map_get_top(struct MapBuf * map, int x, int y)
-{
+MapApi int map_get_top(struct MapBuf * map, int x, int y) {
     map_affirm_x_y();
     return map_get_top_xy(map, map_to_xy(x, y));
 }

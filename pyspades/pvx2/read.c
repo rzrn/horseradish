@@ -18,8 +18,7 @@
 
 #define check(condition) do {if (!(condition)) return -1;} while (0)
 
-static int read_vxl_span_hdr(struct VXLState *state, const unsigned char **buf)
-{
+static int read_vxl_span_hdr(struct VXLState * state, const unsigned char ** buf) {
     int span_len  = (*buf)[0];
     int top_start = (*buf)[1];
     int top_end   = (*buf)[2];
@@ -56,8 +55,7 @@ static int read_vxl_span_hdr(struct VXLState *state, const unsigned char **buf)
 #define r64(x, y, z) r16(x, y, z), r16(x, y, z), r16(x, y, z), r16(x, y, z)
 static const unsigned char dirt_color[64 * 3] = {r64(40, 64, 103)};
 
-static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
-{
+static int read_vxl_span_body(struct VXLState * state, const unsigned char ** buf) {
     struct MapBuf * map = state->map;
 
     int xy         = state->xy;
@@ -99,10 +97,9 @@ static int read_vxl_span_body(struct VXLState *state, const unsigned char **buf)
 }
 
 #define REMAINING (end - csrc)
-int vxl_read(struct MapBuf * map, const void *src, size_t nbytes)
-{
-    const unsigned char *csrc = src;
-    const unsigned char *end = csrc + nbytes;
+int vxl_read(struct MapBuf * map, const void * src, size_t nbytes) {
+    const unsigned char * csrc = src;
+    const unsigned char * end = csrc + nbytes;
 
     struct VXLState state;
     int xy;
@@ -132,8 +129,7 @@ int vxl_read(struct MapBuf * map, const void *src, size_t nbytes)
     return 1;
 }
 
-void vxl_stream_read_open(struct VXLStream *stream, struct MapBuf * map)
-{
+void vxl_stream_read_open(struct VXLStream * stream, struct MapBuf * map) {
     map_clear(map);
     stream->state.map         = map;
 
@@ -143,16 +139,15 @@ void vxl_stream_read_open(struct VXLStream *stream, struct MapBuf * map)
     stream->span_buf_nbytes   = 0;
 }
 
-int vxl_stream_read(struct VXLStream *stream, const void *src, size_t nbytes)
-{
-    const unsigned char *csrc = src;
-    const unsigned char *end = csrc + nbytes;
+int vxl_stream_read(struct VXLStream * stream, const void * src, size_t nbytes) {
+    const unsigned char * csrc = src;
+    const unsigned char * end = csrc + nbytes;
 
     int status;
 
-    unsigned char *ptr  = stream->span_buf + stream->span_buf_nbytes;
+    unsigned char * ptr = stream->span_buf + stream->span_buf_nbytes;
     int to_cpy = stream->state.span_nbytes - stream->span_buf_nbytes;
-    const unsigned char *inptr = stream->span_buf;
+    const unsigned char * inptr = stream->span_buf;
 
     if (REMAINING < to_cpy) {
         memcpy(ptr, csrc, REMAINING);

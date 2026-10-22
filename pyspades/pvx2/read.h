@@ -48,9 +48,9 @@ struct VXLStream {
     unsigned char span_buf[(MAP_Z + 1) * 4];
 };
 
-int vxl_read(struct MapBuf *, const void *src, size_t nbytes);
+int vxl_read(struct MapBuf *, const void * src, size_t nbytes);
 
-void vxl_stream_read_open(struct VXLStream *stream, struct MapBuf *);
-int vxl_stream_read(struct VXLStream *stream, const void *src, size_t nbytes);
+void vxl_stream_read_open(struct VXLStream * stream, struct MapBuf *);
+int vxl_stream_read(struct VXLStream * stream, const void * src, size_t nbytes);
 
 #endif

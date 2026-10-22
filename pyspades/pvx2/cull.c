@@ -19,11 +19,10 @@
 
 #define ror(x, y) (((x) >> (y)) | ((x) << (MAP_Z - (y))))
 
-void map_cull_end(struct CullBuf * cull)
-{
-    int     grnd_ptr    = cull->grnd_ptr;
-    int    *grounded_xy = cull->grounded_xy;
-    MapCol *grounded    = cull->grounded;
+void map_cull_end(struct CullBuf * cull) {
+    int      grnd_ptr    = cull->grnd_ptr;
+    int    * grounded_xy = cull->grounded_xy;
+    MapCol * grounded    = cull->grounded;
 
     map_affirm(grnd_ptr >= 0);
 
@@ -33,12 +32,11 @@ void map_cull_end(struct CullBuf * cull)
     cull->grnd_ptr = 0;
 }
 
-static int unwind_floating(struct MapBuf * map, struct CullBuf * cull, int trvr_ptr)
-{
+static int unwind_floating(struct MapBuf * map, struct CullBuf * cull, int trvr_ptr) {
     int removed = 0;
 
-    int    *traversed_xy = cull->traversed_xy;
-    MapCol *traversed    = cull->traversed;
+    int    * traversed_xy = cull->traversed_xy;
+    MapCol * traversed    = cull->traversed;
 
     map_affirm(trvr_ptr > 0);
 
@@ -56,13 +54,12 @@ static int unwind_floating(struct MapBuf * map, struct CullBuf * cull, int trvr_
     return removed;
 }
 
-static int unwind_grounded(struct CullBuf * cull, int trvr_ptr)
-{
-    int    *traversed_xy = cull->traversed_xy;
-    MapCol *traversed    = cull->traversed;
-    MapCol *grounded     = cull->grounded;
+static int unwind_grounded(struct CullBuf * cull, int trvr_ptr) {
+    int    * traversed_xy = cull->traversed_xy;
+    MapCol * traversed    = cull->traversed;
+    MapCol * grounded     = cull->grounded;
 
-    unsigned char *visiting = cull->visiting;
+    unsigned char * visiting = cull->visiting;
 
     map_affirm(trvr_ptr > 0);
 
@@ -78,8 +75,7 @@ static int unwind_grounded(struct CullBuf * cull, int trvr_ptr)
     return 0;
 }
 
-static MapCol isolate_col(MapCol col, int z)
-{
+static MapCol isolate_col(MapCol col, int z) {
     if (col == (MapCol)-1)
         return -1;
 
@@ -94,8 +90,7 @@ static MapCol isolate_col(MapCol col, int z)
     return ((1LLU << len) - 1) << top;
 }
 
-static MapCol isolate_neighbors(MapCol adjacent, MapCol test)
-{
+static MapCol isolate_neighbors(MapCol adjacent, MapCol test) {
     MapCol checked = 0;
 
     while (1) {
@@ -116,17 +111,17 @@ static int visitf(
     struct MapBuf * map,
     MapCol col,
     int xy,
-    int *tovi_ptr,
-    int *trvr_ptr,
-    int *grnd_ptr
+    int * tovi_ptr,
+    int * trvr_ptr,
+    int * grnd_ptr
 ) {
-    int    *traversed_xy = cull->traversed_xy;
-    int    *grounded_xy  = cull->grounded_xy;
-    int    *to_visit_xy  = cull->to_visit_xy;
-    MapCol *traversed    = cull->traversed;
-    MapCol *grounded     = cull->grounded;
+    int    * traversed_xy = cull->traversed_xy;
+    int    * grounded_xy  = cull->grounded_xy;
+    int    * to_visit_xy  = cull->to_visit_xy;
+    MapCol * traversed    = cull->traversed;
+    MapCol * grounded     = cull->grounded;
 
-    unsigned char *visiting = cull->visiting;
+    unsigned char * visiting = cull->visiting;
 
     MapCol travr = traversed[xy];
     MapCol grnd  = grounded[xy];
@@ -191,8 +186,7 @@ static int visitf(
         goto unwind; \
 } while (0)
 
-int map_cull_xy(struct MapBuf * map, struct CullBuf * cull, long xy, int z)
-{
+int map_cull_xy(struct MapBuf * map, struct CullBuf * cull, long xy, int z) {
     int grnd_ptr = cull->grnd_ptr;
     int trvr_ptr = 0;
     int tovi_ptr = 0;
@@ -227,7 +221,6 @@ int map_cull_xy(struct MapBuf * map, struct CullBuf * cull, long xy, int z)
     return unwind_grounded(cull, trvr_ptr);
 }
 
-int map_cull(struct MapBuf * map, struct CullBuf * cull, int x, int y, int z)
-{
+int map_cull(struct MapBuf * map, struct CullBuf * cull, int x, int y, int z) {
     return map_cull_xy(map, cull, map_to_xy(x, y), z);
 }
