@@ -212,7 +212,6 @@ int map_cull_xy(struct MapBuf * map, struct CullBuf * cull, long xy, int z) {
         cull->visiting[xy/8] &= ~(1 << (xy & 7));
     }
 
-    cull->grnd_ptr = grnd_ptr;
     return unwind_floating(map, cull, trvr_ptr);
 
     unwind:
