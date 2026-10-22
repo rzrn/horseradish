@@ -1,19 +1,24 @@
-# Copyright (c) Mathias Kaerlev 2011-2012.
+# Copyright © 2011–2012 Mathias Kaerlev
+# Copyright © 2011–2012 duckslingers
+# Copyright © 2012 Yourself
+# Copyright © 2012 Ben Aksoy
+# Copyright © 2017–2019 NotAFile
+# Copyright © 2020 Jipok
+# Copyright © 2024 utf-4096
+# Copyright © 2026 rzrn
 
-# This file is part of pyspades.
-
-# pyspades is free software: you can redistribute it and/or modify
+# This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-# pyspades is distributed in the hope that it will be useful,
+# This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
 # You should have received a copy of the GNU General Public License
-# along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import random
 from typing import List, TypedDict

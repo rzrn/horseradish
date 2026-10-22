@@ -1,4 +1,6 @@
-# Copyright (c) Mathias Kaerlev 2011-2012.
+# Copyright © 2011–2012 Mathias Kaerlev
+# Copyright © 2012 duckslingers
+# Copyright © 2019 NotAFile
 
 # This file is part of pyspades.
 

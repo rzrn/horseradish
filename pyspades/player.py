@@ -1,3 +1,32 @@
+# Copyright © 2011–2012 Mathias Kaerlev
+# Copyright © 2011–2012 duckslingers
+# Copyright © 2011–2012 Yourself
+# Copyright © 2012 James Hofmann
+# Copyright © 2012 Ben Aksoy
+# Copyright © 2012 infogulch
+# Copyright © 2017–2019, 2021 NotAFile
+# Copyright © 2018 Samuel Walladge
+# Copyright © 2018–2019 Godwhoa
+# Copyright © 2021 MuffinTastic
+# Copyright © 2023–2024 DryByte
+# Copyright © 2024 utf-4096
+# Copyright © 2026 notaburner <davidco7777@protonmail.com>
+# Copyright © 2026 Francois ND
+# Copyright © 2026 rzrn
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import collections
 import math
 import random
